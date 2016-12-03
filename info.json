@@ -1,0 +1,12 @@
+{
+  "name": "Nanobots",
+  "version": "1.0.0",
+  "factorio_version": "0.14",
+  "title": "Nanobots Early Automated Constructor and Deconstructor",
+  "author": "Nexela",
+  "contact": "www.factorioforums.com",
+  "homepage": "",
+  "description": "Early blueprint builder, A special nanobot gun automaticly revives blueprint ghosts near you if you have the items in your inventory.",
+  "dependencies": ["base >= 0.14.0"],
+  "license": "MIT"
+}
