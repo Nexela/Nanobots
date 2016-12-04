@@ -4,6 +4,18 @@ local function get_build_area(pos, rad)
   return {top_left={x=pos.x-rad, y=pos.y-rad}, bottom_right={x=pos.x+rad, y=pos.y+rad}}
 end
 
+local function get_equipment(player, eq_name)
+  local armor = player.get_inventory(defines.inventory.player_armor)
+  if armor[1].valid_for_read and armor[1].grid and armor[1].grid.equipment then
+    for i=1, #armor[1].grid.equipment do
+      if armor[1].grid.equipment[i].name==eq_name then
+        return armor[1].grid.equipment[i]
+      end
+    end
+  end
+  return nil
+end
+
 local function build_ghosts_in_player_range(player, pos, nano_ammo)
   local area = get_build_area(pos, NANO.BUILD_RADIUS)
   for _, ghost in pairs(player.surface.find_entities_filtered{area=area, name="entity-ghost", force=player.force}) do
@@ -25,9 +37,9 @@ end
 local function destroy_marked_items(player, pos, nano_ammo) --luacheck: ignore
 end
 
-local function gobble_items_on_ground(player)
+local function gobble_items_on_ground(player, equipment) --luacheck: ignore
   local rad = player.character.logistic_cell.construction_radius
-  local area = get_build_area(player.posiion, rad)
+  local area = get_build_area(player.position, rad)
   if not player.surface.find_nearest_enemy{position=player.position ,max_distance=rad+20,force=player.force} then
     for _, item in pairs(player.surface.find_entities_filtered{area=area, name="item-on-ground"}) do
       if not item.to_be_deconstructed(player.force) then
@@ -59,9 +71,11 @@ local function on_tick(event)
           --Do AutoDeconstructMarking
         elseif player.character.logistic_cell and player.character.logistic_cell.mobile
           and player.character.logistic_cell.stationed_construction_robot_count > 0 then
-            --if reprogrammer installed
-            gobble_items_on_ground(player)
-
+            local equipment=get_equipment(player, "bot-reprogrammer-ground")
+            if equipment then
+              --if reprogrammer installed
+              gobble_items_on_ground(player, equipment)
+            end
           end
         end
       end
