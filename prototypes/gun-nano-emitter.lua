@@ -1,6 +1,6 @@
 local recipe_nano_gun = {
     type = "recipe",
-    name = "nano-gun",
+    name = "gun-nano-emitter",
     energy_required = 30,
     ingredients =
     {
@@ -8,20 +8,20 @@ local recipe_nano_gun = {
       {"iron-plate", 10},
       {"electronic-circuit", 2},
     },
-    result = "nano-gun"
+    result = "gun-nano-emitter"
   }
 
 local item_nano_gun =  {
     type = "gun",
-    name = "nano-gun",
+    name = "gun-nano-emitter",
     icon = "__Nanobots__/graphics/icons/nano-gun.png",
     flags = {"goes-to-main-inventory"},
     subgroup = "tool",
-    order = "c[automated-construction]-g[nano-gun]",
+    order = "c[automated-construction]-g[gun-nano-emitter]",
     attack_parameters =
     {
       type = "projectile",
-      ammo_category = "bullet",
+      ammo_category = "nano-ammo",
       cooldown = 10,
       movement_slow_down_factor = 0.7,
       shell_particle =
@@ -47,14 +47,8 @@ local category_nano_gun = {
     name = "nano-ammo"
   }
 
-local recipe_nano_ammo_mag = nil
+data:extend({recipe_nano_gun, item_nano_gun, category_nano_gun})
 
-local item_nano_ammo_mag = nil
-
-
-
-data:extend({recipe_nano_gun, item_nano_gun, category_nano_gun, recipe_nano_ammo_mag, item_nano_ammo_mag})
-
-local effects = data.raw.technology["automation"].effects
-effects[#effects + 1] = {type = "unlock-recipe", recipe="nano-gun"}
+local effects = data.raw.technology["automated-construction"].effects
+effects[#effects + 1] = {type = "unlock-recipe", recipe="gun-nano-emitter"}
 --effects[#effects + 1] = {type = "unlock-recipe", recipe="nano-ammo"}

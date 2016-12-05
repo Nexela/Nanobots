@@ -1,6 +1,16 @@
 --Change blueprint to use electronic-circuit for earlier building
 data.raw.recipe["blueprint"].ingredients = {{"electronic-circuit", 1}}
+data.raw.recipe["deconstruction-planner"].ingredients = {{"electronic-circuit", 1}}
 
---Add unlock for blueprint to automation.
-local effects = data.raw.technology["automation"].effects
-effects[#effects + 1] = {type = "unlock-recipe", recipe="blueprint"}
+--Change automated construction to unlock after automation, using science pack 1
+local tech = data.raw.technology["automated-construction"]
+tech.prerequisites = {"automation"}
+tech.unit =
+{
+  count = 75,
+  ingredients =
+  {
+    {"science-pack-1", 1},
+  },
+  time = 30
+}

@@ -18,6 +18,7 @@ end
 
 local function build_ghosts_in_player_range(player, pos, nano_ammo)
   local area = get_build_area(pos, NANO.BUILD_RADIUS)
+  game.print("Building Ghosts "..game.tick)
   for _, ghost in pairs(player.surface.find_entities_filtered{area=area, name="entity-ghost", force=player.force}) do
     if nano_ammo.valid_for_read and not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force) then
       if player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force}
@@ -47,31 +48,50 @@ local function gobble_items_on_ground(player, equipment) --luacheck: ignore
       end
     end
   end
+  game.print("Gobble Gobble ".. game.tick)
 end
+
+--Return true if selected gun = gun_name and ammo is valid for reading
+local function get_gun_ammo_name(player, gun_name)
+  local index = player.character.selected_gun_index
+  local gun = player.get_inventory(defines.inventory.player_guns)[index]
+  local ammo = player.get_inventory(defines.inventory.player_ammo)[index]
+  if gun.valid_for_read and gun.name == gun_name and ammo.valid_for_read then
+    return gun, ammo, ammo.name
+  end
+  return nil, nil, nil
+end
+
+local function are_bots_ready(character)
+  return (character.logistic_cell and character.logistic_cell.mobile
+    and character.logistic_cell.stationed_construction_robot_count > 0) or false
+  end
+
+  local function is_player_ready(player)
+    return (player.connected and player.afk_time < NANO.TICK_MOD * 1.5 and player.character) or false
+  end
+
+script.on_event(defines.events.on_trigger_created_entity, function(event)
+  game.print("TRIGGER "..event.entity.name)
+end)
 
 local function on_tick(event)
   if NANO.TICK_MOD > 0 and event.tick % NANO.TICK_MOD == 0 then
     for _, player in pairs(game.players) do
       --Establish connected, non afk, player character
-      if player.connected and player.afk_time < NANO.TICK_MOD * 1.5 and player.character and player.force.technologies["automation"].researched then
-        local gun_slot = player.get_inventory(defines.inventory.player_guns)[player.character.selected_gun_index]
-        --Nano Gun selected and we are not in a logistic network.
-        if gun_slot.valid_for_read and gun_slot.name == "nano-gun" and not player.character.logistic_network then
-          local nano_ammo = player.get_inventory(defines.inventory.player_ammo)[player.character.selected_gun_index]
-          --Nano Ammo name defines what we do!
-          if nano_ammo.valid_for_read then
-            if nano_ammo.name == "nano-constructor-ammo" then
-              build_ghosts_in_player_range(player, player.position, nano_ammo)
-            elseif nano_ammo.name == "nano-termite-ammo" then
-              everyone_hates_trees(player, player.position, nano_ammo)
-            elseif nano_ammo.name == "nano-metal-termite-ammo" then
-              destroy_marked_items(player, player.position, nano_ammo)
-            end
+      if is_player_ready(player) and player.force.technologies["automated-construction"].researched then
+        if NANO.AUTO_NANO_BOTS and not player.character.logistic_network then
+          local _, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
+          if ammo_name == "ammo-nano-constructors" then
+            build_ghosts_in_player_range(player, player.position, nano_ammo)
+          elseif ammo_name == "ammo-nano-termites" then
+            everyone_hates_trees(player, player.position, nano_ammo)
+          elseif ammo_name == "ammo-nano-scrappers" then
+            destroy_marked_items(player, player.position, nano_ammo)
           end
           --Do AutoDeconstructMarking
-        elseif player.character.logistic_cell and player.character.logistic_cell.mobile
-          and player.character.logistic_cell.stationed_construction_robot_count > 0 then
-            local equipment=get_equipment(player, "bot-reprogrammer-ground")
+        elseif NANO.AUTO_EQUIPMENT and are_bots_ready(player.character) then
+            local equipment=get_equipment(player, "equipment-bot-chip-items")
             if equipment then
               --if reprogrammer installed
               gobble_items_on_ground(player, equipment)
