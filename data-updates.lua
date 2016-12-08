@@ -14,3 +14,10 @@ tech.unit =
   },
   time = 30
 }
+
+--bobmods recipe changes
+if _G.bobmods and _G.bobmods.lib then
+  _G.bobmods.lib.recipe.replace_ingredient("ammo-nano-constructors", "electronic-circuit", "basic-circuit-board")
+  _G.bobmods.lib.recipe.add_ingredient("equipment-bot-chip-items", "robot-brain-constuction")
+  _G.bobmods.lib.recipe.add_ingredient("equipment-bot-chip-trees", "robot-brain-constuction")
+end
