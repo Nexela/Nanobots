@@ -82,7 +82,11 @@ local function build_ghosts_in_player_range(player, pos, nano_ammo)
       if not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
       and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force}
       and player.remove_item({name=ghost.ghost_name, count=1}) == 1 then
-        ghost.revive()
+        local _, entity = ghost.revive()
+        local event = {tick = game.tick, player_index=player.index, created_entity=entity}
+        game.print(event.created_entity.name)
+        game.raise_event(defines.events.on_built_entity, event)
+        --Sideeffect Autofill will attempt to fill these :)
         nano_ammo.drain_ammo(1)
       end
     else -- We ran out of ammo break out!
