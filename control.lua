@@ -10,22 +10,6 @@ local function get_build_area(pos, rad)
   return {top_left={x=pos.x-rad, y=pos.y-rad}, bottom_right={x=pos.x+rad, y=pos.y+rad}}
 end
 
---Get the named equipment in players first(only) armor slot
---player: the player object
---eq_name: string or table of strings: the name of the equipment to get
---return: a table of equipment
--- local function get_equipment(player, eq_name)
--- local armor = player.get_inventory(defines.inventory.player_armor)
--- if armor[1].valid_for_read and armor[1].grid and armor[1].grid.equipment then
--- for i=1, #armor[1].grid.equipment do
--- if armor[1].grid.equipment[i].name==eq_name then
--- return armor[1].grid.equipment[i]
--- end
--- end
--- end
--- return nil
--- end
-
 --Loop through armor and return a true table of valid equipment names
 --player: the player object
 --return: a table of valid equipment names.
@@ -131,10 +115,6 @@ end
 
 -------------------------------------------------------------------------------
 --[[Events]]--
---Test for other things!
-script.on_event(defines.events.on_trigger_created_entity, function(event)
-    game.print("TRIGGER "..event.entity.name)
-  end)
 
 --The Tick Handler!
 --Future improvments: 1 player per tick, move gun/ammo/equip checks to event handlers.
