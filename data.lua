@@ -11,3 +11,6 @@ require("prototypes/gun-nano-emitter")
 require("prototypes/ammo-nano-constructors")
 require("prototypes/ammo-nano-termites")
 require("prototypes/ammo-nano-scrappers")
+
+--Sounds
+require("prototypes/sounds")
