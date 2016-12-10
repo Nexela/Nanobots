@@ -56,6 +56,12 @@ local function is_player_ready(player)
   return (player.connected and player.afk_time < NANO.TICK_MOD * 1.5 and player.character) or false
 end
 
+local function get_first_item(table)
+  for name in pairs(table) do
+    if name then return name end
+  end
+  return nil
+end
 -------------------------------------------------------------------------------
 --[[Nano Emitter Stuff]]--
 --Build the ghosts in the range of the player
@@ -63,19 +69,24 @@ local function build_ghosts_in_player_range(player, pos, nano_ammo)
   local area = get_build_area(pos, NANO.BUILD_RADIUS)
   for _, ghost in pairs(player.surface.find_entities_filtered{area=area, name="entity-ghost", force=player.force}) do
     if nano_ammo.valid_for_read then
-      if not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
-      and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force}
-      and player.remove_item({name=ghost.ghost_name, count=1}) == 1 then
-        local _, entity = ghost.revive()
-        local event = {tick = game.tick, player_index=player.index, created_entity=entity}
-        --game.print(event.created_entity.name)
-        game.raise_event(defines.events.on_built_entity, event)
-        --Sideeffect Autofill will attempt to fill these :)
-        nano_ammo.drain_ammo(1)
+      --local items = game.entity_prototypes[ghost.ghost_name].items_to_place_this
+      local item = get_first_item(game.entity_prototypes[ghost.ghost_name].items_to_place_this)
+      --if items and item then
+        --local item = items[1].name
+        if item and not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
+        and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force}
+        and player.remove_item({name=item, count=1}) == 1 then
+          local _, entity = ghost.revive()
+          local event = {tick = game.tick, player_index=player.index, created_entity=entity}
+          --game.print(event.created_entity.name)
+          game.raise_event(defines.events.on_built_entity, event)
+          --Sideeffect Autofill will attempt to fill these :)
+          nano_ammo.drain_ammo(1)
+        end
+      else -- We ran out of ammo break out!
+        break
       end
-    else -- We ran out of ammo break out!
-      break
-    end
+    --end
   end
 end
 
@@ -135,8 +146,8 @@ local function on_tick(event)
           --Do AutoDeconstructMarking
         elseif NANO.AUTO_EQUIPMENT and are_bots_ready(player.character) then
           local equipment=get_valid_equipment_names(player)
-           if equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
-             gobble_items(player, equipment)
+          if equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
+            gobble_items(player, equipment)
           end
         end
       end
