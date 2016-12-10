@@ -74,6 +74,17 @@ end
 
 -------------------------------------------------------------------------------
 --[[Nano Emitter Stuff]]--
+local function build_next_queued()
+  local first = table.remove(global.queued, 1)
+  local _, entity = first.ghost.revive()
+  if entity and entity.valid then
+    local event = {tick = game.tick, player_index=first.player_index, created_entity=entity}
+    game.raise_event(defines.events.on_built_entity, event)
+  else
+    game.players[first.player_index].insert({name=first.ghost.name, count=1})
+  end
+end
+
 --Build the ghosts in the range of the player
 local function build_ghosts_in_player_range(player, pos, nano_ammo)
   local area = get_build_area(pos, NANO.BUILD_RADIUS)
@@ -82,12 +93,14 @@ local function build_ghosts_in_player_range(player, pos, nano_ammo)
       if not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
       and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force}
       and player.remove_item({name=ghost.ghost_name, count=1}) == 1 then
-        local _, entity = ghost.revive()
-        local event = {tick = game.tick, player_index=player.index, created_entity=entity}
+        --local _, entity = ghost.revive()
+        --local event = {tick = game.tick, player_index=player.index, created_entity=entity}
         --game.print(event.created_entity.name)
-        game.raise_event(defines.events.on_built_entity, event)
+        --game.raise_event(defines.events.on_built_entity, event)
         --Sideeffect Autofill will attempt to fill these :)
+        if not global.queued then global.queued = {} end
         nano_ammo.drain_ammo(1)
+        global.queued[#global.queued +1]={player_index=player.index, ghost=ghost}
       end
     else -- We ran out of ammo break out!
       break
@@ -131,14 +144,14 @@ end
 
 -------------------------------------------------------------------------------
 --[[Events]]--
---Test for other things!
-script.on_event(defines.events.on_trigger_created_entity, function(event)
-    game.print("TRIGGER "..event.entity.name)
-  end)
 
 --The Tick Handler!
 --Future improvments: 1 player per tick, move gun/ammo/equip checks to event handlers.
 local function on_tick(event)
+  if global.queued and global.queued[1] and event.tick % 10 == 0 then
+    build_next_queued()
+    game.print("Queued Item")
+  end
   if NANO.TICK_MOD > 0 and event.tick % NANO.TICK_MOD == 0 then
     for _, player in pairs(game.players) do
       --Establish connected, non afk, player character
