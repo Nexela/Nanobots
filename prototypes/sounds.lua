@@ -6,10 +6,6 @@ local sound_nanobot_creators = {
   {
     Proto.empty_animation
   },
-  --light = {intensity = 0, size = 0},
-  -- smoke = "smoke-fast",
-  -- smoke_count = 2,
-  -- smoke_slow_down_factor = 1,
   sound =
   {
     aggregation =
@@ -20,11 +16,11 @@ local sound_nanobot_creators = {
     variations =
     {
       {
-        filename = "__core__/sound/alert-construction.ogg",
+        filename = "__Nanobots__/sounds/robostep.ogg",
         volume = 0.75
       },
       {
-        filename = "__core__/sound/alert-construction.ogg",
+        filename = "__Nanobots__/sounds/robostep.ogg",
         volume = 0.75
       }
     }
