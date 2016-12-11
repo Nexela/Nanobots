@@ -73,7 +73,7 @@
 -- print(List.count(test) .. "-".. test.first .. "-" .. test.last)
 
 
-function table.find(tbl, func, ...)
+local function find(tbl, func, ...)
     for k, v in pairs(tbl) do
         if func(v, k, ...) then
             return v, k
@@ -82,6 +82,12 @@ function table.find(tbl, func, ...)
     return nil
 end
 
-local a = {["iron-chest"]="yes"}
+local count = {["iron-chest"] = 0, ["steel-chest"]=0}
+local function get_count(item) return count[item] or 0 end
 
-print(table.find(a, function(k) return k end))
+print(get_count("iron-chest"))
+print(get_count("steel-chest"))
+
+local a = {["iron-chest"]={}, ["steel-chest"]={}}
+
+print(find(a, function(_, k) return get_count(k) > 0 end))
