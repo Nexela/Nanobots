@@ -1,12 +1,8 @@
+--luacheck: globals List
 local NANO = require("config")
-
---Expand a position to an area
---pos: full factorio position table
---rad: number: radius to expand to
---return: factorio area table
-local function get_build_area(pos, rad)
-  return {top_left={x=pos.x-rad, y=pos.y-rad}, bottom_right={x=pos.x+rad, y=pos.y+rad}}
-end
+require("stdlib/utils/utils")
+local Position = require("stdlib/area/position")
+local List = require("stdlib/utils/list")
 
 --Loop through armor and return a true table of valid equipment names
 --player: the player object
@@ -54,34 +50,31 @@ local function is_player_ready(player)
   return (player.connected and player.afk_time < NANO.TICK_MOD * 1.5 and player.character) or false
 end
 
-local function get_first_item(table)
-  for name in pairs(table) do
-    if name then return name end
-  end
-  return nil
-end
 -------------------------------------------------------------------------------
 --[[Nano Emitter Stuff]]--
-local function build_next_queued()
-  local first = table.remove(global.queued, 1)
-  --local entity
-  if first.ghost.valid then
-    local _, entity = first.ghost.revive()
+local function build_next_queued(data)
+  --Slower by using an index but needed for first in first out.
+
+  if data.ghost.valid then
+    local _, entity = data.ghost.revive()
     if entity and entity.valid then
-      local event = {tick = game.tick, player_index=first.player_index, created_entity=entity}
+      local event = {tick = game.tick, player_index=data.player_index, created_entity=entity}
       game.raise_event(defines.events.on_built_entity, event)
-    else
-      game.players[first.player_index].insert({name=first.ghost.ghost_name, count=1})
+    else --Give the item back entity isn't valid
+      game.players[data.player_index].insert({name=data.item, count=1})
     end
+  else --Give the item back ghost isn't valid anymore.
+    game.players[data.player_index].insert({name=data.item, count=1})
   end
 end
 
 --Build the ghosts in the range of the player
-local function build_ghosts_in_player_range(player, pos, nano_ammo)
-  local area = get_build_area(pos, NANO.BUILD_RADIUS)
+local function queue_ghosts_in_player_range(player, pos, nano_ammo)
+  local area = Position.expand_to_area(pos, NANO.BUILD_RADIUS)
   for index, ghost in pairs(player.surface.find_entities_filtered{area=area, name="entity-ghost", force=player.force}) do
     if nano_ammo.valid_for_read then
-      local item = get_first_item(game.entity_prototypes[ghost.ghost_name].items_to_place_this)
+      --get item name
+      local item = table.find(game.entity_prototypes[ghost.ghost_name].items_to_place_this, function(k) return k end)
       if item and not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
       and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force}
       and player.remove_item({name=item, count=1}) == 1 then
@@ -89,7 +82,7 @@ local function build_ghosts_in_player_range(player, pos, nano_ammo)
           player.surface.create_entity{name="sound-nanobot-creators", position = player.position}
         end
         nano_ammo.drain_ammo(1)
-        global.queued[#global.queued +1]={player_index=player.index, ghost=ghost, item=item}
+        List.push_right(global.queued, {player_index=player.index, ghost=ghost, item=item})
       end
     else -- We ran out of ammo break out!
       break
@@ -111,7 +104,7 @@ end
 --Mark items for deconstruction if player has roboport
 local function gobble_items(player, eq_names)
   local rad = player.character.logistic_cell.construction_radius
-  local area = get_build_area(player.position, rad)
+  local area = Position.expand_to_area(player.position, rad)
   if not player.surface.find_nearest_enemy{position=player.position ,max_distance=rad+20,force=player.force} then
     if eq_names["equipment-bot-chip-items"] then
       --local range = get_build_area(player.position, eq_names["equipment-bot-chip-items"] * NANO.CHIP_RADIUS)
@@ -122,7 +115,7 @@ local function gobble_items(player, eq_names)
       end
     end
     if eq_names["equipment-bot-chip-trees"] then
-      local range = get_build_area(player.position, math.min(rad + 10000000, eq_names["equipment-bot-chip-trees"] * NANO.CHIP_RADIUS))
+      local range = Position.expand_to_area(player.position, math.min(rad + 10000000, eq_names["equipment-bot-chip-trees"] * NANO.CHIP_RADIUS))
       for _, item in pairs(player.surface.find_entities_filtered{area=range, type="tree"}) do
         if not item.to_be_deconstructed(player.force) then
           item.order_deconstruction(player.force)
@@ -138,8 +131,8 @@ end
 --The Tick Handler!
 --Future improvments: 1 player per tick, move gun/ammo/equip checks to event handlers.
 local function on_tick(event)
-  if global.queued and global.queued[1] and event.tick % 2 == 0 then
-    build_next_queued()
+  if event.tick % 2 == 0 and List.count(global.queued) > 0 then
+    build_next_queued(List.pop_left(global.queued))
   end
   if NANO.TICK_MOD > 0 and event.tick % NANO.TICK_MOD == 0 then
     for _, player in pairs(game.players) do
@@ -148,7 +141,7 @@ local function on_tick(event)
         if NANO.AUTO_NANO_BOTS and not player.character.logistic_network then
           local _, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
           if ammo_name == "ammo-nano-constructors" then
-            build_ghosts_in_player_range(player, player.position, nano_ammo)
+            queue_ghosts_in_player_range(player, player.position, nano_ammo)
           elseif ammo_name == "ammo-nano-termites" then
             everyone_hates_trees(player, player.position, nano_ammo)
           elseif ammo_name == "ammo-nano-scrappers" then
@@ -167,13 +160,15 @@ local function on_tick(event)
 end
 script.on_event(defines.events.on_tick, on_tick)
 
+-------------------------------------------------------------------------------
+--[[Init]]--
 local function on_init(reset)
   if reset then
     global = {}
-    global.queued = {}
+    global.queued = List.new()
     global.current_index = 1
   else
-    global.queued = global.queued or {}
+    global.queued = global.queued or List.new()
     global.current_index = global.current_index or 1
   end
 end

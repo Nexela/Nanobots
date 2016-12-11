@@ -26,3 +26,4 @@ Change Log:
 * 1.0.1 - Raise event when building entity
 * 1.0.2 - Remove Debug line
 * 1.0.3 - Better entity-to-item logic
+* 1.0.4 - Script Optimizations (fast gets faster)
