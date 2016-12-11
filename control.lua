@@ -52,6 +52,7 @@ end
 
 -------------------------------------------------------------------------------
 --[[Nano Emitter Stuff]]--
+--Builds the next item in the queue
 local function build_next_queued(data)
   if data.ghost.valid then
     local _, entity = data.ghost.revive()
@@ -72,7 +73,7 @@ local function queue_ghosts_in_player_range(player, pos, nano_ammo)
   for index, ghost in pairs(player.surface.find_entities_filtered{area=area, name="entity-ghost", force=player.force}) do
     if nano_ammo.valid_for_read then
       --get item name
-      local item = table.find(game.entity_prototypes[ghost.ghost_name].items_to_place_this, function(k) return k end)
+      local _, item = table.find(game.entity_prototypes[ghost.ghost_name].items_to_place_this, function(k) return k end)
       if item and not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
       and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force}
       and player.remove_item({name=item, count=1}) == 1 then
@@ -129,8 +130,8 @@ end
 --The Tick Handler!
 --Future improvments: 1 player per tick, move gun/ammo/equip checks to event handlers.
 local function on_tick(event)
-  --Handle building from the queue every 2 ticks.
-  if event.tick % 2 == 0 and List.count(global.queued) > 0 then
+  --Handle building from the queue every 3 ticks.
+  if event.tick % NANO.TICKS_PER_QUEUE == 0 and List.count(global.queued) > 0 then
     build_next_queued(List.pop_left(global.queued))
   end
   if NANO.TICK_MOD > 0 and event.tick % NANO.TICK_MOD == 0 then
