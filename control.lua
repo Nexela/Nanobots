@@ -1,6 +1,4 @@
 local NANO = require("config")
--- local AC_RECIPES = {"ammo-nano-constructors", "ammo-nano-scrappers", "ammo-nano-termites", "gun-nano-emitter"}
--- local ROBO_RECIPES = {"equipment-bot-chip-items", "equipment-bot-chip-trees"}
 
 --Expand a position to an area
 --pos: full factorio position table
@@ -56,6 +54,12 @@ local function is_player_ready(player)
   return (player.connected and player.afk_time < NANO.TICK_MOD * 1.5 and player.character) or false
 end
 
+local function get_first_item(table)
+  for name in pairs(table) do
+    if name then return name end
+  end
+  return nil
+end
 -------------------------------------------------------------------------------
 --[[Nano Emitter Stuff]]--
 local function build_next_queued()
@@ -77,25 +81,20 @@ local function build_ghosts_in_player_range(player, pos, nano_ammo)
   local area = get_build_area(pos, NANO.BUILD_RADIUS)
   for index, ghost in pairs(player.surface.find_entities_filtered{area=area, name="entity-ghost", force=player.force}) do
     if nano_ammo.valid_for_read then
-      if not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
+      local item = get_first_item(game.entity_prototypes[ghost.ghost_name].items_to_place_this)
+      if item and not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
       and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force}
-      and player.remove_item({name=ghost.ghost_name, count=1}) == 1 then
-        if index == 1 then
+      and player.remove_item({name=item, count=1}) == 1 then
+        if index == 1 then --if we have at least 1 item to build play sound.
           player.surface.create_entity{name="sound-nanobot-creators", position = player.position}
-          --surface.create_entity{name=,position=,direction=,force=,target=,source=,fast_replace=,player=,spill=}
         end
-        --local _, entity = ghost.revive()
-        --local event = {tick = game.tick, player_index=player.index, created_entity=entity}
-        --game.print(event.created_entity.name)
-        --game.raise_event(defines.events.on_built_entity, event)
-        --Sideeffect Autofill will attempt to fill these :)
-        if not global.queued then global.queued = {} end
         nano_ammo.drain_ammo(1)
-        global.queued[#global.queued +1]={player_index=player.index, ghost=ghost}
+        global.queued[#global.queued +1]={player_index=player.index, ghost=ghost, item=item}
       end
     else -- We ran out of ammo break out!
       break
     end
+    --end
   end
 end
 
@@ -140,31 +139,47 @@ end
 --Future improvments: 1 player per tick, move gun/ammo/equip checks to event handlers.
 local function on_tick(event)
   if global.queued and global.queued[1] and event.tick % 2 == 0 then
-  build_next_queued()
-  --game.print("Queued Item")
-end
-if NANO.TICK_MOD > 0 and event.tick % NANO.TICK_MOD == 0 then
-  for _, player in pairs(game.players) do
-    --Establish connected, non afk, player character
-    if is_player_ready(player) and player.force.technologies["automated-construction"].researched then
-      if NANO.AUTO_NANO_BOTS and not player.character.logistic_network then
-        local _, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
-        if ammo_name == "ammo-nano-constructors" then
-          build_ghosts_in_player_range(player, player.position, nano_ammo)
-        elseif ammo_name == "ammo-nano-termites" then
-          everyone_hates_trees(player, player.position, nano_ammo)
-        elseif ammo_name == "ammo-nano-scrappers" then
-          destroy_marked_items(player, player.position, nano_ammo)
-        end
-        --Do AutoDeconstructMarking
-      elseif NANO.AUTO_EQUIPMENT and are_bots_ready(player.character) then
-        local equipment=get_valid_equipment_names(player)
-        if equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
-          gobble_items(player, equipment)
+    build_next_queued()
+  end
+  if NANO.TICK_MOD > 0 and event.tick % NANO.TICK_MOD == 0 then
+    for _, player in pairs(game.players) do
+      --Establish connected, non afk, player character
+      if is_player_ready(player) and player.force.technologies["automated-construction"].researched then
+        if NANO.AUTO_NANO_BOTS and not player.character.logistic_network then
+          local _, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
+          if ammo_name == "ammo-nano-constructors" then
+            build_ghosts_in_player_range(player, player.position, nano_ammo)
+          elseif ammo_name == "ammo-nano-termites" then
+            everyone_hates_trees(player, player.position, nano_ammo)
+          elseif ammo_name == "ammo-nano-scrappers" then
+            destroy_marked_items(player, player.position, nano_ammo)
+          end
+          --Do AutoDeconstructMarking
+        elseif NANO.AUTO_EQUIPMENT and are_bots_ready(player.character) then
+          local equipment=get_valid_equipment_names(player)
+          if equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
+            gobble_items(player, equipment)
+          end
         end
       end
     end
   end
 end
-end
 script.on_event(defines.events.on_tick, on_tick)
+
+local function on_init(reset)
+  if reset then
+    global = {}
+    global.queued = {}
+    global.current_index = 1
+  else
+    global.queued = global.queued or {}
+    global.current_index = global.current_index or 1
+  end
+end
+script.on_init(on_init)
+
+local function on_configuration_changed()
+  on_init()
+end
+script.on_configuration_changed(on_configuration_changed)
