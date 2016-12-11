@@ -4,7 +4,7 @@ require("stdlib/utils/utils")
 local Position = require("stdlib/area/position")
 local List = require("stdlib/utils/list")
 
---Loop through armor and return a true table of valid equipment names
+--Loop through armor and return a table of valid equipment names and counts
 --player: the player object
 --return: a table of valid equipment names.
 local function get_valid_equipment_names(player)
@@ -53,8 +53,6 @@ end
 -------------------------------------------------------------------------------
 --[[Nano Emitter Stuff]]--
 local function build_next_queued(data)
-  --Slower by using an index but needed for first in first out.
-
   if data.ghost.valid then
     local _, entity = data.ghost.revive()
     if entity and entity.valid then
@@ -131,6 +129,7 @@ end
 --The Tick Handler!
 --Future improvments: 1 player per tick, move gun/ammo/equip checks to event handlers.
 local function on_tick(event)
+  --Handle building from the queue every 2 ticks.
   if event.tick % 2 == 0 and List.count(global.queued) > 0 then
     build_next_queued(List.pop_left(global.queued))
   end
