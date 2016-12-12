@@ -1,24 +1,25 @@
 local recipe = {
     type = "recipe",
-    name = "ammo-nano-constructors",
+    name = "ammo-nano-deconstructors",
     enabled = false,
     energy_required = 5,
     ingredients =
     {
-      {"copper-plate", 5},
-      {"electronic-circuit", 1}
+      {"ammo-nano-constructors", 1},
+      {"ammo-nano-scrappers", 1},
+      {"advanced-circuit", 1}
     },
-    result = "ammo-nano-constructors"
+    result = "ammo-nano-deconstructors"
   }
 
-local constructors = {
+local deconstructors = {
   type = "ammo",
-  name = "ammo-nano-constructors",
-  icon = "__Nanobots__/graphics/icons/nano-ammo.png",
+  name = "ammo-nano-deconstructors",
+  icon = "__Nanobots__/graphics/icons/nano-ammo-deconstructors.png",
   flags = {"goes-to-main-inventory"},
   magazine_size = 20,
   subgroup = "tool",
-  order = "c[automated-construction]-g[gun-nano-emitter]-constructor",
+  order = "c[automated-construction]-g[gun-nano-emitter]-deconstructors",
   stack_size = 100,
   ammo_type =
   {
@@ -47,6 +48,6 @@ local constructors = {
 
 }
 
-data:extend({recipe, constructors})
+data:extend({recipe, deconstructors})
 local effects = data.raw.technology["automated-construction"].effects
-effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-constructors"}
+effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-deconstructors"}

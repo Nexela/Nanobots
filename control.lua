@@ -54,13 +54,13 @@ end
 -------------------------------------------------------------------------------
 --[[Nano Emitter Stuff]]--
 --Builds the next item in the queue
-local function build_next_queued(data)
-  if data.ghost.valid then
-    local _, entity = data.ghost.revive()
-    if entity and entity.valid then
+local function build_queued(data)
+  if data.entity.valid then
+    local revived, entity = data.entity.revive()
+    if revived and entity and entity.valid then --raise event if entity-ghost
       local event = {tick = game.tick, player_index=data.player_index, created_entity=entity}
       game.raise_event(defines.events.on_built_entity, event)
-    else --Give the item back entity isn't valid
+    elseif not revived then --Give the item back if the entity was not revived
       game.players[data.player_index].insert({name=data.item, count=1})
     end
   else --Give the item back ghost isn't valid anymore.
@@ -68,23 +68,36 @@ local function build_next_queued(data)
   end
 end
 
+-- local function find_item(_, k, player)
+-- return player.get_item_count(k) > 0 and not (player.cursor_stack.valid_for_read and player.cursor_stack.name == k)
+-- end
+-- local function find_match(v, _, ghost)
+-- if type(v) == "table" then return v.ghost == ghost end
+-- end
+--Optimize for table.find
+local table_find = table.find
+local find_item=function(_, k, p) return p.get_item_count(k) > 0 and not (p.cursor_stack.valid_for_read and p.cursor_stack.name == k) end
+local find_match=function(v, _, entity) if type(v) == "table" then return v.entity == entity end end
+
 --Build the ghosts in the range of the player
-local function queue_ghosts_in_player_range(player, pos, nano_ammo)
+local function queue_ghosts_in_range(player, pos, nano_ammo, ghost_type)
   local area = Position.expand_to_area(pos, NANO.BUILD_RADIUS)
-  for index, ghost in pairs(player.surface.find_entities_filtered{area=area, name="entity-ghost", force=player.force}) do
+
+  --local main_inv = defines.inventory.player_main
+  for index, ghost in pairs(player.surface.find_entities_filtered{area=area, name=ghost_type, force=player.force}) do
     if nano_ammo.valid_for_read then
-
-      --Get first available item that places entity from inventory.
-      local _, item = table.find(ghost.ghost_prototype.items_to_place_this, function(_, k) return player.get_item_count(k) > 0 end)
-
+      --Get first available item that places entity from inventory that is not in our hand.
+      local _, item = table_find(ghost.ghost_prototype.items_to_place_this, find_item, player)
+      --if wall: Have item, Not in logistic network, can we place entity or is it tile, is not already queued, can we remove 1 item.
       if item and not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
-      and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force}
+      and ((ghost_type == "entity-ghost" and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force})
+        or ghost_type == "tile-ghost") and not table_find(global.queued, find_match, ghost)
       and player.remove_item({name=item, count=1}) == 1 then
         if index == 1 then --if we have at least 1 item to build play sound.
           player.surface.create_entity{name="sound-nanobot-creators", position = player.position}
         end
         nano_ammo.drain_ammo(1)
-        List.push_right(global.queued, {player_index=player.index, ghost=ghost, item=item})
+        List.push_right(global.queued, {action = "build_queued", player_index=player.index, entity=ghost, item=item})
       end
     else -- We ran out of ammo break out!
       break
@@ -94,12 +107,45 @@ local function queue_ghosts_in_player_range(player, pos, nano_ammo)
 end
 
 --Nano Termites
+--local max = math.max
+local function termite_queued(data)
+  local tree=data.entity
+  if tree and tree.valid then
+    --game.print("nom, nom, nom")
+    tree.health=tree.health-10
+    if tree.health > 0 then
+      List.push_right(global.queued, data)
+    else
+      tree.destroy()
+      --Do we need to raise a tree destroy event?
+    end
+  end
+end
+
+
 local function everyone_hates_trees(player, pos, nano_ammo) --luacheck: ignore
+  local area = Position.expand_to_area(pos, NANO.TERMITE_RADIUS)
+  for index, stupid_tree in pairs(player.surface.find_entities_filtered{area=area, type="tree"}) do
+    if nano_ammo.valid_for_read and not stupid_tree.surface.find_logistic_network_by_position(stupid_tree.position, player.force)
+    and not table_find(global.queued, find_match, stupid_tree) then
+    if index == 1 then player.surface.create_entity{name="sound-nanobot-creators", position = player.position} end
+      stupid_tree.order_deconstruction(player.force) --Order deconstruction to show us that the tree is queued!
+      nano_ammo.drain_ammo(1)
+      List.push_right(global.queued, {action="termite_queued", entity=stupid_tree, player_index=player.index})
+    end
+  end
 end
 
 --Nano Scrappers
 local function destroy_marked_items(player, pos, nano_ammo) --luacheck: ignore
 end
+
+local function handle_next(data)
+  local actions={build_queued=build_queued, termite_queued=termite_queued}
+  actions[data.action](data)
+end
+-- if data.action == build_queued then build_queued(data)
+-- elseif data.action=
 
 -------------------------------------------------------------------------------
 --[[Personal Roboport Stuff]]--
@@ -117,7 +163,7 @@ local function gobble_items(player, eq_names)
       end
     end
     if eq_names["equipment-bot-chip-trees"] then
-      local range = Position.expand_to_area(player.position, math.min(rad + 10000000, eq_names["equipment-bot-chip-trees"] * NANO.CHIP_RADIUS))
+      local range = Position.expand_to_area(player.position, math.min(rad + 100, eq_names["equipment-bot-chip-trees"] * NANO.CHIP_RADIUS))
       for _, item in pairs(player.surface.find_entities_filtered{area=range, type="tree"}) do
         if not item.to_be_deconstructed(player.force) then
           item.order_deconstruction(player.force)
@@ -135,7 +181,7 @@ end
 local function on_tick(event)
   --Handle building from the queue every x ticks.
   if event.tick % NANO.TICKS_PER_QUEUE == 0 and List.count(global.queued) > 0 then
-    build_next_queued(List.pop_left(global.queued))
+    handle_next(List.pop_left(global.queued))
   end
   if NANO.TICK_MOD > 0 and event.tick % NANO.TICK_MOD == 0 then
     for _, player in pairs(game.connected_players) do
@@ -146,7 +192,9 @@ local function on_tick(event)
           local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
           if gun then
             if ammo_name == "ammo-nano-constructors" then
-              queue_ghosts_in_player_range(player, player.position, nano_ammo)
+              queue_ghosts_in_range(player, player.position, nano_ammo,"entity-ghost")
+            elseif ammo_name == "ammo-nano-flooring" then
+              queue_ghosts_in_range(player, player.position, nano_ammo, "tile-ghost")
             elseif ammo_name == "ammo-nano-termites" then
               everyone_hates_trees(player, player.position, nano_ammo)
             elseif ammo_name == "ammo-nano-scrappers" then
