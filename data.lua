@@ -1,3 +1,5 @@
+defines = defines or {}
+require("stdlib/utils/colors")
 require("prototypes/proto-helpers")
 
 --Modular Equipment, When inserted into an equipment grid will automaticly mark items on ground for deconstruction

@@ -16,13 +16,13 @@ local sound_nanobot_creators = {
     variations =
     {
       {
-        filename = "__Nanobots__/sounds/robostep.ogg",
+        filename = "__base__/sound/roboport-door.ogg",
         volume = 0.75
       },
-      {
-        filename = "__Nanobots__/sounds/robostep.ogg",
-        volume = 0.75
-      }
+      -- {
+      --   filename = "__Nanobots__/sounds/robostep.ogg",
+      --   volume = 0.75
+      -- }
     }
   }
 }

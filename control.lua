@@ -56,12 +56,16 @@ end
 --Builds the next item in the queue
 local function build_queued(data)
   if data.entity.valid then
+    local surface, position = data.entity.surface, data.entity.position
     local revived, entity = data.entity.revive()
     if revived and entity and entity.valid then --raise event if entity-ghost
       local event = {tick = game.tick, player_index=data.player_index, created_entity=entity}
       game.raise_event(defines.events.on_built_entity, event)
     elseif not revived then --Give the item back if the entity was not revived
       game.players[data.player_index].insert({name=data.item, count=1})
+    end
+    if revived then
+      surface.create_entity{name="builder-cloud",position=position,force="neutral"}
     end
   else --Give the item back ghost isn't valid anymore.
     game.players[data.player_index].insert({name=data.item, count=1})
@@ -116,8 +120,7 @@ local function termite_queued(data)
     if tree.health > 0 then
       List.push_right(global.queued, data)
     else
-      tree.destroy()
-      --Do we need to raise a tree destroy event?
+      tree.die()
     end
   end
 end
