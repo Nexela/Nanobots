@@ -1,4 +1,4 @@
-local AC_RECIPES = {"ammo-nano-deconstructors", "ammo-nano-scrappers", "ammo-nano-termites", "ammo-nano-flooring"}
+local AC_RECIPES = {"ammo-nano-deconstructors", "ammo-nano-scrappers", "ammo-nano-termites"}
 local ROBO_RECIPES = {}
 for _, force in pairs(game.forces) do
   if force.technologies["automated-construction"].researched then

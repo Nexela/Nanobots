@@ -30,18 +30,13 @@ local constructors = {
       action_delivery =
       {
         type = "instant",
-        source_effects = nil,
         target_effects =
         {
           {
             type = "create-entity",
-            entity_name = "builder-cloud",
+            entity_name = "nano-cloud-big-constructors",
             trigger_created_entity=true
           },
-          -- {
-          --   type = "create-entity",
-          --   entity_name = "stone-furnace"
-          -- },
         }
       }
     }
@@ -50,9 +45,11 @@ local constructors = {
 
 local color = defines.colors.blue
 color.a = .05
-local cloud = {
+
+--cloud-big is for the gun, cloud-small is for the individual item.
+local cloud_big = {
   type = "smoke-with-trigger",
-  name = "builder-cloud",
+  name = "nano-cloud-big-constructors",
   flags = {"not-on-map"},
   show_when_smoke_off = true,
   animation =
@@ -65,7 +62,7 @@ local cloud = {
     frame_count = 45,
     animation_speed = 0.5,
     line_length = 7,
-    scale = 0.5,
+    scale = 4,
   },
   slow_down_factor = 0,
   affected_by_wind = false,
@@ -74,7 +71,7 @@ local cloud = {
   fade_away_duration = 60,
   spread_duration = 10,
   color = color,
-  action =
+  action = nil,
   {
     type = "direct",
     action_delivery =
@@ -85,30 +82,20 @@ local cloud = {
           type = "play-sound",
           sound = {
             filename = "__Nanobots__/sounds/robostep.ogg",
-            volume = 0.75
+            volume = 0.25
           },
         },
       },
-      target_effects =
-      {
-        type = "nested-result",
-        action =
-        {
-          type = "area",
-          perimeter = 11,
-          entity_flags = {"breaths-air"},
-          action_delivery =
-          {
-            type = "instant",
-            target_effects = nil,
-          }
-        }
-      }
     }
   },
-  action_frequency = 60
+  action_frequency = 120
 }
 
-data:extend({recipe, constructors, cloud})
+local cloud_small=table.deepcopy(cloud_big)
+cloud_small.name = "nano-cloud-constructors-small"
+cloud_small.animation.scale = 0.5
+cloud_small.action = nil
+
+data:extend({recipe, constructors, cloud_big, cloud_small})
 local effects = data.raw.technology["automated-construction"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-constructors"}

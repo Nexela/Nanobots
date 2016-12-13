@@ -26,23 +26,11 @@ local item_nano_gun = {
     cooldown = 30,
     movement_slow_down_factor = 0.0,
     shell_particle = nil,
-    -- {
-    -- name = "shell-particle",
-    -- direction_deviation = 0.1,
-    -- speed = 0.1,
-    -- speed_deviation = 0.03,
-    -- center = {0, 0.1},
-    -- creation_distance = -0.5,
-    -- starting_frame_speed = 0.4,
-    -- starting_frame_speed_deviation = 0.1
-    -- },
     projectile_creation_distance = 1.125,
-    range = 30,
+    range = 40,
     sound = {
       filename = "__base__/sound/roboport-door.ogg",
-      --filename = "__Nanobots__/sounds/robostep.ogg",
-      volume = 0.75
-
+      volume = 0.50
     },
   },
   stack_size = 1

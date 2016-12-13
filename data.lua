@@ -14,7 +14,7 @@ require("prototypes/ammo/ammo-nano-constructors")
 require("prototypes/ammo/ammo-nano-termites")
 require("prototypes/ammo/ammo-nano-scrappers")
 require("prototypes/ammo/ammo-nano-deconstructors")
-require("prototypes/ammo/ammo-nano-flooring")
+-- require("prototypes/ammo/ammo-nano-flooring")
 
 --Sounds
 require("prototypes/sounds")
