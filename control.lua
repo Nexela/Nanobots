@@ -130,7 +130,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
   --local main_inv = defines.inventory.player_main
   for _, ghost in pairs(player.surface.find_entities_filtered{area=area, force=player.force}) do
     if (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") then
-      if nano_ammo.valid_for_read then
+      if nano_ammo.valid and nano_ammo.valid_for_read then
         --Get first available item that places entity from inventory that is not in our hand.
         local _, item = table_find(ghost.ghost_prototype.items_to_place_this, find_item, player)
         --if wall: Have item, Not in logistic network, can we place entity or is it tile, is not already queued, can we remove 1 item.
@@ -141,9 +141,9 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
           if ghost.ghost_type=="inserter" then -- Add inserters to the end of the build queue.
             inserters[#inserters+1] = {action = "build_ghosts", player_index=player.index, entity=ghost, item=item}
           else
-            nano_ammo.drain_ammo(1)
             List.push_right(global.queued, {action = "build_ghosts", player_index=player.index, entity=ghost, item=item})
           end
+          nano_ammo.drain_ammo(1)
         end
       else -- We ran out of ammo break out!
         break
@@ -158,7 +158,7 @@ end
 local function everyone_hates_trees(player, pos, nano_ammo)
   local area = Position.expand_to_area(pos, NANO.TERMITE_RADIUS)
   for _, stupid_tree in pairs(player.surface.find_entities_filtered{area=area, type="tree"}) do
-    if nano_ammo.valid_for_read then
+    if nano_ammo.valid and nano_ammo.valid_for_read then
       local tree_area = Position.expand_to_area(stupid_tree.position, .5)
 
       if player.surface.count_entities_filtered{area=tree_area, name="nano-cloud-small-termites"} < 1 then
@@ -191,7 +191,7 @@ end
 local function destroy_marked_items(player, pos, nano_ammo, deconstructors) --luacheck: ignore
   local area = Position.expand_to_area(pos, NANO.BUILD_RADIUS)
   for _, entity in pairs(player.surface.find_entities(area)) do
-    if entity.to_be_deconstructed(player.force) and not table_find(global.queued, find_match, entity)then
+    if entity.to_be_deconstructed(player.force) and not table_find(global.queued, find_match, entity) and nano_ammo.valid and nano_ammo.valid_for_read then
       if deconstructors then
         local item_list = {}
 
