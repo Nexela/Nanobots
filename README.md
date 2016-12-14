@@ -37,3 +37,4 @@ Change Log:
 * 1.0.4 - Constructors now do floor tiles, Ghost building is queued, Visual enhancements.  (Scrappers/deconstructors don't do anything yet)
 * 1.0.5 - Silly 5 am bobmods typo
 * 1.0.6 - Scrappers and Deconstructors added, Small bug fixes/tweaks, Some entites (inserters) are added to the end of the queue.
+* 1.0.7 - Hard Crash on invalid ammo
