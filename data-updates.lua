@@ -17,7 +17,7 @@ tech.unit =
 
 --bobmods recipe changes
 if _G.bobmods and _G.bobmods.lib then
-  local replace=_G.bobmnods.lib.recipe.replace_ingredient
+  local replace=_G.bobmods.lib.recipe.replace_ingredient
   local add=_G.bobmods.lib.recipe.add_ingredient
   replace("ammo-nano-constructors", "electronic-circuit", "basic-circuit-board")
   replace("ammo-nano-scrappers", "electronic-circuit", "basic-circuit-board")
