@@ -102,6 +102,7 @@ end
 --rewrite to include tiles regardless of type.
 local function queue_ghosts_in_range(player, pos, nano_ammo)
   local area = Position.expand_to_area(pos, NANO.BUILD_RADIUS)
+  local inserters = {}
   --local main_inv = defines.inventory.player_main
   for _, ghost in pairs(player.surface.find_entities_filtered{area=area, force=player.force}) do
     if (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") then
@@ -113,16 +114,20 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
         and ((ghost.name == "entity-ghost" and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force})
           or ghost.name == "tile-ghost") and not table_find(global.queued, find_match, ghost)
         and player.remove_item({name=item, count=1}) == 1 then
-          -- if index == 1 then --if we have at least 1 item to build play sound.
-          -- player.surface.create_entity{name="sound-nanobot-creators", position = player.position}
-          -- end
+          if ghost.ghost_type=="inserter" then -- Add inserters to the end of the build queue.
+            inserters[#inserters+1] = {action = "build_ghosts", player_index=player.index, entity=ghost, item=item}
+          else
           nano_ammo.drain_ammo(1)
           List.push_right(global.queued, {action = "build_ghosts", player_index=player.index, entity=ghost, item=item})
+        end
         end
       else -- We ran out of ammo break out!
         break
       end
     end -- not an actual ghost!
+  end --Done looping through ghosts
+  for _, data in pairs(inserters) do
+    List.push_right(global.queued, data)
   end
 end
 
@@ -149,9 +154,7 @@ end
 local function nano_trigger_cloud(event)
   local area = Position.expand_to_area(event.entity.position, game.item_prototypes["gun-nano-emitter"].attack_parameters.range + 5)
   for _, character in pairs(event.entity.surface.find_entities_filtered{area=area, type="player"}) do
-    game.print("before")
     local player = (character.player and character.player.valid) and character.player -- Make sure there is a player and it is valid
-    game.print("after")
     if player and is_connected_player_ready(player) and not player.character.logistic_network then
       local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
       if gun then
