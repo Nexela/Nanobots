@@ -43,8 +43,8 @@ local constructors = {
   },
 }
 
-local color = defines.colors.blue
-color.a = .05
+local color = defines.colors.lightblue
+color.a = .040
 
 --cloud-big is for the gun, cloud-small is for the individual item.
 local cloud_big = {
