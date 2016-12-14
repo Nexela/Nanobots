@@ -2,6 +2,7 @@
 local recipe_nano_gun = {
   type = "recipe",
   name = "gun-nano-emitter",
+  enabled=false,
   energy_required = 30,
   ingredients =
   {
@@ -45,4 +46,3 @@ data:extend({recipe_nano_gun, item_nano_gun, category_nano_gun})
 
 local effects = data.raw.technology["automated-construction"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="gun-nano-emitter"}
---effects[#effects + 1] = {type = "unlock-recipe", recipe="nano-ammo"}
