@@ -27,7 +27,7 @@ function Game.get_valid_player(player_or_index)
       return game.players[player_or_index]
     end
   elseif type(player_or_index) == "table" and player_or_index.valid then
-      return player_or_index
+    return player_or_index
   end
   return false
 end
@@ -38,7 +38,7 @@ function Game.valid_force(force)
   elseif type(force) == "table" and game.forces[force.name] and game.forces[force.name].valid then
     return true
   end
-return false
+  return false
 end
 
 --------------------------------------------------------------------------------------
@@ -264,6 +264,11 @@ function table.val_to_str ( v )
       if v == value then return v end
     end
     return nil
+  end
+
+  function table.add_values(tbl, key, val)
+    tbl[key] = (tbl[key] or 0) + val
+    return tbl
   end
 
   function table.getcount(tbl)

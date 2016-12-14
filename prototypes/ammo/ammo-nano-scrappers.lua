@@ -23,30 +23,79 @@ local scrappers = {
   ammo_type =
   {
     category = "nano-ammo",
+    target_type = "position",
     action =
     {
       type = "direct",
       action_delivery =
       {
         type = "instant",
-        source_effects =
-        {
-          type = "create-explosion",
-          entity_name = "explosion-gunshot"
-        },
         target_effects =
         {
           {
-            type = "damage",
-            damage = { amount = 0 , type = "physical"}
-          }
+            type = "create-entity",
+            entity_name = "nano-cloud-big-scrappers",
+            trigger_created_entity=true
+          },
         }
       }
     }
   },
-
 }
 
-data:extend({recipe, scrappers})
+local color = defines.colors.lightred
+color.a = .040
+
+--cloud-big is for the gun, cloud-small is for the individual item.
+local cloud_big = {
+  type = "smoke-with-trigger",
+  name = "nano-cloud-big-scrappers",
+  flags = {"not-on-map"},
+  show_when_smoke_off = true,
+  animation =
+  {
+    filename = "__base__/graphics/entity/cloud/cloud-45-frames.png",
+    flags = { "compressed" },
+    priority = "low",
+    width = 256,
+    height = 256,
+    frame_count = 45,
+    animation_speed = 0.5,
+    line_length = 7,
+    scale = 4,
+  },
+  slow_down_factor = 0,
+  affected_by_wind = false,
+  cyclic = true,
+  duration = 60*2,
+  fade_away_duration = 60,
+  spread_duration = 10,
+  color = color,
+  action = nil,
+  {
+    type = "direct",
+    action_delivery =
+    {
+      type = "instant",
+      source_effects = {
+        {
+          type = "play-sound",
+          sound = {
+            filename = "__Nanobots__/sounds/robostep.ogg",
+            volume = 0.25
+          },
+        },
+      },
+    }
+  },
+  action_frequency = 120
+}
+
+local cloud_small=table.deepcopy(cloud_big)
+cloud_small.name = "nano-cloud-small-scrappers"
+cloud_small.animation.scale = 0.5
+cloud_small.action = nil
+
+data:extend({recipe, scrappers, cloud_big, cloud_small})
 local effects = data.raw.technology["automated-construction"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-scrappers"}

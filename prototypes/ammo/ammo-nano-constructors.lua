@@ -92,7 +92,7 @@ local cloud_big = {
 }
 
 local cloud_small=table.deepcopy(cloud_big)
-cloud_small.name = "nano-cloud-constructors-small"
+cloud_small.name = "nano-cloud-small-constructors"
 cloud_small.animation.scale = 0.5
 cloud_small.action = nil
 

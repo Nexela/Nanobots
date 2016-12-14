@@ -21,7 +21,7 @@ if _G.bobmods and _G.bobmods.lib then
   local add=_G.bobmods.lib.recipe.add_ingredient
   replace("gun-nano-emitter", "electronic-circuit", "basic-circuit-board")
   replace("ammo-nano-constructors", "electronic-circuit", "basic-circuit-board")
-  replace("ammo-nano-scrappers", "electronic-circuit", "basic-circuit-board")
+  --replace("ammo-nano-scrappers", "electronic-circuit", "basic-circuit-board")
   replace("ammo-nano-termites", "electronic-circuit", "basic-circuit-board")
   add("equipment-bot-chip-items", "robot-brain-constuction")
   add("equipment-bot-chip-trees", "robot-brain-constuction")

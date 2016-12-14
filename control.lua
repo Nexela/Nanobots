@@ -56,17 +56,41 @@ end
 
 local queue = {}
 
---Nano Termites, re-write in progress!
-function queue.termite(data)
-  local tree=data.entity
-  if tree and tree.valid then
-    --game.print("nom, nom, nom")
-    tree.health=tree.health-10
-    if tree.health > 0 then
-      List.push_right(global.queued, data)
-    else
-      tree.die()
+-- --Nano Termites, re-write in progress!
+-- function queue.termite(data)
+-- local tree=data.entity
+-- if tree and tree.valid then
+-- --game.print("nom, nom, nom")
+-- tree.health=tree.health-10
+-- if tree.health > 0 then
+-- List.push_right(global.queued, data)
+-- else
+-- tree.die()
+-- end
+-- end
+-- end
+
+function queue.deconstruction(data)
+  if data.entity.valid then
+    local player = game.players[data.player_index]
+    --Start inserting items!
+    for item, count in pairs(data.item_list) do
+      local inserted = player.insert({name=item, count=count})
+      if inserted ~= count then
+        player.surface.spill_item_stack(player.position,{name=item, count=count-inserted},true)
+      end
     end
+
+    --raise the destory event?
+    game.raise_event(defines.events.on_preplayer_mined_item, {tick=game.tick, player_index=player.index, entity=data.entity})
+    data.entity.destroy()
+  end
+end
+
+function queue.scrap(data)
+  if data.entity.valid then
+    game.raise_event(defines.events.on_entity_died, {tick=game.tick, force=game.players[data.player_index].force, entity=data.entity})
+    data.entity.destroy()
   end
 end
 
@@ -76,11 +100,11 @@ function queue.build_ghosts(data)
     local surface, position = data.entity.surface, data.entity.position
     local revived, entity = data.entity.revive()
     if revived then
-      surface.create_entity{name="nano-cloud-constructors-small", position=position, force="neutral"}
+      surface.create_entity{name="nano-cloud-small-constructors", position=position, force="neutral"}
       if entity and entity.valid then --raise event if entity-ghost
         game.raise_event(defines.events.on_built_entity, {tick = game.tick, player_index=data.player_index, created_entity=entity})
       end
-    else --Give the item back if the entity was not revived
+    else --Give the item back if the entity was not revived TODO: Need to check inserted count!
       game.players[data.player_index].insert({name=data.item, count=1})
     end
   else --Give the item back ghost isn't valid anymore.
@@ -117,9 +141,9 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
           if ghost.ghost_type=="inserter" then -- Add inserters to the end of the build queue.
             inserters[#inserters+1] = {action = "build_ghosts", player_index=player.index, entity=ghost, item=item}
           else
-          nano_ammo.drain_ammo(1)
-          List.push_right(global.queued, {action = "build_ghosts", player_index=player.index, entity=ghost, item=item})
-        end
+            nano_ammo.drain_ammo(1)
+            List.push_right(global.queued, {action = "build_ghosts", player_index=player.index, entity=ghost, item=item})
+          end
         end
       else -- We ran out of ammo break out!
         break
@@ -147,8 +171,66 @@ local function everyone_hates_trees(player, pos, nano_ammo)
   end
 end
 
+--Gets and removes all the items inside an entity.
+local function get_all_items_inside(entity)
+  local item_list = {}
+  for _, inv in pairs(defines.inventory) do
+    local inventory = entity.get_inventory(inv)
+    if inventory and inventory.valid then
+      for item_name, count in pairs(inventory.get_contents()) do
+        --item_list[item_name] = (item_list[item_name] or 0) + count
+        table.add_values(item_list, item_name, count)
+        inventory.remove({name=item_name, count=count})
+      end
+    end
+  end
+  return item_list
+end
+
 --Nano Scrappers
-local function destroy_marked_items(player, pos, nano_ammo) --luacheck: ignore
+local function destroy_marked_items(player, pos, nano_ammo, deconstructors) --luacheck: ignore
+  local area = Position.expand_to_area(pos, NANO.BUILD_RADIUS)
+  for _, entity in pairs(player.surface.find_entities(area)) do
+    if entity.to_be_deconstructed(player.force) and not table_find(global.queued, find_match, entity)then
+      if deconstructors then
+        local item_list = {}
+
+        entity.surface.create_entity{name="nano-cloud-small-deconstructors", position=entity.position, force="neutral"}
+        nano_ammo.drain_ammo(1)
+
+        --Get all the damn items and clear the inventories
+        for item_name, count in pairs(get_all_items_inside(entity)) do
+          table.add_values(item_list, item_name, count)
+        end
+
+        --Loop through the minable products and add the item(s) to the list
+        if entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable then
+          local products = entity.prototype.mineable_properties.products
+          if products then
+            for _, item in pairs(products) do
+              table.add_values(item_list, item.name, item.amount or math.random(item.amount_min, item.amount_max))
+            end
+          end
+        end
+
+        --Add to the list if this is an item-entity
+        if entity.type == "item-entity" then
+          table.add_values(item_list, entity.stack.name, entity.stack.count)
+          --item_list[entity.stack.name] = (item_list[entity.stack.name] or 0) + entity.stack.count
+        end
+
+        --move to queued data
+        --game.print(serpent.dump(item_list))
+        local data = {player_index=player.index, action="deconstruction", item_list=item_list, entity=entity}
+        List.push_right(global.queued, data)
+      elseif not deconstructors and not entity.has_flag("breaths-air") then
+        entity.surface.create_entity{name="nano-cloud-small-scrappers", position=entity.position, force="neutral"}
+        nano_ammo.drain_ammo(1)
+        local data = {player_index=player.index, action="scrap", entity=entity}
+        List.push_right(global.queued, data)
+      end
+    end
+  end
 end
 
 local function nano_trigger_cloud(event)
@@ -165,10 +247,10 @@ local function nano_trigger_cloud(event)
           everyone_hates_trees(player, event.entity.position, nano_ammo)
 
         elseif ammo_name == "ammo-nano-scrappers" and event.entity.name == "nano-cloud-big-scrappers" then
-          destroy_marked_items(player, event.entity.position, nano_ammo)
+          destroy_marked_items(player, event.entity.position, nano_ammo, false)
 
         elseif ammo_name == "ammo-nano-deconstructors" and event.entity.name == "nano-cloud-big-deconstructors" then
-          destroy_marked_items(player, event.entity.position, nano_ammo)
+          destroy_marked_items(player, event.entity.position, nano_ammo, true)
 
         end
       end
@@ -223,12 +305,12 @@ local function on_tick(event)
           if gun then
             if ammo_name == "ammo-nano-constructors" then
               queue_ghosts_in_range(player, player.position, nano_ammo)
-            elseif ammo_name == "ammo-nano-flooring" then
-              queue_ghosts_in_range(player, player.position, nano_ammo)
             elseif ammo_name == "ammo-nano-termites" then
               everyone_hates_trees(player, player.position, nano_ammo)
             elseif ammo_name == "ammo-nano-scrappers" then
-              destroy_marked_items(player, player.position, nano_ammo)
+              destroy_marked_items(player, player.position, nano_ammo, false)
+            elseif ammo_name == "ammo-nano-deconstructors" then
+              destroy_marked_items(player, player.position, nano_ammo, true)
             end
           end --Auto Nano Bots
           --Do AutoDeconstructMarking
