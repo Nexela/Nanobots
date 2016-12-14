@@ -126,7 +126,7 @@ local cloud_small = {
       action =
       {
         type = "area",
-        perimeter = 1,
+        perimeter = .5,
         force="all",
         entity_flags = {"placeable-neutral"},
         action_delivery =

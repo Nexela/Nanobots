@@ -149,7 +149,9 @@ end
 local function nano_trigger_cloud(event)
   local area = Position.expand_to_area(event.entity.position, game.item_prototypes["gun-nano-emitter"].attack_parameters.range + 5)
   for _, character in pairs(event.entity.surface.find_entities_filtered{area=area, type="player"}) do
-    local player = character.player and character.player.valid and character.player -- Make sure there is a player and it is valid
+    game.print("before")
+    local player = (character.player and character.player.valid) and character.player -- Make sure there is a player and it is valid
+    game.print("after")
     if player and is_connected_player_ready(player) and not player.character.logistic_network then
       local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
       if gun then
