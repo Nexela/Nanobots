@@ -52,26 +52,26 @@ local function are_bots_ready(character)
 end
 
 -------------------------------------------------------------------------------
---[[Nano Emitter Stuff]]--
-
+--[[Nano Emitter Queue Handler]]--
 local queue = {}
 
--- --Nano Termites, re-write in progress!
+--Nano Termites, Currently Unused!
 -- function queue.termite(data)
--- local tree=data.entity
--- if tree and tree.valid then
--- --game.print("nom, nom, nom")
--- tree.health=tree.health-10
--- if tree.health > 0 then
--- List.push_right(global.queued, data)
--- else
--- tree.die()
--- end
--- end
+--   local tree=data.entity
+--   if tree and tree.valid then
+--     --game.print("nom, nom, nom")
+--     tree.health=tree.health-10
+--     if tree.health > 0 then
+--       List.push_right(global.queued, data)
+--     else
+--       tree.die()
+--     end
+--   end
 -- end
 
 function queue.deconstruction(data)
   if data.entity.valid then
+    data.entity.surface.create_entity{name="nano-cloud-small-deconstructors", position=data.entity.position, force="neutral"}
     local player = game.players[data.player_index]
     --Start inserting items!
     for item, count in pairs(data.item_list) do
@@ -89,6 +89,7 @@ end
 
 function queue.scrap(data)
   if data.entity.valid then
+    data.entity.surface.create_entity{name="nano-cloud-small-scrappers", position=data.entity.position, force="neutral"}
     game.raise_event(defines.events.on_entity_died, {tick=game.tick, force=game.players[data.player_index].force, entity=data.entity})
     data.entity.destroy()
   end
@@ -112,6 +113,9 @@ function queue.build_ghosts(data)
   end
 end
 
+-------------------------------------------------------------------------------
+--[[Nano Emitter - Functions]]--
+
 --Optimize for table.find
 --local table_merge=table.merge
 local table_find = table.find
@@ -134,10 +138,10 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
         --Get first available item that places entity from inventory that is not in our hand.
         local _, item = table_find(ghost.ghost_prototype.items_to_place_this, find_item, player)
         --if wall: Have item, Not in logistic network, can we place entity or is it tile, is not already queued, can we remove 1 item.
-        if item and not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
+        if item
         and ((ghost.name == "entity-ghost" and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force})
-          or ghost.name == "tile-ghost") and not table_find(global.queued, find_match, ghost)
-        and player.remove_item({name=item, count=1}) == 1 then
+          or ghost.name == "tile-ghost") and not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
+          and not table_find(global.queued, find_match, ghost) and player.remove_item({name=item, count=1}) == 1 then
           if ghost.ghost_type=="inserter" then -- Add inserters to the end of the build queue.
             inserters[#inserters+1] = {action = "build_ghosts", player_index=player.index, entity=ghost, item=item}
           else
@@ -150,7 +154,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
       end
     end -- not an actual ghost!
   end --Done looping through ghosts
-  for _, data in pairs(inserters) do
+  for _, data in ipairs(inserters) do
     List.push_right(global.queued, data)
   end
 end
@@ -191,7 +195,7 @@ end
 local function destroy_marked_items(player, pos, nano_ammo, deconstructors) --luacheck: ignore
   local area = Position.expand_to_area(pos, NANO.BUILD_RADIUS)
   for _, entity in pairs(player.surface.find_entities(area)) do
-    if entity.to_be_deconstructed(player.force) and not table_find(global.queued, find_match, entity) and nano_ammo.valid and nano_ammo.valid_for_read then
+    if entity.to_be_deconstructed(player.force) and (nano_ammo.valid and nano_ammo.valid_for_read) and not table_find(global.queued, find_match, entity) then
       if deconstructors then
         local item_list = {}
 
@@ -216,11 +220,9 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors) --lu
         --Add to the list if this is an item-entity
         if entity.type == "item-entity" then
           table.add_values(item_list, entity.stack.name, entity.stack.count)
-          --item_list[entity.stack.name] = (item_list[entity.stack.name] or 0) + entity.stack.count
         end
 
-        --move to queued data
-        --game.print(serpent.dump(item_list))
+        --Queue Data
         local data = {player_index=player.index, action="deconstruction", item_list=item_list, entity=entity}
         List.push_right(global.queued, data)
       elseif not deconstructors and not entity.has_flag("breaths-air") then
