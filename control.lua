@@ -37,7 +37,7 @@ local function get_gun_ammo_name(player, gun_name)
   local index = player.character.selected_gun_index
   local gun = player.get_inventory(defines.inventory.player_guns)[index]
   local ammo = player.get_inventory(defines.inventory.player_ammo)[index]
-  if gun.valid_for_read and gun.name == gun_name and ammo.valid_for_read then
+  if gun.valid_for_read and gun.name == gun_name and ammo.valid and ammo.valid_for_read then
     return gun, ammo, ammo.name
   end
   return nil, nil, nil
@@ -192,7 +192,7 @@ local function get_all_items_inside(entity)
 end
 
 --Nano Scrappers
-local function destroy_marked_items(player, pos, nano_ammo, deconstructors) --luacheck: ignore
+local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
   local area = Position.expand_to_area(pos, NANO.BUILD_RADIUS)
   for _, entity in pairs(player.surface.find_entities(area)) do
     if entity.to_be_deconstructed(player.force) and (nano_ammo.valid and nano_ammo.valid_for_read) and not table_find(global.queued, find_match, entity) then
