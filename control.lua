@@ -330,12 +330,13 @@ script.on_event(defines.events.on_tick, on_tick)
 
 --Scripts to run through on trigger created entity
 --Possible movement to stdlib events in the future.
-local function triggered_entity(event)
-  if string.contains(event.entity.name,"nano%-cloud%-big%-") then
-    nano_trigger_cloud(event)
-  end
-end
-script.on_event(defines.events.on_trigger_created_entity, triggered_entity)
+--Due to a hard crash bug the shooting event will be disabled until a solution is found.
+-- local function triggered_entity(event)
+--   if string.contains(event.entity.name,"nano%-cloud%-big%-") then
+--     nano_trigger_cloud(event)
+--   end
+-- end
+-- script.on_event(defines.events.on_trigger_created_entity, triggered_entity)
 
 -------------------------------------------------------------------------------
 --[[Init]]--
