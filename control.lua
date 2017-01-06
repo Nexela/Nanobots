@@ -82,16 +82,26 @@ function queue.deconstruction(data)
     end
 
     --raise the destory event?
-    game.raise_event(defines.events.on_preplayer_mined_item, {tick=game.tick, player_index=player.index, entity=data.entity})
-    data.entity.destroy()
+    if data.entity.name ~= "deconstructible-tile-proxy" then
+        game.raise_event(defines.events.on_preplayer_mined_item, {tick=game.tick, player_index=player.index, entity=data.entity})
+        data.entity.destroy()
+    else
+        local surface = data.entity.surface
+        surface.set_tiles({{position=data.entity.position, name = surface.get_tile(data.entity.position.x,data.entity.position.y).hidden_tile}})
+    end
   end
 end
 
 function queue.scrap(data)
   if data.entity.valid then
     data.entity.surface.create_entity{name="nano-cloud-small-scrappers", position=data.entity.position, force="neutral"}
-    game.raise_event(defines.events.on_entity_died, {tick=game.tick, force=game.players[data.player_index].force, entity=data.entity})
-    data.entity.destroy()
+    if data.entity.name ~= "deconstructible-tile-proxy" then
+        game.raise_event(defines.events.on_entity_died, {tick=game.tick, force=game.players[data.player_index].force, entity=data.entity})
+        data.entity.destroy()
+    else
+        local surface = data.entity.surface
+        surface.set_tiles({{position=data.entity.position, name = surface.get_tile(data.entity.position.x,data.entity.position.y).hidden_tile}})
+    end
   end
 end
 
@@ -206,17 +216,20 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
         for item_name, count in pairs(get_all_items_inside(entity)) do
           table.add_values(item_list, item_name, count)
         end
-
+        local products
+        local tile = entity.surface.get_tile(entity.position.x, entity.position.y)
         --Loop through the minable products and add the item(s) to the list
         if entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable then
-          local products = entity.prototype.mineable_properties.products
-          if products then
-            for _, item in pairs(products) do
-              table.add_values(item_list, item.name, item.amount or math.random(item.amount_min, item.amount_max))
-            end
+          products = entity.prototype.mineable_properties.products
+        elseif entity.name == "deconstructible-tile-proxy"
+          and tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
+            products = tile.prototype.mineable_properties.products
+        end
+        if products then
+          for _, item in pairs(products) do
+            table.add_values(item_list, item.name, item.amount or math.random(item.amount_min, item.amount_max))
           end
         end
-
         --Add to the list if this is an item-entity
         if entity.type == "item-entity" then
           table.add_values(item_list, entity.stack.name, entity.stack.count)
