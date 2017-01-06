@@ -87,7 +87,10 @@ function queue.deconstruction(data)
         data.entity.destroy()
     else
         local surface = data.entity.surface
-        surface.set_tiles({{position=data.entity.position, name = surface.get_tile(data.entity.position.x,data.entity.position.y).hidden_tile}})
+        local position = data.entity.position
+        data.entity.destroy()
+        surface.set_tiles({{position=position, name = surface.get_hidden_tile(position)}} )
+
     end
   end
 end
@@ -100,7 +103,7 @@ function queue.scrap(data)
         data.entity.destroy()
     else
         local surface = data.entity.surface
-        surface.set_tiles({{position=data.entity.position, name = surface.get_tile(data.entity.position.x,data.entity.position.y).hidden_tile}})
+        surface.set_tiles({{position=data.entity.position, name = surface.get_hidden_tile(data.entity.position)}})
     end
   end
 end
@@ -208,7 +211,6 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
     if entity.to_be_deconstructed(player.force) and (nano_ammo.valid and nano_ammo.valid_for_read) and not table_find(global.queued, find_match, entity) then
       if deconstructors then
         local item_list = {}
-
         entity.surface.create_entity{name="nano-cloud-small-deconstructors", position=entity.position, force="neutral"}
         nano_ammo.drain_ammo(1)
 
@@ -217,13 +219,15 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
           table.add_values(item_list, item_name, count)
         end
         local products
-        local tile = entity.surface.get_tile(entity.position.x, entity.position.y)
+
         --Loop through the minable products and add the item(s) to the list
         if entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable then
           products = entity.prototype.mineable_properties.products
-        elseif entity.name == "deconstructible-tile-proxy"
-          and tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
+        elseif entity.name == "deconstructible-tile-proxy" then
+          local tile = entity.surface.get_tile(entity.position.x, entity.position.y)
+          if tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
             products = tile.prototype.mineable_properties.products
+          end
         end
         if products then
           for _, item in pairs(products) do
@@ -238,7 +242,7 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
         --Queue Data
         local data = {player_index=player.index, action="deconstruction", item_list=item_list, entity=entity}
         List.push_right(global.queued, data)
-      elseif not deconstructors and not entity.has_flag("breaths-air") then
+      elseif not entity.has_flag("breaths-air") then
         entity.surface.create_entity{name="nano-cloud-small-scrappers", position=entity.position, force="neutral"}
         nano_ammo.drain_ammo(1)
         local data = {player_index=player.index, action="scrap", entity=entity}
