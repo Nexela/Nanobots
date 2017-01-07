@@ -96,11 +96,11 @@ function queue.scrap(data)
   if data.entity.valid then
     data.entity.surface.create_entity{name="nano-cloud-small-scrappers", position=data.entity.position, force="neutral"}
     if data.entity.name ~= "deconstructible-tile-proxy" then
-        game.raise_event(defines.events.on_entity_died, {tick=game.tick, force=game.players[data.player_index].force, entity=data.entity})
-        data.entity.destroy()
+      game.raise_event(defines.events.on_entity_died, {tick=game.tick, force=game.players[data.player_index].force, entity=data.entity})
+      data.entity.destroy()
     else
-        local surface = data.entity.surface
-        surface.set_tiles({{position=data.entity.position, name = surface.get_hidden_tile(data.entity.position)}})
+      local surface = data.entity.surface
+      surface.set_tiles({{position=data.entity.position, name = surface.get_hidden_tile(data.entity.position)}})
     end
   end
 end
@@ -180,7 +180,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
         local _, item = table_find(ghost.ghost_prototype.items_to_place_this, find_item, player)
         --if wall: Have item, Not in logistic network, can we place entity or is it tile, is not already queued, can we remove 1 item.
         if item
-        and ((ghost.name == "entity-ghost" and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force})
+        and ((ghost.name == "entity-ghost" and pickup_items_on_ground(ghost, player) and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force})
           or ghost.name == "tile-ghost") and not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
           and not table_find(global.queued, find_match, ghost) and player.remove_item({name=item, count=1}) == 1 then
           if ghost.ghost_type=="inserter" then -- Add inserters to the end of the build queue.
@@ -194,9 +194,10 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
         break
       end
       -- Check if entity needs repair (robots don't correctly heal so they are excluded.)
-    elseif ghost.health and ghost.health < ghost.prototype.max_health and not ghost.type:find("robot") and nano_ammo.valid and nano_ammo.valid_for_read then
-      List.push_right(global.queued, {action = "repair", player_index=player.index, entity=ghost})
-      nano_ammo.drain_ammo(5)
+      if #ghost.surface.find_entities_filtered{name="nano-cloud-small-repair", area={{ghost.position.x-0.75, ghost.position.y-0.75}, {ghost.position.x+0.75, ghost.position.y+0.75}}} == 0 then
+        ghost.surface.create_entity{name="nano-cloud-small-repair", position=ghost.position, force="neutral"}
+        nano_ammo.drain_ammo(1)
+      end
     end -- not an actual ghost and doesn't need repair!
   end --Done looping through ghosts
   for _, data in ipairs(inserters) do
@@ -234,6 +235,20 @@ local function get_all_items_inside(entity)
     end
   end
   return item_list
+end
+
+function pickup_items_on_ground(entity, player)
+    local surface, position = entity.surface, entity.position
+    local items_on_ground = {}
+    local collision_mask = entity.ghost_prototype.selection_box
+      for _, item_on_ground in pairs(surface.find_entities_filtered{name="item-on-ground", area={{position.x + collision_mask.left_top.x, position.y + collision_mask.left_top.y}, {position.x + collision_mask.right_bottom.x, position.y + collision_mask.right_bottom.y}}}) do
+        items_on_ground[item_on_ground.stack.name] = items_on_ground[item_on_ground.stack.name] and items_on_ground[item_on_ground.stack.name] + item_on_ground.stack.count or item_on_ground.stack.count
+        item_on_ground.destroy()
+    end
+    for name, count in pairs(items_on_ground) do
+        player.insert{name=name, count=count}
+    end
+    return true
 end
 
 --Nano Scrappers
@@ -286,7 +301,7 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
   end
 end
 
-local function nano_trigger_cloud(event)
+local function nano_trigger_cloud(event) --luacheck: ignore
   local area = Position.expand_to_area(event.entity.position, game.item_prototypes["gun-nano-emitter"].attack_parameters.range + 5)
   for _, character in pairs(event.entity.surface.find_entities_filtered{area=area, type="player"}) do
     local player = (character.player and character.player.valid) and character.player -- Make sure there is a player and it is valid
