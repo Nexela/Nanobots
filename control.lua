@@ -194,6 +194,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
         break
       end
       -- Check if entity needs repair (robots don't correctly heal so they are excluded.)
+    elseif ghost.health  and ghost.health > 0 and ghost.health < ghost.prototype.max_health and not ghost.type:find("robot") and nano_ammo.valid and nano_ammo.valid_for_read then
       if #ghost.surface.find_entities_filtered{name="nano-cloud-small-repair", area={{ghost.position.x-0.75, ghost.position.y-0.75}, {ghost.position.x+0.75, ghost.position.y+0.75}}} == 0 then
         ghost.surface.create_entity{name="nano-cloud-small-repair", position=ghost.position, force="neutral"}
         nano_ammo.drain_ammo(1)
