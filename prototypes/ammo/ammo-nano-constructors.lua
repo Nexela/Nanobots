@@ -6,7 +6,8 @@ local recipe = {
   ingredients =
   {
     {"copper-plate", 5},
-    {"electronic-circuit", 1}
+    {"electronic-circuit", 1},
+    {"repair-pack", 1}
   },
   result = "ammo-nano-constructors"
 }
@@ -14,7 +15,7 @@ local recipe = {
 local constructors = {
   type = "ammo",
   name = "ammo-nano-constructors",
-  icon = "__Nanobots__/graphics/icons/nano-ammo-constructors.png",
+  icon="__Nanobots__/graphics/icons/nano-ammo-constructors.png",
   flags = {"goes-to-main-inventory"},
   magazine_size = 20,
   subgroup = "tool",
@@ -96,6 +97,64 @@ cloud_small.name = "nano-cloud-small-constructors"
 cloud_small.animation.scale = 0.5
 cloud_small.action = nil
 
-data:extend({recipe, constructors, cloud_big, cloud_small})
+local repair_color = defines.colors.darkblue
+repair_color.a = 0.25
+
+local cloud_small_repair={
+  type = "smoke-with-trigger",
+  name = "nano-cloud-small-repair",
+  flags = {"not-on-map"},
+  show_when_smoke_off = true,
+  animation =
+  {
+    filename = "__base__/graphics/entity/cloud/cloud-45-frames.png",
+    flags = { "compressed" },
+    priority = "low",
+    width = 256,
+    height = 256,
+    frame_count = 45,
+    animation_speed = 0.5,
+    line_length = 7,
+    scale = 0.5,
+  },
+  slow_down_factor = 0,
+  affected_by_wind = false,
+  cyclic = true,
+  duration = 200,
+  fade_away_duration = 2*60,
+  spread_duration = 10,
+  color = repair_color,
+  action =
+{
+  type = "direct",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      type = "nested-result",
+      action =
+      {
+        type = "area",
+        perimeter = 0.75,
+        force="all",
+        entity_flags = {"player-creation"},
+        action_delivery =
+        {
+          type = "instant",
+          target_effects =
+          {
+            type = "damage",
+            damage = { amount = -1, type = "physical"}
+          }
+        }
+      }
+    }
+  }
+},
+action_frequency = 1
+}
+
+data:extend({recipe, constructors, cloud_big, cloud_small, cloud_small_repair})
 local effects = data.raw.technology["automated-construction"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-constructors"}

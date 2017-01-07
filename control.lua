@@ -80,7 +80,6 @@ function queue.deconstruction(data)
         player.surface.spill_item_stack(player.position,{name=item, count=count-inserted},true)
       end
     end
-
     --raise the destory event?
     if data.entity.name ~= "deconstructible-tile-proxy" then
         game.raise_event(defines.events.on_preplayer_mined_item, {tick=game.tick, player_index=player.index, entity=data.entity})
@@ -88,9 +87,7 @@ function queue.deconstruction(data)
     else
         local surface = data.entity.surface
         local position = data.entity.position
-        data.entity.destroy()
         surface.set_tiles({{position=position, name = surface.get_hidden_tile(position)}} )
-
     end
   end
 end
@@ -112,9 +109,33 @@ end
 function queue.build_ghosts(data)
   if data.entity.valid then
     local surface, position = data.entity.surface, data.entity.position
+    local item_requests = data.entity.item_requests
+    local temp_item_requests = item_requests
+    local module_contents = {}
+    data.entity.item_requests = {}
+    if (data.entity.ghost_type == "assembling-machine" and data.entity.recipe) or data.entity.ghost_type ~= "assembling-machine" then
+      for i,v in pairs(item_requests) do
+        local removed_modules = game.players[data.player_index].remove_item({name=v.item, count=v.count})
+        if removed_modules > 0 then
+          table.insert(module_contents, {name=v.item, count=removed_modules})
+        end
+        if removed_modules < v.count then
+          temp_item_requests[i].count = v.count - removed_modules
+        else
+          temp_item_requests[i] = nil
+        end
+      end
+    end
+    data.entity.item_requests = temp_item_requests
     local revived, entity = data.entity.revive()
     if revived then
       surface.create_entity{name="nano-cloud-small-constructors", position=position, force="neutral"}
+      local module_inventory = entity.get_module_inventory()
+      if module_inventory then
+        for i,v in pairs(module_contents) do
+          module_inventory.insert(v)
+        end
+      end
       if entity and entity.valid then --raise event if entity-ghost
         game.raise_event(defines.events.on_built_entity, {tick = game.tick, player_index=data.player_index, created_entity=entity})
       end
@@ -123,6 +144,13 @@ function queue.build_ghosts(data)
     end
   else --Give the item back ghost isn't valid anymore.
     game.players[data.player_index].insert({name=data.item, count=1})
+  end
+end
+
+
+function queue.repair(data)
+  if data.entity.valid then
+    data.entity.surface.create_entity{name="nano-cloud-small-repair", position=data.entity.position, force="neutral"}
   end
 end
 
@@ -165,7 +193,11 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
       else -- We ran out of ammo break out!
         break
       end
-    end -- not an actual ghost!
+      -- Check if entity needs repair (robots don't correctly heal so they are excluded.)
+    elseif ghost.health and ghost.health < ghost.prototype.max_health and not ghost.type:find("robot") and nano_ammo.valid and nano_ammo.valid_for_read then
+      List.push_right(global.queued, {action = "repair", player_index=player.index, entity=ghost})
+      nano_ammo.drain_ammo(5)
+    end -- not an actual ghost and doesn't need repair!
   end --Done looping through ghosts
   for _, data in ipairs(inserters) do
     List.push_right(global.queued, data)
@@ -215,8 +247,10 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
         nano_ammo.drain_ammo(1)
 
         --Get all the damn items and clear the inventories
-        for item_name, count in pairs(get_all_items_inside(entity)) do
-          table.add_values(item_list, item_name, count)
+        if entity.has_items_inside() then
+            for item_name, count in pairs(get_all_items_inside(entity)) do
+              table.add_values(item_list, item_name, count)
+            end
         end
         local products
 
@@ -224,7 +258,7 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
         if entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable then
           products = entity.prototype.mineable_properties.products
         elseif entity.name == "deconstructible-tile-proxy" then
-          local tile = entity.surface.get_tile(entity.position.x, entity.position.y)
+          local tile = entity.surface.get_tile(entity.position)
           if tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
             products = tile.prototype.mineable_properties.products
           end
