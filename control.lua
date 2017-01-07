@@ -98,10 +98,11 @@ end
 --Builds the next item in the queue
 function queue.build_ghosts(data)
   if data.entity.valid then
-    local surface, position = data.entity.surface, data.entity.position
+    local surface, position, ppos = data.entity.surface, data.entity.position, game.players[data.player_index].position
     local revived, entity = data.entity.revive()
     if revived then
-      surface.create_entity{name="nano-cloud-small-constructors", position=position, force="neutral"}
+      surface.create_entity{name="nano-cloud-projectile-constructors", position=ppos, force="neutral", target=position, speed=.05}
+      --surface.create_entity{name="nano-cloud-small-constructors", position=position, force="neutral"}
       if entity and entity.valid then --raise event if entity-ghost
         game.raise_event(defines.events.on_built_entity, {tick = game.tick, player_index=data.player_index, created_entity=entity})
       end
@@ -235,7 +236,7 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
   end
 end
 
-local function nano_trigger_cloud(event)
+local function nano_trigger_cloud(event) --luacheck: ignore
   local area = Position.expand_to_area(event.entity.position, game.item_prototypes["gun-nano-emitter"].attack_parameters.range + 5)
   for _, character in pairs(event.entity.surface.find_entities_filtered{area=area, type="player"}) do
     local player = (character.player and character.player.valid) and character.player -- Make sure there is a player and it is valid
