@@ -2,18 +2,19 @@
 local NANO = require("config")
 require("stdlib/utils/utils")
 local Position = require("stdlib/area/position")
+local Area = require("stdlib/area/area")
 local List = require("stdlib/utils/list")
 
---Is the player connected, not afk, and have an attached character
---player: the player object
---return: true or false
+-- Is the player connected, not afk, and have an attached character
+-- @param player: the player object
+-- @return bool: player is connected and ready
 local function is_connected_player_ready(player)
   return (player.afk_time < NANO.TICK_MOD * 1.5 and player.character and player.force.technologies["automated-construction"].researched) or false
 end
 
---Loop through armor and return a table of valid equipment names and counts
---player: the player object
---return: a table of valid equipment names.
+-- Loop through armor and return a table of valid equipment names and counts
+-- @param player: the player object
+-- @return table: a table of valid equipment, name as key, count as value .
 local function get_valid_equipment_names(player)
   local armor = player.get_inventory(defines.inventory.player_armor)
   local list = {}
@@ -25,14 +26,15 @@ local function get_valid_equipment_names(player)
   return list
 end
 
---TODO: Checking for the gun just wastes time, we could check the ammo directly.
---Get the gun, ammo and ammo name for the named gun: will return nil
---for all returns if there is no ammo for the gun.
---player: the player object
---gun_name: the name of the gun to get
---Return: gun: table: the gun object or nil
---Return: ammo: table: the ammo object or nil
---return: ammo.name: string: the name of the ammo or nil
+-- TODO: Checking for the gun just wastes time, we could check the ammo directly.
+-- TODO: This is also horrendous
+-- Get the gun, ammo and ammo name for the named gun: will return nil
+-- for all returns if there is no ammo for the gun.
+-- @param player: the player object
+-- @param gun_name: the name of the gun to get
+-- @return the gun object or nil
+-- @return the ammo object or nil
+-- @return string: the name of the ammo or nil
 local function get_gun_ammo_name(player, gun_name)
   local index = player.character.selected_gun_index
   local gun = player.get_inventory(defines.inventory.player_guns)[index]
@@ -43,12 +45,79 @@ local function get_gun_ammo_name(player, gun_name)
   return nil, nil, nil
 end
 
---Does the character have a personal robort and construction robots
---character: the player character
---return: true or false
+-- Does the character have a personal robort and construction robots
+-- character: the player character
+-- @return bool: true or false
 local function are_bots_ready(character)
   return (character.logistic_cell and character.logistic_cell.mobile
     and character.logistic_cell.stationed_construction_robot_count > 0) or false
+end
+
+-- Attempt to insert an item_stack or array of item_stacks into the player
+-- Spill to the ground at player anything that doesn't get inserted
+-- @param player: the player object
+-- @param item_stacks: a SimpleItemStack or array of SimpleItemStacks to insert
+local function insert_or_spill_items(player, item_stacks)
+  local new_stacks = {}
+  if item_stacks and item_stacks[1] and item_stacks[1].name then
+    new_stacks = item_stacks
+  elseif item_stacks and item_stacks.name then
+    new_stacks = {item_stacks}
+  end
+  for _, stack in pairs(new_stacks) do
+    local name, count = stack.name, stack.count
+    local inserted = player.insert{name=name, count=count}
+    if inserted ~= count then
+      player.surface.spill_item_stack(player.position, {name=name, count=count-inserted}, true)
+    end
+  end
+end
+
+-- Remove all items inside an entity and return an array of SimpleItemStacks removed
+-- @param entity: The entity object to remove items from
+-- @return table: an array of SimpleItemStacks
+local function get_all_items_inside(entity)
+  local item_stacks = {}
+  for _, inv in pairs(defines.inventory) do
+    local inventory = entity.get_inventory(inv)
+    if inventory and inventory.valid then
+      for item_name, count in pairs(inventory.get_contents()) do
+        --item_stacks[item_name] = (item_stacks[item_name] or 0) + count
+        table.add_values(item_stacks, item_name, count)
+        inventory.remove({name=item_name, count=count})
+      end
+    end
+  end
+  return item_stacks
+end
+
+-- Scan the ground under an entities collision box for items and insert them into the player.
+-- @param entity: the entity object to scan under
+-- @param player: the player object to insert into
+-- @return bool: always true if function ran.
+local function pickup_items_on_ground(entity, player)
+  --local surface, position, collision_mask, items_on_ground = entity.surface, entity.position, entity.ghost_prototype.selection_box, {}
+  local surface, position, collision_mask = entity.surface, entity.position, entity.ghost_prototype.selection_box
+  for _, item_on_ground in pairs(surface.find_entities_filtered{name="item-on-ground", area=Area.offset(collision_mask, position)}) do
+    --items_on_ground[item_on_ground.stack.name] = items_on_ground[item_on_ground.stack.name] and items_on_ground[item_on_ground.stack.name] + item_on_ground.stack.count or item_on_ground.stack.count
+    --table.add_values(item_on_ground, item_on_ground.stack.name, item_on_ground.stack.count)
+    insert_or_spill_items(player, {{name=item_on_ground.stack.name, count=item_on_ground.stack.count}})
+    item_on_ground.destroy()
+  end
+  -- for name, count in pairs(items_on_ground) do
+  -- player.insert{name=name, count=count}
+  -- end
+  return true
+end
+
+--table.find functions
+local table_find = table.find
+local _find_item=function(_, k, p)
+  return p.get_item_count(k) > 0 and not (p.cursor_stack.valid_for_read and p.cursor_stack.name == k and p.cursor_stack.count <= p.get_item_count(k))
+end
+
+local _find_match=function(v, _, entity)
+  if type(v) == "table" then return v.entity == entity end
 end
 
 -------------------------------------------------------------------------------
@@ -57,16 +126,16 @@ local queue = {}
 
 --Nano Termites, Currently Unused!
 -- function queue.termite(data)
---   local tree=data.entity
---   if tree and tree.valid then
---     --game.print("nom, nom, nom")
---     tree.health=tree.health-10
---     if tree.health > 0 then
---       List.push_right(global.queued, data)
---     else
---       tree.die()
---     end
---   end
+-- local tree=data.entity
+-- if tree and tree.valid then
+-- --game.print("nom, nom, nom")
+-- tree.health=tree.health-10
+-- if tree.health > 0 then
+-- List.push_right(global.queued, data)
+-- else
+-- tree.die()
+-- end
+-- end
 -- end
 
 function queue.deconstruction(data)
@@ -82,12 +151,12 @@ function queue.deconstruction(data)
     end
     --raise the destory event?
     if data.entity.name ~= "deconstructible-tile-proxy" then
-        game.raise_event(defines.events.on_preplayer_mined_item, {tick=game.tick, player_index=player.index, entity=data.entity})
-        data.entity.destroy()
+      game.raise_event(defines.events.on_preplayer_mined_item, {tick=game.tick, player_index=player.index, entity=data.entity})
+      data.entity.destroy()
     else
-        local surface = data.entity.surface
-        local position = data.entity.position
-        surface.set_tiles({{position=position, name = surface.get_hidden_tile(position)}} )
+      local surface = data.entity.surface
+      local position = data.entity.position
+      surface.set_tiles({{position=position, name = surface.get_hidden_tile(position)}} )
     end
   end
 end
@@ -132,21 +201,22 @@ function queue.build_ghosts(data)
       surface.create_entity{name="nano-cloud-small-constructors", position=position, force="neutral"}
       local module_inventory = entity.get_module_inventory()
       if module_inventory then
-        for i,v in pairs(module_contents) do
+        for _,v in pairs(module_contents) do
           module_inventory.insert(v)
         end
       end
       if entity and entity.valid then --raise event if entity-ghost
-        game.raise_event(defines.events.on_built_entity, {tick = game.tick, player_index=data.player_index, created_entity=entity})
+        game.raise_event(defines.events.on_built_entity, {player_index=data.player_index, created_entity=entity})
       end
-    else --Give the item back if the entity was not revived TODO: Need to check inserted count!
-      game.players[data.player_index].insert({name=data.item, count=1})
+    else --Give the item back if the entity was not revived
+      --game.players[data.player_index].insert({name=data.item, count=1})
+      insert_or_spill_items(game.players[data.player_index], {name=data.item, count=1})
     end
   else --Give the item back ghost isn't valid anymore.
-    game.players[data.player_index].insert({name=data.item, count=1})
+    --game.players[data.player_index].insert({name=data.item, count=1})
+    insert_or_spill_items(game.players[data.player_index], {name=data.item, count=1})
   end
 end
-
 
 function queue.repair(data)
   if data.entity.valid then
@@ -157,16 +227,6 @@ end
 -------------------------------------------------------------------------------
 --[[Nano Emitter - Functions]]--
 
---Optimize for table.find
---local table_merge=table.merge
-local table_find = table.find
-local find_item=function(_, k, p)
-  return p.get_item_count(k) > 0 and not (p.cursor_stack.valid_for_read and p.cursor_stack.name == k and p.cursor_stack.count <= p.get_item_count(k))
-end
-local find_match=function(v, _, entity)
-  if type(v) == "table" then return v.entity == entity end
-end
-
 --Build the ghosts in the range of the player
 --rewrite to include tiles regardless of type.
 local function queue_ghosts_in_range(player, pos, nano_ammo)
@@ -175,14 +235,15 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
   --local main_inv = defines.inventory.player_main
   for _, ghost in pairs(player.surface.find_entities_filtered{area=area, force=player.force}) do
     if (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") then
-      if nano_ammo.valid and nano_ammo.valid_for_read then
+      local _valid_ammo = (nano_ammo.valid and nano_ammo.valid_for_read)
+      if _valid_ammo then
         --Get first available item that places entity from inventory that is not in our hand.
-        local _, item = table_find(ghost.ghost_prototype.items_to_place_this, find_item, player)
+        local _, item = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
         --if wall: Have item, Not in logistic network, can we place entity or is it tile, is not already queued, can we remove 1 item.
-        if item
-        and ((ghost.name == "entity-ghost" and pickup_items_on_ground(ghost, player) and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force})
-          or ghost.name == "tile-ghost") and not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)
-          and not table_find(global.queued, find_match, ghost) and player.remove_item({name=item, count=1}) == 1 then
+        if (item and ((ghost.name == "entity-ghost" and pickup_items_on_ground(ghost, player)
+              and player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force})
+            or ghost.name == "tile-ghost") and not (NANO.NO_NETWORK or ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force))
+          and not table_find(global.queued, _find_match, ghost) and player.remove_item({name=item, count=1}) == 1) then
           if ghost.ghost_type=="inserter" then -- Add inserters to the end of the build queue.
             inserters[#inserters+1] = {action = "build_ghosts", player_index=player.index, entity=ghost, item=item}
           else
@@ -194,8 +255,8 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
         break
       end
       -- Check if entity needs repair (robots don't correctly heal so they are excluded.)
-    elseif ghost.health  and ghost.health > 0 and ghost.health < ghost.prototype.max_health and not ghost.type:find("robot") and nano_ammo.valid and nano_ammo.valid_for_read then
-      if #ghost.surface.find_entities_filtered{name="nano-cloud-small-repair", area={{ghost.position.x-0.75, ghost.position.y-0.75}, {ghost.position.x+0.75, ghost.position.y+0.75}}} == 0 then
+    elseif ghost.health and ghost.health > 0 and ghost.health < ghost.prototype.max_health and not ghost.type:find("robot") and _valid_ammo then
+      if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=Area.expand(ghost.postion, .75)} == 0 then
         ghost.surface.create_entity{name="nano-cloud-small-repair", position=ghost.position, force="neutral"}
         nano_ammo.drain_ammo(1)
       end
@@ -212,7 +273,7 @@ local function everyone_hates_trees(player, pos, nano_ammo)
     if nano_ammo.valid and nano_ammo.valid_for_read then
       local tree_area = Position.expand_to_area(stupid_tree.position, .5)
 
-      if player.surface.count_entities_filtered{area=tree_area, name="nano-cloud-small-termites"} < 1 then
+      if player.surface.count_entities_filtered{area=tree_area, name="nano-cloud-small-termites"} == 0 then
         player.surface.create_entity{name="nano-cloud-small-termites", position=stupid_tree.position, force=player.force}
         nano_ammo.drain_ammo(1)
       end
@@ -222,41 +283,11 @@ local function everyone_hates_trees(player, pos, nano_ammo)
   end
 end
 
---Gets and removes all the items inside an entity.
-local function get_all_items_inside(entity)
-  local item_list = {}
-  for _, inv in pairs(defines.inventory) do
-    local inventory = entity.get_inventory(inv)
-    if inventory and inventory.valid then
-      for item_name, count in pairs(inventory.get_contents()) do
-        --item_list[item_name] = (item_list[item_name] or 0) + count
-        table.add_values(item_list, item_name, count)
-        inventory.remove({name=item_name, count=count})
-      end
-    end
-  end
-  return item_list
-end
-
-function pickup_items_on_ground(entity, player)
-    local surface, position = entity.surface, entity.position
-    local items_on_ground = {}
-    local collision_mask = entity.ghost_prototype.selection_box
-      for _, item_on_ground in pairs(surface.find_entities_filtered{name="item-on-ground", area={{position.x + collision_mask.left_top.x, position.y + collision_mask.left_top.y}, {position.x + collision_mask.right_bottom.x, position.y + collision_mask.right_bottom.y}}}) do
-        items_on_ground[item_on_ground.stack.name] = items_on_ground[item_on_ground.stack.name] and items_on_ground[item_on_ground.stack.name] + item_on_ground.stack.count or item_on_ground.stack.count
-        item_on_ground.destroy()
-    end
-    for name, count in pairs(items_on_ground) do
-        player.insert{name=name, count=count}
-    end
-    return true
-end
-
 --Nano Scrappers
 local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
   local area = Position.expand_to_area(pos, NANO.BUILD_RADIUS)
   for _, entity in pairs(player.surface.find_entities(area)) do
-    if entity.to_be_deconstructed(player.force) and (nano_ammo.valid and nano_ammo.valid_for_read) and not table_find(global.queued, find_match, entity) then
+    if entity.to_be_deconstructed(player.force) and (nano_ammo.valid and nano_ammo.valid_for_read) and not table_find(global.queued, _find_match, entity) then
       if deconstructors then
         local item_list = {}
         entity.surface.create_entity{name="nano-cloud-small-deconstructors", position=entity.position, force="neutral"}
@@ -264,9 +295,9 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
 
         --Get all the damn items and clear the inventories
         if entity.has_items_inside() then
-            for item_name, count in pairs(get_all_items_inside(entity)) do
-              table.add_values(item_list, item_name, count)
-            end
+          for item_name, count in pairs(get_all_items_inside(entity)) do
+            table.add_values(item_list, item_name, count)
+          end
         end
         local products
 
@@ -302,30 +333,30 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
   end
 end
 
-local function nano_trigger_cloud(event) --luacheck: ignore
-  local area = Position.expand_to_area(event.entity.position, game.item_prototypes["gun-nano-emitter"].attack_parameters.range + 5)
-  for _, character in pairs(event.entity.surface.find_entities_filtered{area=area, type="player"}) do
-    local player = (character.player and character.player.valid) and character.player -- Make sure there is a player and it is valid
-    if player and is_connected_player_ready(player) and not player.character.logistic_network then
-      local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
-      if gun then
-        if ammo_name == "ammo-nano-constructors" and event.entity.name == "nano-cloud-big-constructors" then
-          queue_ghosts_in_range(player, event.entity.position, nano_ammo)
-
-        elseif ammo_name == "ammo-nano-termites" and event.entity.name == "nano-cloud-big-termites" then
-          everyone_hates_trees(player, event.entity.position, nano_ammo)
-
-        elseif ammo_name == "ammo-nano-scrappers" and event.entity.name == "nano-cloud-big-scrappers" then
-          destroy_marked_items(player, event.entity.position, nano_ammo, false)
-
-        elseif ammo_name == "ammo-nano-deconstructors" and event.entity.name == "nano-cloud-big-deconstructors" then
-          destroy_marked_items(player, event.entity.position, nano_ammo, true)
-
-        end
-      end
-    end
-  end
-end
+-- local function nano_trigger_cloud(event) --luacheck: ignore
+--   local area = Position.expand_to_area(event.entity.position, game.item_prototypes["gun-nano-emitter"].attack_parameters.range + 5)
+--   for _, character in pairs(event.entity.surface.find_entities_filtered{area=area, type="player"}) do
+--     local player = (character.player and character.player.valid) and character.player -- Make sure there is a player and it is valid
+--     if player and is_connected_player_ready(player) and not player.character.logistic_network then
+--       local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
+--       if gun then
+--         if ammo_name == "ammo-nano-constructors" and event.entity.name == "nano-cloud-big-constructors" then
+--           queue_ghosts_in_range(player, event.entity.position, nano_ammo)
+--
+--         elseif ammo_name == "ammo-nano-termites" and event.entity.name == "nano-cloud-big-termites" then
+--           everyone_hates_trees(player, event.entity.position, nano_ammo)
+--
+--         elseif ammo_name == "ammo-nano-scrappers" and event.entity.name == "nano-cloud-big-scrappers" then
+--           destroy_marked_items(player, event.entity.position, nano_ammo, false)
+--
+--         elseif ammo_name == "ammo-nano-deconstructors" and event.entity.name == "nano-cloud-big-deconstructors" then
+--           destroy_marked_items(player, event.entity.position, nano_ammo, true)
+--
+--         end
+--       end
+--     end
+--   end
+-- end
 
 -------------------------------------------------------------------------------
 --[[Personal Roboport Stuff]]--
@@ -369,7 +400,7 @@ local function on_tick(event)
 
       --Establish connected, non afk, player character
       if is_connected_player_ready(player) then
-        if NANO.AUTO_NANO_BOTS and not player.character.logistic_network then
+        if NANO.AUTO_NANO_BOTS and not (NANO.NO_NETWORK or player.character.logistic_network) then
           local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
           if gun then
             if ammo_name == "ammo-nano-constructors" then
@@ -398,12 +429,14 @@ script.on_event(defines.events.on_tick, on_tick)
 --Scripts to run through on trigger created entity
 --Possible movement to stdlib events in the future.
 --Due to a hard crash bug the shooting event will be disabled until a solution is found.
--- local function triggered_entity(event)
---   if string.contains(event.entity.name,"nano%-cloud%-big%-") then
---     nano_trigger_cloud(event)
---   end
--- end
--- script.on_event(defines.events.on_trigger_created_entity, triggered_entity)
+--[[
+local function triggered_entity(event)
+  if string.contains(event.entity.name,"nano%-cloud%-big%-") then
+    nano_trigger_cloud(event)
+  end
+end
+script.on_event(defines.events.on_trigger_created_entity, triggered_entity)
+--]]
 
 -------------------------------------------------------------------------------
 --[[Init]]--

@@ -6,13 +6,13 @@ local author_name2 = "Nexela"
 
 require("stdlib.game")
 require("stdlib.surface")
-require("stdlib.iterator")
+--require("stdlib.iterator")
 require("stdlib.table")
 require("stdlib.string")
 require("stdlib.time")
 
 require("stdlib.utils.colors")
-require("stdlib.utils.list")
+--require("stdlib.utils.list")
 -------------------------------------------------------------------------------
 
 --@return Player Object
@@ -144,7 +144,7 @@ end
 --------------------------------------------------------------------------------------
 function table.add_list(list, obj)
   -- to avoid duplicates...
-  for i, obj2 in pairs(list) do
+  for _, obj2 in pairs(list) do
     if obj2 == obj then
       return(false)
     end
@@ -249,7 +249,7 @@ function table.val_to_str ( v )
   function table.arraytostring(...)
     local s = ""
 
-    for i, v in ipairs({...}) do
+    for _, v in ipairs({...}) do
       s = s .." " .. tostring(v)
     end
     return s
@@ -260,7 +260,7 @@ function table.val_to_str ( v )
     if type(tbl) ~= "table" then
       if tostring(value) == tostring(tbl) then return value else return nil end
     end
-    for k, v in ipairs(tbl) do
+    for _, v in ipairs(tbl) do
       if v == value then return v end
     end
     return nil
