@@ -57,7 +57,7 @@ end
 -- Spill to the ground at player anything that doesn't get inserted
 -- @param player: the player object
 -- @param item_stacks: a SimpleItemStack or array of SimpleItemStacks to insert
--- @return: there was at least 1 item stack
+-- @return table : the items stacks inserted or spilled
 local function insert_or_spill_items(player, item_stacks)
   local new_stacks = {}
   if item_stacks then
@@ -73,22 +73,21 @@ local function insert_or_spill_items(player, item_stacks)
         player.surface.spill_item_stack(player.position, {name=name, count=count-inserted}, true)
       end
     end
-    return new_stacks[1]
+    return (new_stacks[1] and item_stacks)
   end
 end
 
 -- Remove all items inside an entity and return an array of SimpleItemStacks removed
 -- @param entity: The entity object to remove items from
 -- @return table: a table of SimpleItemStacks or nil if empty
-local function get_all_items_inside(entity)
-  local item_stacks = {}
+local function get_all_items_inside(entity, existing_stacks)
+  local item_stacks = existing_stacks or {}
   for _, inv in pairs(defines.inventory) do
     local inventory = entity.get_inventory(inv)
     if inventory and inventory.valid then
-      for item_name, count in pairs(inventory.get_contents()) do
-        --item_stacks[item_name] = (item_stacks[item_name] or 0) + count
-        table.add_values(item_stacks, item_name, count)
-        inventory.remove({name=item_name, count=count})
+      for name, count in pairs(inventory.get_contents()) do
+        item_stacks[#item_stacks+1] = {name=name, count=count}
+        inventory.remove({name=name, count=count})
       end
     end
   end
@@ -98,19 +97,14 @@ end
 -- Scan the ground under an entities collision box for items and insert them into the player.
 -- @param entity: the entity object to scan under
 -- @return table: a table of SimpleItemStacks or nil if empty
-local function get_all_items_on_ground(entity)
+local function get_all_items_on_ground(entity, existing_stacks)
   --local surface, position, collision_mask, items_on_ground = entity.surface, entity.position, entity.ghost_prototype.selection_box, {}
-  local item_stacks = {}
+  local item_stacks = existing_stacks or {}
   local surface, position, collision_mask = entity.surface, entity.position, entity.ghost_prototype.selection_box
   for _, item_on_ground in pairs(surface.find_entities_filtered{name="item-on-ground", area=Area.offset(collision_mask, position)}) do
-    --items_on_ground[item_on_ground.stack.name] = items_on_ground[item_on_ground.stack.name] and items_on_ground[item_on_ground.stack.name] + item_on_ground.stack.count or item_on_ground.stack.count
-    table.add_values(item_stacks, item_on_ground.stack.name, item_on_ground.stack.count)
-    --insert_or_spill_items(player, {{name=item_on_ground.stack.name, count=item_on_ground.stack.count}})
+    item_stacks[#item_stacks+1] = {name=item_on_ground.stack.name, item_on_ground.stack.count}
     item_on_ground.destroy()
   end
-  -- for name, count in pairs(items_on_ground) do
-  -- player.insert{name=name, count=count}
-  -- end
   return (item_stacks[1] and item_stacks)
 end
 
@@ -150,7 +144,8 @@ function queue.deconstruction(data)
     insert_or_spill_items(player, data.item_stacks)
 
     if data.entity.name ~= "deconstructible-tile-proxy" then
-      game.raise_event(defines.events.on_preplayer_mined_item, {tick=game.tick, player_index=player.index, entity=data.entity})
+      game.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=data.entity})
+      game.raise_event(defines.events.on_entity_died, {player_index=player.index, entity=data.entity})
       data.entity.destroy()
     else
       local surface = data.entity.surface
@@ -304,16 +299,13 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
         --entity.surface.create_entity{name="nano-cloud-small-deconstructors", position=entity.position, force="neutral"}
         nano_ammo.drain_ammo(1)
 
-        --Get all the damn items and clear the inventories
+        --Get all items inside of the entity.
         if entity.has_items_inside() then
-          -- for item_name, count in pairs(get_all_items_inside(entity)) do
-          --   table.add_values(item_stacks, item_name, count)
-          -- end
-          item_stacks = get_all_items_inside(entity)
+          item_stacks = get_all_items_inside(entity, item_stacks)
         end
-        local products
 
         --Loop through the minable products and add the item(s) to the list
+        local products
         if entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable then
           products = entity.prototype.mineable_properties.products
         elseif entity.name == "deconstructible-tile-proxy" then
@@ -324,18 +316,19 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
         end
         if products then
           for _, item in pairs(products) do
-            table.add_values(item_stacks, item.name, item.amount or math.random(item.amount_min, item.amount_max))
+            item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or math.random(item.amount_min, item.amount_max)}
           end
         end
-        --Add to the list if this is an item-entity
-        if entity.type == "item-entity" then
-          table.add_values(item_stacks, entity.stack.name, entity.stack.count)
-        end
 
+        --Get all of the items on ground.
+        if entity.type == "item-entity" then
+          item_stacks[#item_stacks+1] = {name=entity.stack.name, count=entity.stack.count}
+        end
+        game.print(game.tick..  "-" .. serpent.line(item_stacks, {comment=false}))
         --Queue Data
         local data = {player_index=player.index, action="deconstruction", item_stacks=item_stacks, entity=entity}
         List.push_right(global.queued, data)
-      elseif not entity.has_flag("breaths-air") then
+      elseif not entity.has_flag("breaths-air") then  -- Scrappers
         --entity.surface.create_entity{name="nano-cloud-small-scrappers", position=entity.position, force="neutral"}
         nano_ammo.drain_ammo(1)
         local data = {player_index=player.index, action="scrap", entity=entity}
