@@ -177,7 +177,7 @@ end
 --Builds the next item in the queue
 function queue.build_ghosts(data)
   if data.entity.valid then
-    local surface, position = data.entity.surface, data.entity.position
+    local surface, position, ppos = data.entity.surface, data.entity.position, game.players[data.player_index].position
     local item_requests = data.entity.item_requests
     local temp_item_requests = item_requests
     local module_contents = {}
@@ -198,7 +198,8 @@ function queue.build_ghosts(data)
     data.entity.item_requests = temp_item_requests
     local revived, entity = data.entity.revive()
     if revived then
-      surface.create_entity{name="nano-cloud-small-constructors", position=position, force="neutral"}
+      surface.create_entity{name="nano-cloud-projectile-constructors", position=ppos, force="neutral", target=position, speed=.05}
+      --surface.create_entity{name="nano-cloud-small-constructors", position=position, force="neutral"}
       local module_inventory = entity.get_module_inventory()
       if module_inventory then
         for _,v in pairs(module_contents) do

@@ -92,10 +92,55 @@ local cloud_big = {
   action_frequency = 120
 }
 
+-- local cloud_beam = table.deepcopy(data.raw["beam"]["electric-beam"])
+-- cloud_beam.name = "nano-cloud-beam-constructors"
+-- cloud_beam.working_sound = nil
+-- cloud_beam.action =
+-- {
+--   type = "direct",
+--   action_delivery =
+--   {
+--     type = "instant",
+--     target_effects =
+--     {
+--       {
+--         type = "create-entity",
+--         entity_name = "nano-cloud-small-constructors",
+--         trigger_created_entity=true
+--       },
+--     }
+--   }
+-- }
+
+local cloud_projectile = table.deepcopy(data.raw["projectile"]["poison-capsule"])
+cloud_projectile.name = "nano-cloud-projectile-constructors"
+cloud_projectile.smoke = nil
+cloud_projectile.action =
+{
+  type = "direct",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "create-entity",
+        entity_name = "nano-cloud-small-constructors",
+        trigger_created_entity=true
+      },
+    }
+  }
+}
+cloud_projectile.animation.scale = .40
+cloud_projectile.shadow.scale = .40
+
+
 local cloud_small=table.deepcopy(cloud_big)
+--cloud_small.acceleration = 0.005
 cloud_small.name = "nano-cloud-small-constructors"
-cloud_small.animation.scale = 0.5
 cloud_small.action = nil
+--cloud_small.animation =
+cloud_small.animation.scale = 0.5
 
 local repair_color = defines.colors.darkblue
 repair_color.a = 0.25
@@ -155,6 +200,6 @@ local cloud_small_repair={
 action_frequency = 1
 }
 
-data:extend({recipe, constructors, cloud_big, cloud_small, cloud_small_repair})
+data:extend({recipe, constructors, cloud_big, cloud_small, cloud_small_repair, cloud_projectile})
 local effects = data.raw.technology["automated-construction"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-constructors"}
