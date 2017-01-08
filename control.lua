@@ -177,44 +177,52 @@ end
 --Builds the next item in the queue
 function queue.build_ghosts(data)
   if data.entity.valid then
-    local surface, position, ppos = data.entity.surface, data.entity.position, game.players[data.player_index].position
+    local surface, position, player = data.entity.surface, data.entity.position, game.players[data.player_index]
     local item_requests = data.entity.item_requests
     local temp_item_requests = item_requests
     local module_contents = {}
     data.entity.item_requests = {}
-    if (data.entity.ghost_type == "assembling-machine" and data.entity.recipe) or data.entity.ghost_type ~= "assembling-machine" then
-      for i,v in pairs(item_requests) do
-        local removed_modules = game.players[data.player_index].remove_item({name=v.item, count=v.count})
-        if removed_modules > 0 then
-          table.insert(module_contents, {name=v.item, count=removed_modules})
+
+    if true then
+      if (data.entity.ghost_type == "assembling-machine" and data.entity.recipe) or data.entity.ghost_type ~= "assembling-machine" then
+        for i,v in pairs(item_requests) do
+          local removed_modules = game.players[data.player_index].remove_item({name=v.item, count=v.count})
+          if removed_modules > 0 then
+            table.insert(module_contents, {name=v.item, count=removed_modules})
+          end
+          if removed_modules < v.count then
+            temp_item_requests[i].count = v.count - removed_modules
+          else
+            temp_item_requests[i] = nil
+          end
         end
-        if removed_modules < v.count then
-          temp_item_requests[i].count = v.count - removed_modules
+      end
+      data.entity.item_requests = temp_item_requests
+      local revived, entity = data.entity.revive()
+      if revived then
+        if player.connected and player.controller_type==defines.controllers.character then
+          --surface.create_entity{name="nano-cloud-beam-constructors", position=player.position, force="neutral", target=entity, source=player.character, speed=.05, duration=20}
+          surface.create_entity{name="nano-cloud-beam-constructors", position=player.position, force="neutral", target=entity, source=player.character, speed= .5, duration=20}
         else
-          temp_item_requests[i] = nil
+          surface.create_entity{name="nano-cloud-small-constructors", position=position, force="neutral"}
+        end
+        local module_inventory = entity.get_module_inventory()
+        if module_inventory then
+          for _,v in pairs(module_contents) do
+            module_inventory.insert(v)
+          end
+        end
+        if entity and entity.valid then --raise event if entity-ghost
+          game.raise_event(defines.events.on_built_entity, {player_index=data.player_index, created_entity=entity})
+        end
+      else --Give the item back if the entity was not revived
+        insert_or_spill_items(player, {name=data.item, count=1})
+        if player.connected and player.controller_type==defines.controllers.character then
+          surface.create_entity{name="nano-cloud-projectile-constructors", position=position, force="neutral", target=player.position, source=player.character, speed= .5, duration=20}
         end
       end
-    end
-    data.entity.item_requests = temp_item_requests
-    local revived, entity = data.entity.revive()
-    if revived then
-      surface.create_entity{name="nano-cloud-projectile-constructors", position=ppos, force="neutral", target=position, speed=.05}
-      --surface.create_entity{name="nano-cloud-small-constructors", position=position, force="neutral"}
-      local module_inventory = entity.get_module_inventory()
-      if module_inventory then
-        for _,v in pairs(module_contents) do
-          module_inventory.insert(v)
-        end
-      end
-      if entity and entity.valid then --raise event if entity-ghost
-        game.raise_event(defines.events.on_built_entity, {player_index=data.player_index, created_entity=entity})
-      end
-    else --Give the item back if the entity was not revived
-      --game.players[data.player_index].insert({name=data.item, count=1})
-      insert_or_spill_items(game.players[data.player_index], {name=data.item, count=1})
-    end
+    end --Can't place entity
   else --Give the item back ghost isn't valid anymore.
-    --game.players[data.player_index].insert({name=data.item, count=1})
     insert_or_spill_items(game.players[data.player_index], {name=data.item, count=1})
   end
 end
@@ -235,8 +243,8 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
   local inserters = {}
   --local main_inv = defines.inventory.player_main
   for _, ghost in pairs(player.surface.find_entities_filtered{area=area, force=player.force}) do
+    local _valid_ammo = (nano_ammo.valid and nano_ammo.valid_for_read)
     if (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") then
-      local _valid_ammo = (nano_ammo.valid and nano_ammo.valid_for_read)
       if _valid_ammo then
         --Get first available item that places entity from inventory that is not in our hand.
         local _, item = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
@@ -291,7 +299,7 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
     if entity.to_be_deconstructed(player.force) and (nano_ammo.valid and nano_ammo.valid_for_read) and not table_find(global.queued, _find_match, entity) then
       if deconstructors then
         local item_list = {}
-        entity.surface.create_entity{name="nano-cloud-small-deconstructors", position=entity.position, force="neutral"}
+        --entity.surface.create_entity{name="nano-cloud-small-deconstructors", position=entity.position, force="neutral"}
         nano_ammo.drain_ammo(1)
 
         --Get all the damn items and clear the inventories
@@ -325,7 +333,7 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
         local data = {player_index=player.index, action="deconstruction", item_list=item_list, entity=entity}
         List.push_right(global.queued, data)
       elseif not entity.has_flag("breaths-air") then
-        entity.surface.create_entity{name="nano-cloud-small-scrappers", position=entity.position, force="neutral"}
+        --entity.surface.create_entity{name="nano-cloud-small-scrappers", position=entity.position, force="neutral"}
         nano_ammo.drain_ammo(1)
         local data = {player_index=player.index, action="scrap", entity=entity}
         List.push_right(global.queued, data)
