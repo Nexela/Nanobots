@@ -102,7 +102,7 @@ local function get_all_items_on_ground(entity, existing_stacks)
   local item_stacks = existing_stacks or {}
   local surface, position, collision_mask = entity.surface, entity.position, entity.ghost_prototype.selection_box
   for _, item_on_ground in pairs(surface.find_entities_filtered{name="item-on-ground", area=Area.offset(collision_mask, position)}) do
-    item_stacks[#item_stacks+1] = {name=item_on_ground.stack.name, item_on_ground.stack.count}
+    item_stacks[#item_stacks+1] = {name=item_on_ground.stack.name, count=item_on_ground.stack.count}
     item_on_ground.destroy()
   end
   return (item_stacks[1] and item_stacks)
@@ -122,20 +122,6 @@ end
 --[[Nano Emitter Queue Handler]]--
 local queue = {}
 
---Nano Termites, Currently Unused!
--- function queue.termite(data)
--- local tree=data.entity
--- if tree and tree.valid then
--- --game.print("nom, nom, nom")
--- tree.health=tree.health-10
--- if tree.health > 0 then
--- List.push_right(global.queued, data)
--- else
--- tree.die()
--- end
--- end
--- end
-
 function queue.deconstruction(data)
   if data.entity.valid then
     data.entity.surface.create_entity{name="nano-cloud-small-deconstructors", position=data.entity.position, force="neutral"}
@@ -144,78 +130,95 @@ function queue.deconstruction(data)
     insert_or_spill_items(player, data.item_stacks)
 
     if data.entity.name ~= "deconstructible-tile-proxy" then
-      game.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=data.entity})
-      game.raise_event(defines.events.on_entity_died, {player_index=player.index, entity=data.entity})
+      -- game.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=data.entity})
+      -- game.raise_event(defines.events.on_entity_died, {player_index=player.index, entity=data.entity})
+      game.raise_event(defines.events.on_robot_pre_mined, {robot=player, entity=data.entity})
+      game.raise_event(defines.events.on_robot_mined, {robot=player, item_stack=data.item_stack})
       data.entity.destroy()
     else
       local surface = data.entity.surface
       local position = data.entity.position
-      surface.set_tiles({{position=position, name = surface.get_hidden_tile(position)}} )
+      game.raise_event(defines.events.robot_pre_mined, {robot=player, entity=data.entity})
+      data.entity.destroy()
+      surface.set_tiles({{position=position, name = surface.get_hidden_tile(position)}})
+      game.raise_event(defines.events.on_robot_mined, {robot=player, item_stack=data.item_stack})
+      game.raise_event(defines.events.on_robot_mined_tile, {robot=player, positions={position}})
     end
   end
 end
+
+--built
+--pre-mined (proxy)
+--mined
+--mined_tile
 
 function queue.scrap(data)
   if data.entity.valid then
     data.entity.surface.create_entity{name="nano-cloud-small-scrappers", position=data.entity.position, force="neutral"}
     if data.entity.name ~= "deconstructible-tile-proxy" then
-      game.raise_event(defines.events.on_entity_died, {tick=game.tick, force=game.players[data.player_index].force, entity=data.entity})
+      --game.raise_event(defines.events.on_entity_died, {tick=game.tick, force=game.players[data.player_index].force, entity=data.entity})
       data.entity.destroy()
     else
       local surface = data.entity.surface
+      --game.raise_event(defines.events.on_robot_mined_tile, {robot=game.players[data.player_index], positions={data.entity.position}})
       surface.set_tiles({{position=data.entity.position, name = surface.get_hidden_tile(data.entity.position)}})
     end
   end
 end
 
+--TODO Adjust queuing logic to build_entity_ghosts and build_tile_ghosts
 --Builds the next item in the queue
 function queue.build_ghosts(data)
   if data.entity.valid then
     local ghost, surface, position, player = data.entity, data.entity.surface, data.entity.position, game.players[data.player_index]
-    local item_requests = data.entity.item_requests
-    local temp_item_requests = item_requests
-    local module_contents = {}
-    data.entity.item_requests = {}
+    local item_requests, module_contents = {}, {}
 
     if insert_or_spill_items(player, get_all_items_on_ground(ghost)) and player.connected and player.controller_type==defines.controllers.character then
-      surface.create_entity{name="nano-cloud-projectile-constructors", ghost.position, force="neutral", target=player.character.position, speed=.2}
+      surface.create_entity{name="nano-cloud-projectile-constructors", position=ghost.position, force="neutral", target=player.character.position, speed=.05}
     end
     if player.surface.can_place_entity{name=ghost.ghost_name,position=ghost.position,direction=ghost.direction,force=ghost.force} then
-      if (data.entity.ghost_type == "assembling-machine" and data.entity.recipe) or data.entity.ghost_type ~= "assembling-machine" then
-        for i,v in pairs(item_requests) do
-          local removed_modules = game.players[data.player_index].remove_item({name=v.item, count=v.count})
-          if removed_modules > 0 then
-            table.insert(module_contents, {name=v.item, count=removed_modules})
-          end
-          if removed_modules < v.count then
-            temp_item_requests[i].count = v.count - removed_modules
-          else
-            temp_item_requests[i] = nil
+      if data.entity.type == "entity-ghost" then
+        local temp_item_requests = item_requests
+        if (data.entity.ghost_type == "assembling-machine" and data.entity.recipe) or data.entity.ghost_type ~= "assembling-machine" then
+          item_requests = data.entity.item_requests
+          data.entity.item_requests = {}
+          for i,v in pairs(item_requests) do
+            local removed_modules = game.players[data.player_index].remove_item({name=v.item, count=v.count})
+            if removed_modules > 0 then
+              table.insert(module_contents, {name=v.item, count=removed_modules})
+            end
+            if removed_modules < v.count then
+              temp_item_requests[i].count = v.count - removed_modules
+            else
+              temp_item_requests[i] = nil
+            end
           end
         end
+        data.entity.item_requests = temp_item_requests
       end
-      data.entity.item_requests = temp_item_requests
+
+
       local revived, entity = data.entity.revive()
       if revived then
         if player.connected and player.controller_type==defines.controllers.character then
-          --surface.create_entity{name="nano-cloud-beam-constructors", position=player.position, force="neutral", target=entity, source=player.character, speed=.05, duration=20}
-          surface.create_entity{name="nano-cloud-beam-constructors", position=player.position, force="neutral", target=entity, source=player.character, speed= .5, duration=20}
+          surface.create_entity{name="nano-beam-constructors", position=player.position, force="neutral", target=entity, source=player.character, speed= .5, duration=20}
         else
           surface.create_entity{name="nano-cloud-small-constructors", position=position, force="neutral"}
         end
-        local module_inventory = entity.get_module_inventory()
-        if module_inventory then
-          for _,v in pairs(module_contents) do
-            module_inventory.insert(v)
-          end
-        end
         if entity and entity.valid then --raise event if entity-ghost
-          game.raise_event(defines.events.on_built_entity, {player_index=data.player_index, created_entity=entity})
+          local module_inventory = entity.get_module_inventory()
+          if module_inventory then
+            for _,v in pairs(module_contents) do
+              module_inventory.insert(v)
+            end
+          end
+          game.raise_event(defines.events.on_robot_built_entity, {robot=player, created_entity=entity})
         end
       else --Give the item back if the entity was not revived
         insert_or_spill_items(player, {name=data.item, count=1})
+        --Make it look like nanotbots are returning with items.
         if player.connected and player.controller_type==defines.controllers.character then
-          surface.create_entity{name="nano-cloud-projectile-constructors", position=position, force="neutral", target=player.position, source=player.character, speed= .5, duration=20}
+          surface.create_entity{name="nano-projectile-constructors", position=position, force="neutral", target=player.position, source=player.character, speed= .5, duration=20}
         end
       end
     else --Can't place entity
@@ -262,8 +265,8 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
       end
       -- Check if entity needs repair (robots don't correctly heal so they are excluded.)
     elseif ghost.health and ghost.health > 0 and ghost.health < ghost.prototype.max_health and not ghost.type:find("robot") and _valid_ammo then
-      if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=Area.expand(ghost.postion, .75)} == 0 then
-        ghost.surface.create_entity{name="nano-cloud-small-repair", position=ghost.position, force="neutral"}
+      if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=Position.expand_to_area(ghost.position, .75)} == 0 then
+        ghost.surface.create_entity{name="nano-beam-healers", position=player.position, force=player.force, target=ghost, source=player.character, speed= .5, duration=20}
         nano_ammo.drain_ammo(1)
       end
     end -- not an actual ghost and doesn't need repair!
@@ -305,7 +308,7 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
         end
 
         --Loop through the minable products and add the item(s) to the list
-        local products
+        local products, this_product
         if entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable then
           products = entity.prototype.mineable_properties.products
         elseif entity.name == "deconstructible-tile-proxy" then
@@ -315,6 +318,7 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
           end
         end
         if products then
+          this_product = products[1]
           for _, item in pairs(products) do
             item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or math.random(item.amount_min, item.amount_max)}
           end
@@ -324,9 +328,9 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
         if entity.type == "item-entity" then
           item_stacks[#item_stacks+1] = {name=entity.stack.name, count=entity.stack.count}
         end
-        game.print(game.tick..  "-" .. serpent.line(item_stacks, {comment=false}))
+
         --Queue Data
-        local data = {player_index=player.index, action="deconstruction", item_stacks=item_stacks, entity=entity}
+        local data = {player_index=player.index, action="deconstruction", item_stacks=item_stacks, item_stack=this_product, entity=entity}
         List.push_right(global.queued, data)
       elseif not entity.has_flag("breaths-air") then  -- Scrappers
         --entity.surface.create_entity{name="nano-cloud-small-scrappers", position=entity.position, force="neutral"}

@@ -44,6 +44,8 @@ local constructors = {
   },
 }
 
+-------------------------------------------------------------------------------
+
 local color = defines.colors.lightblue
 color.a = .040
 
@@ -92,12 +94,12 @@ local cloud_big = {
   action_frequency = 120
 }
 
-local cloud_beam = table.deepcopy(data.raw["beam"]["electric-beam"])
-cloud_beam.name = "nano-cloud-beam-constructors"
-cloud_beam.working_sound = nil
-cloud_beam.duration=10
-cloud_beam.action_frequency = 20
-cloud_beam.action =
+local nano_beam_constructors = table.deepcopy(data.raw["beam"]["electric-beam"])
+nano_beam_constructors.name = "nano-beam-constructors"
+nano_beam_constructors.working_sound = nil
+nano_beam_constructors.duration=10
+nano_beam_constructors.action_frequency = 20
+nano_beam_constructors.action =
 {
   type = "direct",
   action_delivery =
@@ -114,10 +116,9 @@ cloud_beam.action =
   }
 }
 
-local cloud_projectile = table.deepcopy(data.raw["projectile"]["poison-capsule"])
-cloud_projectile.name = "nano-cloud-projectile-constructors"
-cloud_projectile.smoke = nil
-cloud_projectile.action =
+local nano_beam_healers = table.deepcopy(nano_beam_constructors)
+nano_beam_healers.name = "nano-beam-healers"
+nano_beam_healers.action =
 {
   type = "direct",
   action_delivery =
@@ -127,14 +128,34 @@ cloud_projectile.action =
     {
       {
         type = "create-entity",
-        entity_name = "nano-cloud-small-constructors",
+        entity_name = "nano-cloud-small-repair",
         trigger_created_entity=true
       },
     }
   }
 }
-cloud_projectile.animation.scale = .40
-cloud_projectile.shadow.scale = .40
+
+local cloud_projectile = table.deepcopy(data.raw["projectile"]["poison-capsule"])
+cloud_projectile.name = "nano-projectile-constructors"
+cloud_projectile.smoke = nil
+cloud_projectile.action = nil
+-- {
+--   type = "direct",
+--   action_delivery =
+--   {
+--     type = "instant",
+--     target_effects =
+--     {
+--       {
+--         type = "create-entity",
+--         entity_name = "nano-cloud-small-constructors",
+--         trigger_created_entity=true
+--       },
+--     }
+--   }
+-- }
+cloud_projectile.animation.scale = .30
+cloud_projectile.shadow.scale = .30
 
 
 local cloud_small=table.deepcopy(cloud_big)
@@ -202,6 +223,6 @@ local cloud_small_repair={
 action_frequency = 1
 }
 
-data:extend({recipe, constructors, cloud_big, cloud_small, cloud_small_repair, cloud_projectile, cloud_beam})
+data:extend({recipe, constructors, cloud_big, cloud_small, cloud_small_repair, cloud_projectile, nano_beam_constructors, nano_beam_healers})
 local effects = data.raw.technology["automated-construction"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-constructors"}
