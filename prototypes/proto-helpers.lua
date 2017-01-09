@@ -15,7 +15,8 @@ Proto.empty_animation = {
   line_length = 1,
   frame_count = 1,
   shift = { -0.5, 0.5},
-  animation_speed = 0
+  animation_speed = 0,
+  direction_count = 1
 }
 
 return Proto

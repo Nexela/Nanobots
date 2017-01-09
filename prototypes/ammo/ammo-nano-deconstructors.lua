@@ -1,17 +1,18 @@
 local recipe = {
-    type = "recipe",
-    name = "ammo-nano-deconstructors",
-    enabled = false,
-    energy_required = 5,
-    ingredients =
-    {
-      {"ammo-nano-constructors", 1},
-      {"ammo-nano-scrappers", 1},
-      {"advanced-circuit", 1}
-    },
-    result = "ammo-nano-deconstructors"
-  }
+  type = "recipe",
+  name = "ammo-nano-deconstructors",
+  enabled = false,
+  energy_required = 5,
+  ingredients =
+  {
+    {"ammo-nano-constructors", 1},
+    {"ammo-nano-scrappers", 1},
+    {"advanced-circuit", 1}
+  },
+  result = "ammo-nano-deconstructors"
+}
 
+-------------------------------------------------------------------------------
 local deconstructors = {
   type = "ammo",
   name = "ammo-nano-deconstructors",
@@ -42,8 +43,9 @@ local deconstructors = {
       }
     }
   },
-  }
+}
 
+-------------------------------------------------------------------------------
 local color = defines.colors.yellow
 color.a = .035
 
@@ -92,11 +94,36 @@ local cloud_big = {
   action_frequency = 120
 }
 
+-------------------------------------------------------------------------------
 local cloud_small=table.deepcopy(cloud_big)
 cloud_small.name = "nano-cloud-small-deconstructors"
 cloud_small.animation.scale = 0.5
 cloud_small.action = nil
 
-data:extend({recipe, deconstructors, cloud_big, cloud_small})
+-------------------------------------------------------------------------------
+local nano_beam = table.deepcopy(data.raw["beam"]["electric-beam"])
+nano_beam.name = "nano-beam-deconstructors"
+nano_beam.working_sound = nil
+nano_beam.duration=10
+nano_beam.action_frequency = 20
+nano_beam.action =
+{
+  type = "direct",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "create-entity",
+        entity_name = "nano-cloud-small-deconstructors",
+        trigger_created_entity=false
+      },
+    }
+  }
+}
+
+-------------------------------------------------------------------------------
+data:extend({recipe, deconstructors, cloud_big, cloud_small, nano_beam})
 local effects = data.raw.technology["automated-construction"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-deconstructors"}

@@ -11,6 +11,7 @@ local recipe = {
   result = "ammo-nano-termites"
 }
 
+-------------------------------------------------------------------------------
 local termites = {
   type = "ammo",
   name = "ammo-nano-termites",
@@ -42,6 +43,8 @@ local termites = {
     }
   },
 }
+
+-------------------------------------------------------------------------------
 local color = defines.colors.lightgreen
 color.a = .05
 
@@ -90,6 +93,7 @@ local cloud_big = {
   action_frequency = 60
 }
 
+-------------------------------------------------------------------------------
 local cloud_small = {
   type = "smoke-with-trigger",
   name = "nano-cloud-small-termites",
@@ -115,6 +119,43 @@ local cloud_small = {
   spread_duration = 10,
   color = color,
   action =
+  {
+    type = "direct",
+    action_delivery =
+    {
+      type = "instant",
+      target_effects =
+      {
+        type = "nested-result",
+        action =
+        {
+          type = "area",
+          perimeter = .75,
+          force="all",
+          entity_flags = {"placeable-neutral"},
+          action_delivery =
+          {
+            type = "instant",
+            target_effects =
+            {
+              type = "damage",
+              damage = { amount = 4, type = "poison"}
+            }
+          }
+        }
+      }
+    }
+  },
+  action_frequency = 30
+}
+
+-------------------------------------------------------------------------------
+local nano_beam = table.deepcopy(data.raw["beam"]["electric-beam"])
+nano_beam.name = "nano-beam-termites"
+nano_beam.working_sound = nil
+nano_beam.duration=10
+nano_beam.action_frequency = 20
+nano_beam.action =
 {
   type = "direct",
   action_delivery =
@@ -122,29 +163,16 @@ local cloud_small = {
     type = "instant",
     target_effects =
     {
-      type = "nested-result",
-      action =
       {
-        type = "area",
-        perimeter = .75,
-        force="all",
-        entity_flags = {"placeable-neutral"},
-        action_delivery =
-        {
-          type = "instant",
-          target_effects =
-          {
-            type = "damage",
-            damage = { amount = 4, type = "poison"}
-          }
-        }
-      }
+        type = "create-entity",
+        entity_name = "nano-cloud-small-termites",
+        trigger_created_entity=false
+      },
     }
   }
-},
-action_frequency = 30
 }
 
-data:extend({recipe, termites, cloud_big, cloud_small})
+-------------------------------------------------------------------------------
+data:extend({recipe, termites, cloud_big, cloud_small, nano_beam})
 local effects = data.raw.technology["automated-construction"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-termites"}

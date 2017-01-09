@@ -1,16 +1,17 @@
 local recipe = {
-    type = "recipe",
-    name = "ammo-nano-scrappers",
-    enabled = false,
-    energy_required = 5,
-    ingredients =
-    {
-      {"steel-axe", 1},
-      {"electronic-circuit", 1}
-    },
-    result = "ammo-nano-scrappers"
-  }
+  type = "recipe",
+  name = "ammo-nano-scrappers",
+  enabled = false,
+  energy_required = 5,
+  ingredients =
+  {
+    {"steel-axe", 1},
+    {"electronic-circuit", 1}
+  },
+  result = "ammo-nano-scrappers"
+}
 
+-------------------------------------------------------------------------------
 local scrappers = {
   type = "ammo",
   name = "ammo-nano-scrappers",
@@ -43,6 +44,7 @@ local scrappers = {
   },
 }
 
+-------------------------------------------------------------------------------
 local color = defines.colors.lightred
 color.a = .040
 
@@ -91,11 +93,36 @@ local cloud_big = {
   action_frequency = 120
 }
 
+-------------------------------------------------------------------------------
 local cloud_small=table.deepcopy(cloud_big)
 cloud_small.name = "nano-cloud-small-scrappers"
 cloud_small.animation.scale = 0.5
 cloud_small.action = nil
 
-data:extend({recipe, scrappers, cloud_big, cloud_small})
+-------------------------------------------------------------------------------
+local nano_beam = table.deepcopy(data.raw["beam"]["electric-beam"])
+nano_beam.name = "nano-beam-scrappers"
+nano_beam.working_sound = nil
+nano_beam.duration=10
+nano_beam.action_frequency = 20
+nano_beam.action =
+{
+  type = "direct",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "create-entity",
+        entity_name = "nano-cloud-small-scrappers",
+        trigger_created_entity=false
+      },
+    }
+  }
+}
+
+-------------------------------------------------------------------------------
+data:extend({recipe, scrappers, cloud_big, cloud_small, nano_beam})
 local effects = data.raw.technology["automated-construction"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-scrappers"}
