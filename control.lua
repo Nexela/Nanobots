@@ -24,7 +24,7 @@ end
 -- @return bool: player is connected and ready
 local function is_connected_player_ready(player)
   --and player.force.technologies["automated-construction"].researched
-  return (player.afk_time < 90 and player.character) or false
+  return (player.afk_time < 180 and player.character) or false
 end
 
 -- Loop through armor and return a table of valid equipment names and counts
@@ -88,7 +88,7 @@ local function insert_or_spill_items(player, item_stacks)
         player.surface.spill_item_stack(player.position, {name=name, count=count-inserted, health=health}, true)
       end
     end
-    return (new_stacks[1] and item_stacks)
+    return new_stacks[1] and new_stacks[1].name and true
   end
 end
 
@@ -101,24 +101,18 @@ local function get_all_items_inside(entity, existing_stacks)
   for _, inv in pairs(defines.inventory) do
     local inventory = entity.get_inventory(inv)
     if inventory and inventory.valid then
-      for _, stack in ipairs(inventory) do
-        if stack.valid_for_read then
-          item_stacks[#item_stacks+1] = {name=stack.name, count=stack.count, health=stack.health or 1}
-          stack.clear()
-          game.print(serpent.line(item_stacks))
+      if inventory.get_item_count() > 0 then
+        for i=1, #inventory do
+          if inventory[i].valid_for_read then
+            local stack = inventory[i]
+            item_stacks[#item_stacks+1] = {name=stack.name, count=stack.count, health=stack.health or 1}
+            stack.clear()
+          end
         end
       end
-
-
-      -- for name, count in pairs(inventory.get_contents()) do
-      --   local health = 1
-      --   item_stacks[#item_stacks+1] = {name=name, count=count, health=health or 1}
-      --   inventory.remove({name=name, count=count})
-      -- end
-
     end
   end
-  return (item_stacks[1] and item_stacks)
+  return (item_stacks[1] and item_stacks) or {}
 end
 
 -- Scan the ground under an entities collision box for items and insert them into the player.
@@ -132,7 +126,25 @@ local function get_all_items_on_ground(entity, existing_stacks)
     item_stacks[#item_stacks+1] = {name=item_on_ground.stack.name, count=item_on_ground.stack.count, health=item_on_ground.health or 1}
     item_on_ground.destroy()
   end
-  return (item_stacks[1] and item_stacks)
+  return (item_stacks[1] and item_stacks) or {}
+end
+
+-- Get one item with health data from the inventory
+-- @param entity: the entity object to search
+-- @param item: the item to look for
+-- @return item_stack; SimpleItemStack
+local function get_one_item_from_inv(entity, item)
+  for _, inv in pairs(defines.inventory) do
+    local inventory = entity.get_inventory(inv)
+    if inventory and inventory.valid then
+      local stack=inventory.find_item_stack(item)
+      if stack then
+        local item_stack = {name=stack.name, count=1, health=stack.health or 1}
+        stack.count = stack.count - 1
+        return item_stack
+      end
+    end
+  end
 end
 
 -- Get the stacks of modules not inserted and modules to insert
@@ -176,14 +188,14 @@ local function create_beam_or_cloud(beam, cloud, player, target)
   local duration = 20
   local newtarget
   --Create a proxy target if entity doesn't have health, destroy the proxy target after xx ticks
-  if player.can_reach_entity(target) and not (target and (target.health or 0) > 0) then
+  if player.can_reach_entity(target) --[[and not (target and (target.health or 0) > 0)]] then
     newtarget = surface.create_entity{name="nano-target-proxy", position=target.position, force=force}
     global.kill_proxy[game.tick + 20] = newtarget
   else
     newtarget=target
   end
   --if there is a connected char use beam, otherwise just create cloud
-  if connected_char then
+  if connected_char and player.can_reach_entity(target) then
     surface.create_entity{name=beam, position=connected_char.position, force=force, target=newtarget, source=connected_char, speed=speed, duration=duration}
   else
     surface.create_entity{name=cloud, position=target.position, force=force}
@@ -207,7 +219,8 @@ local table_find = table.find
 
 -- return the item name if found in inventory and we are not holding it.
 local _find_item=function(_, k, p)
-  return p.get_item_count(k) > 0 and not (p.cursor_stack.valid_for_read and p.cursor_stack.name == k and p.cursor_stack.count <= p.get_item_count(k))
+  local count = p.get_item_count(k)
+  return count > 0 and not (p.cursor_stack.valid_for_read and p.cursor_stack.name == k and p.cursor_stack.count <= count)
 end
 
 -- return true? if entity exists in table.entity
@@ -287,6 +300,7 @@ function queue.build_entity_ghost(data)
         local revived, entity = ghost.revive()
         if revived then
           create_beam_or_cloud("nano-beam-constructors", "nano-cloud-small-constructors", player, entity)
+          entity.health = (entity.health > 0) and ((data.place_item.health or 1) * entity.prototype.max_health)
           local module_inventory = entity.get_module_inventory()
           if module_inventory and module_stacks then
             for _,v in pairs(module_stacks) do
@@ -343,18 +357,21 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
       if (global.config.no_network_limits or not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)) then
         if (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") then
           --Get first available item that places entity from inventory that is not in our hand.
-          local _, item = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
-          if item and not table_find(global.queued, _find_match, ghost) then
-            item = {name=item, count=1, health=1}
-            local data = {action = "build_entity_ghost", player_index=player.index, entity=ghost, place_item=item, surface=ghost.surface, position=ghost.position}
-            if ghost.ghost_type=="inserter" and player.remove_item(item) == 1 then -- Add inserters to the end of the build queue.
+          local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
+          if item_name and not table_find(global.queued, _find_match, ghost) then
+            local place_item = get_one_item_from_inv(player, item_name)
+            local data = {action = "build_entity_ghost", player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position}
+            if ghost.ghost_type=="inserter" and place_item then -- Add inserters to the end of the build queue.
+              data.place_item = place_item
               inserters[#inserters+1] = data
               nano_ammo.drain_ammo(1)
-            elseif ghost.name == "entity-ghost" and player.remove_item(item) == 1 then
+            elseif ghost.name == "entity-ghost" and place_item then
+              data.place_item = place_item
               List.push_right(global.queued, data)
               nano_ammo.drain_ammo(1)
             elseif ghost.name == "tile-ghost" then
-              if ghost.surface.count_entities_filtered{name="entity-ghost", position=ghost.position, limit=1} == 0 and player.remove_item(item) == 1 then
+              if ghost.surface.count_entities_filtered{name="entity-ghost", position=ghost.position, limit=1} == 0 and place_item then
+                data.place_item = place_item
                 data.action="build_tile_ghost"
                 List.push_right(global.queued, data)
                 nano_ammo.drain_ammo(1)
@@ -364,8 +381,8 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
           -- Check if entity needs repair (robots don't correctly heal so they are excluded.)
         elseif ghost.health and ghost.health > 0 and ghost.health < ghost.prototype.max_health and not ghost.type:find("robot") then
           if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=Position.expand_to_area(ghost.position, .75)} == 0 then
-            ghost.surface.create_entity{name="nano-beam-healers", position=player.position, force=player.force, target=ghost, source=player.character, speed= .5, duration=20}
-            nano_ammo.drain_ammo(1)
+            --ghost.surface.create_entity{name="nano-beam-healers", position=player.position, force=player.force, target=ghost, source=player.character, speed= .5, duration=20}
+            --nano_ammo.drain_ammo(1)
           end -- END ghost or repair
         end
       end --END network check

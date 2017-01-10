@@ -27,7 +27,11 @@ NANO.quickstart.stacks = {
   "creative-mode_energy-source",
   "creative-mode_super-electric-pole",
   "construction-robot",
-  "creative-mode_magic-wand-modifier"
+  "creative-mode_magic-wand-modifier",
+  "gun-nano-emitter",
+  "ammo-nano-constructors",
+  "stone-furnace",
+  "ammo-nano-deconstructors"
 }
 
 

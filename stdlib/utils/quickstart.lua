@@ -1,7 +1,6 @@
 require("stdlib.event.event")
 require("stdlib.config.config")
 
---local QS = QS or {} --luacheck: no global
 local QS = Config.new(QS or {}) --luacheck: no global
 
 if remote.interfaces["quickstart-script"] then
