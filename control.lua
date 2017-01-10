@@ -15,6 +15,7 @@ local List = require("stdlib/utils/list")
 
 if _G.DEBUG then
   log(MOD.name .. " Debug mode enabled")
+  QS = MOD.config.quickstart --luacheck: ignore QS
   MOD.quickstart = require("stdlib/utils/quickstart")
 end
 
@@ -100,11 +101,21 @@ local function get_all_items_inside(entity, existing_stacks)
   for _, inv in pairs(defines.inventory) do
     local inventory = entity.get_inventory(inv)
     if inventory and inventory.valid then
-      for name, count in pairs(inventory.get_contents()) do
-        local health = 1
-        item_stacks[#item_stacks+1] = {name=name, count=count, health=health or 1}
-        inventory.remove({name=name, count=count})
+      for _, stack in ipairs(inventory) do
+        if stack.valid_for_read then
+          item_stacks[#item_stacks+1] = {name=stack.name, count=stack.count, health=stack.health or 1}
+          stack.clear()
+          game.print(serpent.line(item_stacks))
+        end
       end
+
+
+      -- for name, count in pairs(inventory.get_contents()) do
+      --   local health = 1
+      --   item_stacks[#item_stacks+1] = {name=name, count=count, health=health or 1}
+      --   inventory.remove({name=name, count=count})
+      -- end
+
     end
   end
   return (item_stacks[1] and item_stacks)

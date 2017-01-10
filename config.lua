@@ -13,4 +13,22 @@ NANO.control.auto_equipment    = true  --default: true, set to false to disable 
 NANO.control.auto_nanobots     = true  --default: true, set to false to disable automatic nanobots.
 NANO.control.run_ticks         = true
 
+NANO.quickstart = {}
+NANO.quickstart.clear_items = true
+NANO.quickstart.power_armor = false
+NANO.quickstart.destroy_everything = true
+NANO.quickstart.floor_tile = "concrete"
+NANO.quickstart.mod_name = "Nanobots"
+NANO.quickstart.stacks = {
+  "blueprint",
+  "deconstruction-planner",
+  "creative-mode_matter-source",
+  "creative-mode_fluid-source",
+  "creative-mode_energy-source",
+  "creative-mode_super-electric-pole",
+  "construction-robot",
+  "creative-mode_magic-wand-modifier"
+}
+
+
 return NANO
