@@ -99,7 +99,7 @@ function _G.cursor.onChange( player )
     end
 
     -- find item and pick it up
-    -- TODO: vehicle?
+    -- vehicle?
     if isInside( selected, itemName )
     or isInside( opened  , itemName )
     or dropNear( player  , itemName ) then

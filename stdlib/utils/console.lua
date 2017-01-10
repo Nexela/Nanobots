@@ -1,7 +1,7 @@
 local USE_FALLBACK_INTERFACE = false
 
 --Console Code from adil modified for use with STDlib
-Gui = Gui or require("stdlib.gui.gui")
+require("stdlib.gui.gui")
 
 local function create_gui_player(player)
 	if player.gui.left.console then player.gui.left.console.destroy() end
@@ -50,7 +50,6 @@ local function clear(event)
 end
 Gui.on_click("console_clear", clear)
 
---TODO Implement "History"
 
 --Fallback interface --- set USE_FALLBACK_INTERACE = true and
 --just using a require("path.to.console") in your control will
