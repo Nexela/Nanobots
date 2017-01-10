@@ -23,7 +23,7 @@ end
 -- @return bool: player is connected and ready
 local function is_connected_player_ready(player)
   --and player.force.technologies["automated-construction"].researched
-  return (player.afk_time < global.config.tick_mod * 1.5 and player.character) or false
+  return (player.afk_time < 90 and player.character) or false
 end
 
 -- Loop through armor and return a table of valid equipment names and counts
@@ -482,7 +482,7 @@ local function on_tick(event)
     queue[data.action](data)
     --game.print(serpent.block(data, {comment=false}))
   end
-  if config.run_tick and event.tick % config.tick_mod == 0 then
+  if config.run_ticks and event.tick % config.tick_mod == 0 then
 
     for _, player in pairs(game.connected_players) do
 
