@@ -6,6 +6,12 @@ MOD.logfile = require("stdlib/log/logger")
 
 require("stdlib/config/config")
 require("stdlib/event/event")
+require("stdlib.game")
+require("stdlib.surface")
+require("stdlib.table")
+require("stdlib.string")
+require("stdlib.time")
+require("stdlib.utils.colors")
 require("stdlib/utils/utils")
 require("stdlib/gui/gui")
 
@@ -17,6 +23,7 @@ if _G.DEBUG then
   log(MOD.name .. " Debug mode enabled")
   QS = MOD.config.quickstart --luacheck: ignore QS
   MOD.quickstart = require("stdlib/utils/quickstart")
+  MOD.roboport = require("stdlib/utils/scratchpad/robo-replacer")
 end
 
 -- Is the player connected, not afk, and have an attached character
@@ -93,7 +100,6 @@ local function insert_or_spill_items(player, item_stacks)
 end
 
 -- Remove all items inside an entity and return an array of SimpleItemStacks removed
--- TODO using get_contents it is not possible to get the health. id:9 gh:21
 -- @param entity: The entity object to remove items from
 -- @return table: a table of SimpleItemStacks or nil if empty
 local function get_all_items_inside(entity, existing_stacks)
@@ -133,17 +139,21 @@ end
 -- @param entity: the entity object to search
 -- @param item: the item to look for
 -- @return item_stack; SimpleItemStack
-local function get_one_item_from_inv(entity, item)
-  for _, inv in pairs(defines.inventory) do
-    local inventory = entity.get_inventory(inv)
-    if inventory and inventory.valid then
-      local stack=inventory.find_item_stack(item)
-      if stack then
-        local item_stack = {name=stack.name, count=1, health=stack.health or 1}
-        stack.count = stack.count - 1
-        return item_stack
+local function get_one_item_from_inv(entity, item, cheat)
+  if not cheat then
+    for _, inv in pairs(defines.inventory) do
+      local inventory = entity.get_inventory(inv)
+      if inventory and inventory.valid then
+        local stack=inventory.find_item_stack(item)
+        if stack then
+          local item_stack = {name=stack.name, count=1, health=stack.health or 1}
+          stack.count = stack.count - 1
+          return item_stack
+        end
       end
     end
+  else
+    return {name=item, count=1, health=1}
   end
 end
 
@@ -183,22 +193,13 @@ end
 local function create_beam_or_cloud(beam, cloud, player, target)
   local connected_char = (player.connected and player.controller_type == defines.controllers.character) and player.character
   local surface = player.surface
-  local force = player.force
-  local speed = .5
-  local duration = 20
-  local newtarget
-  --Create a proxy target if entity doesn't have health, destroy the proxy target after xx ticks
-  if player.can_reach_entity(target) --[[and not (target and (target.health or 0) > 0)]] then
-    newtarget = surface.create_entity{name="nano-target-proxy", position=target.position, force=force}
-    global.kill_proxy[game.tick + 20] = newtarget
-  else
-    newtarget=target
-  end
+  local speed, duration = .5, 20
+  local new_target = surface.create_entity{name="nano-proxy-health", position=target.position, force="neutral"}
   --if there is a connected char use beam, otherwise just create cloud
-  if connected_char and player.can_reach_entity(target) then
-    surface.create_entity{name=beam, position=connected_char.position, force=force, target=newtarget, source=connected_char, speed=speed, duration=duration}
+  if connected_char and player.can_reach_entity(new_target) then
+    surface.create_entity{name=beam, position=connected_char.position, force=player.force, target=new_target, source=connected_char, speed=speed, duration=duration}
   else
-    surface.create_entity{name=cloud, position=target.position, force=force}
+    surface.create_entity{name=cloud, position=target.position, force="neutral"}
   end
 end
 
@@ -219,8 +220,9 @@ local table_find = table.find
 
 -- return the item name if found in inventory and we are not holding it.
 local _find_item=function(_, k, p)
-  local count = p.get_item_count(k)
-  return count > 0 and not (p.cursor_stack.valid_for_read and p.cursor_stack.name == k and p.cursor_stack.count <= count)
+  local count = p.cheat_mode or p.get_item_count(k)
+  --return p.cheat_mode or (count > 0 and not (p.cursor_stack.valid_for_read and p.cursor_stack.name == k and p.cursor_stack.count <= count))
+  return p.cheat_mode or count > 0
 end
 
 -- return true? if entity exists in table.entity
@@ -333,6 +335,7 @@ function queue.build_tile_ghost(data)
       --logic behind surface.get_hidden_tile is broken, possible related to more_floors mod
       --if not surface.get_hidden_tile(position) then
       create_beam_or_cloud("nano-beam-constructors", "nano-cloud-small-constructors", player, ghost)
+      surface.create_entity{name="nano-sound-build-tiles",position=position}
       surface.set_tiles({{name=ghost.ghost_name, position=position}})
       game.raise_event(defines.events.on_robot_built_tile, {robot=player, positions={position}})
       -- else --Can't place entity
@@ -359,7 +362,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
           --Get first available item that places entity from inventory that is not in our hand.
           local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
           if item_name and not table_find(global.queued, _find_match, ghost) then
-            local place_item = get_one_item_from_inv(player, item_name)
+            local place_item = get_one_item_from_inv(player, item_name, player.cheat_mode)
             local data = {action = "build_entity_ghost", player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position}
             if ghost.ghost_type=="inserter" and place_item then -- Add inserters to the end of the build queue.
               data.place_item = place_item
@@ -381,15 +384,15 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
           -- Check if entity needs repair (robots don't correctly heal so they are excluded.)
         elseif ghost.health and ghost.health > 0 and ghost.health < ghost.prototype.max_health and not ghost.type:find("robot") then
           if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=Position.expand_to_area(ghost.position, .75)} == 0 then
-            --ghost.surface.create_entity{name="nano-beam-healers", position=player.position, force=player.force, target=ghost, source=player.character, speed= .5, duration=20}
-            --nano_ammo.drain_ammo(1)
+            ghost.surface.create_entity{name="nano-beam-healers", position=player.position, force=player.force, target=ghost, source=player.character, speed= .5, duration=20}
+            nano_ammo.drain_ammo(1)
           end -- END ghost or repair
         end
       end --END network check
     else --ELSE not valid ammo
       break --We ran out of ammo break out!
     end --END valid ammo
-  end --END looping through entities
+  end --END looping through entities`
   --Insert the inserters at the end of the queue, probably not needed anymore
   for _, data in ipairs(inserters) do
     List.push_right(global.queued, data)
@@ -413,52 +416,57 @@ local function everyone_hates_trees(player, pos, nano_ammo)
   end
 end
 
+function queue.decon(data)
+  local entity = data.entity
+  local item_stacks = {}
+  --entity.surface.create_entity{name="nano-cloud-small-deconstructors", position=entity.position, force="neutral"}
+  --item_stacks=item_stacks, place_item=this_product
+
+  --Get all items inside of the entity.
+  if entity.has_items_inside() then
+    item_stacks = get_all_items_inside(entity, item_stacks)
+  end
+
+  --Loop through the minable products and add the item(s) to the list
+  local products, this_product
+  if entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable then
+    products = entity.prototype.mineable_properties.products
+  elseif entity.name == "deconstructible-tile-proxy" then
+    local tile = entity.surface.get_tile(entity.position)
+    if tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
+      products = tile.prototype.mineable_properties.products
+    end
+  end
+  if products then
+    this_product = #item_stacks + 1
+    for _, item in pairs(products) do
+      local max = entity.health and entity.prototype.max_health
+      local health = (entity.health and entity.health/max) or 1
+      item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or math.random(item.amount_min, item.amount_max), health=health}
+    end
+    this_product = item_stacks[this_product]
+  end
+
+  --Get all of the items on ground.
+  if entity.type == "item-entity" then
+    item_stacks[#item_stacks+1] = {name=entity.stack.name, count=entity.stack.count, health=entity.stack.health or 1}
+  end
+
+end
+
 --Nano Scrappers and deconstructors
 local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
   local area = Position.expand_to_area(pos, MOD.config.BUILD_RADIUS)
   for _, entity in pairs(player.surface.find_entities(area)) do
+    local data
     if entity.to_be_deconstructed(player.force) and (nano_ammo.valid and nano_ammo.valid_for_read) and not table_find(global.queued, _find_match, entity) then
       if deconstructors then
-        local item_stacks = {}
-        --entity.surface.create_entity{name="nano-cloud-small-deconstructors", position=entity.position, force="neutral"}
         nano_ammo.drain_ammo(1)
-
-        --Get all items inside of the entity.
-        if entity.has_items_inside() then
-          item_stacks = get_all_items_inside(entity, item_stacks)
-        end
-
-        --Loop through the minable products and add the item(s) to the list
-        local products, this_product
-        if entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable then
-          products = entity.prototype.mineable_properties.products
-        elseif entity.name == "deconstructible-tile-proxy" then
-          local tile = entity.surface.get_tile(entity.position)
-          if tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
-            products = tile.prototype.mineable_properties.products
-          end
-        end
-        if products then
-          this_product = #item_stacks + 1
-          for _, item in pairs(products) do
-            local max = entity.health and entity.prototype.max_health
-            local health = (entity.health and entity.health/max) or 1
-            item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or math.random(item.amount_min, item.amount_max), health=health}
-          end
-          this_product = item_stacks[this_product]
-        end
-
-        --Get all of the items on ground.
-        if entity.type == "item-entity" then
-          item_stacks[#item_stacks+1] = {name=entity.stack.name, count=entity.stack.count, health=entity.stack.health or 1}
-        end
-
-        --Queue Data
-        local data = {player_index=player.index, action="deconstruction", item_stacks=item_stacks, place_item=this_product, entity=entity}
+        data = {player_index=player.index, action="decon", deconstructors=deconstructors, entity=entity}
         List.push_right(global.queued, data)
       elseif not entity.has_flag("breaths-air") then -- Scrappers
         nano_ammo.drain_ammo(1)
-        local data = {player_index=player.index, action="scrap", entity=entity}
+        data = {player_index=player.index, action="decon", deconstructors=false, entity=entity}
         List.push_right(global.queued, data)
       end
     end
@@ -498,11 +506,6 @@ end
 --Future improvments: 1 player per tick, move gun/ammo/equip checks to event handlers.
 local function on_tick(event)
   local config = global.config
-  --Destroy Proxies
-  local proxy = global.kill_proxy[event.tick]
-  if proxy and proxy.valid and proxy.destroy() then
-    global.kill_proxy[event.tick] = nil
-  end
 
   --Handle building from the queue every x ticks.
   if event.tick % config.ticks_per_queue == 0 and List.count(global.queued) > 0 then
@@ -549,13 +552,11 @@ function _G.on_init(update)
     global = {}
     global.queued = List.new()
     global.current_index = 1
-    global.kill_proxy = {}
     global.config = table.deepcopy(MOD.config.control)
     game.print(MOD.name..": Init Complete")
   else
     global.queued = global.queued or List.new()
     global.current_index = global.current_index or 1
-    global.kill_proxy = global.kill_proxy or {}
     global.config = global.config or table.deepcopy(MOD.config.control)
     game.print(MOD.name..": Upgrade complete.")
   end

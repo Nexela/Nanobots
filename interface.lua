@@ -2,17 +2,18 @@ local List = require("stdlib/utils/list")
 
 local interface = {}
 
-function interface.reset()
+function interface.reset_mod()
   _G.on_init()
-  interface.destroy_proxies()
   game.print(MOD.name..": Reset Complete.")
 end
 
-function interface.add_to_queue(data)
-  if data and type(data) =="table" and data.action then
-    List.push_right(global.queue, data)
-    return true
-  end
+function interface.reset_config()
+  interface.config("reset")
+end
+
+function interface.reset_queue()
+  global.queue=List.new
+  game.print(MOD.name..": Resetting Queue")
 end
 
 function interface.config(key, value, silent)
@@ -48,6 +49,17 @@ function interface.config(key, value, silent)
   end
 end
 
+function interface.get_queue()
+  return(global.queue)
+end
+
+function interface.add_to_queue(data)
+  if data and type(data) =="table" and data.action then
+    List.push_right(global.queue, data)
+    return true
+  end
+end
+
 function interface.print_global(name)
   if name and type(name) == "string" then
     game.print(name.."="..serpent.block(global[name], {comment=false, sparse=true}))
@@ -56,10 +68,6 @@ function interface.print_global(name)
     game.print(serpent.block(global, {comment=false, sparse=true}))
     game.write_file("/logs/Nanobots/global.log", serpent.block(global, {comment=false, sparse=true}))
   end
-end
-
-function interface.get_queue()
-  return(global.queue)
 end
 
 -- Turn toggle or set the tick handlers on or off
@@ -75,24 +83,18 @@ function interface.toggle_handlers(handler, value, silent)
   if handler then
     local config = Config.new(global.config)
     config.set(handler, (type(value) == "bool" and value) or not config.get(handler, true))
-    if not silent then game.print(config.get(handler)) end
+    if not silent then game.print(MOD.name..": "..handler.."=".. tostring(config.get(handler))) end
     return config.get(handler)
   else
     game.print(MOD.name..": Handler not valid, must be tick, nanobots, equipment")
   end
 end
 
-function interface.destroy_proxies()
-  global.kill_proxy = {}
-  for _, surface in pairs(game.surfaces) do
-    for _, ent in pairs(surface.find_entities_filtered{name="nano-target-proxy",type="simple-entity"}) do
-      ent.destroy()
-    end
-  end
-  game.print(MOD.name..": All target proxies destroyed.")
+function interface.toggle_tick_handler()
+  interface.toggle_handlers("tick", nil, false)
 end
 
-function interface.test()
+function interface.test_mode()
   local config = Config.new(global.config)
   config.set("tick_mod", 10)
   config.set("ticks_per_queue", 1)
@@ -107,9 +109,11 @@ end
 if remote.interfaces["creative-mode"] and remote.interfaces["creative-mode"]["register_remote_function_to_modding_ui"] then
   log("Nanobots - Registering with Creative Mode")
   remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "print_global")
-  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "reset")
-  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "destroy_proxies")
-  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "test")
+  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "reset_mod")
+  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "reset_config")
+  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "reset_queue")
+  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "toggle_tick_handler")
+  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "test_mode")
   if _G.DEBUG then
     remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "console")
   end
