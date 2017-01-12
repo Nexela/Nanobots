@@ -12,6 +12,7 @@ NANO.control.ticks_per_queue   = 4     --default:4, builds from queue 1 item eve
 NANO.control.auto_equipment    = true  --default: true, set to false to disable automatic power armor equipment (item will need to be used) (soon)
 NANO.control.auto_nanobots     = true  --default: true, set to false to disable automatic nanobots.
 NANO.control.run_ticks         = true
+NANO.control.sync_cheat_mode   = true
 
 NANO.quickstart = {}
 NANO.quickstart.clear_items = true

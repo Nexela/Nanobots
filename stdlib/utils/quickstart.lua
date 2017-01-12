@@ -42,6 +42,7 @@ function quickstart.on_player_created(event)
 
     if QS.get("destroy_everything", true) then
       if remote.interfaces["RSO"] and remote.interfaces["RSO"]["disableChunkHandler"] then
+        remote.call("RSO", "disableStartingArea")
         remote.call("RSO", "disableChunkHandler")
       end
       for _, entity in pairs(surface.find_entities(area)) do
