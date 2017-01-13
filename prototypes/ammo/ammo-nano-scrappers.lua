@@ -46,7 +46,7 @@ local scrappers = {
 
 -------------------------------------------------------------------------------
 local color = defines.colors.lightred
-color.a = .040
+color.a = .025
 
 --cloud-big is for the gun, cloud-small is for the individual item.
 local cloud_big = {
@@ -96,7 +96,7 @@ local cloud_big = {
 -------------------------------------------------------------------------------
 local cloud_small=table.deepcopy(cloud_big)
 cloud_small.name = "nano-cloud-small-scrappers"
-cloud_small.animation.scale = 0.5
+cloud_small.animation.scale = 0.4
 cloud_small.action = nil
 
 -------------------------------------------------------------------------------

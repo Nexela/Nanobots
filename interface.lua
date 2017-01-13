@@ -94,16 +94,22 @@ function interface.toggle_tick_handler()
   interface.toggle_handlers("tick", nil, false)
 end
 
-function interface.test_mode()
+function interface.fast_test_mode()
   local config = Config.new(global.config)
   config.set("tick_mod", 10)
   config.set("ticks_per_queue", 1)
-  game.print(MOD.name..": Test mode enabled")
+  game.print(MOD.name..": Fast test mode enabled")
 end
 
-if _G.DEBUG then
-  interface.console = require("stdlib/utils/console")
+function interface.slow_test_mode()
+  local config = Config.new(global.config)
+  config.set("tick_mod", 60)
+  config.set("ticks_per_queue", 60)
+  game.print(MOD.name..": Slow test mode enabled")
 end
+
+interface.console = require("stdlib/utils/console")
+
 
 --Register with creative-mode for easy testing
 if remote.interfaces["creative-mode"] and remote.interfaces["creative-mode"]["register_remote_function_to_modding_ui"] then
@@ -113,10 +119,9 @@ if remote.interfaces["creative-mode"] and remote.interfaces["creative-mode"]["re
   remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "reset_config")
   remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "reset_queue")
   remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "toggle_tick_handler")
-  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "test_mode")
-  if _G.DEBUG then
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "console")
-  end
+  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "fast_test_mode")
+  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "slow_test_mode")
+  remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "console")
 end
 
 return interface

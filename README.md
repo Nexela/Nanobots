@@ -39,4 +39,5 @@ Change Log:
 * 1.0.6 - Scrappers and Deconstructors added, Small bug fixes/tweaks, Some entites (inserters) are added to the end of the queue.
 * 1.0.7 - Hard Crash on invalid ammo
 * 1.0.8 - More sanity checks
-* 1.0.9 - Remove the shooting event pending more info on crash. Shooting nanobots is now just visual and wastes nanobots. Reverted termite changes, increased range
+* 1.0.9 - Remove the shooting event pending more info on crash. Shooting nanobots is now just visual and wastes nanobots. Reverted termite changes,
+* 1.2.0 - Many changes, Nanobots are now smarter and harder working!
