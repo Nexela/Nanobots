@@ -1,16 +1,27 @@
+--luacheck: no global
 require("stdlib.event.event")
 require("stdlib.config.config")
 
-local QS = Config.new(QS or {}) --luacheck: no global
+local QS = Config.new(QS or {})
 
 if remote.interfaces["quickstart-script"] then
   game.print("Existing quickstart script - "..remote.call("quickstart-script", "creative_mode_quickstart_registerd_to"))
-  return remote.call("quickstart-script", "creative_mode_quickstart_registerd_to")
+  return remote.call("quickstart-script", "registerd_to")
 end
-remote.add_interface("quickstart-script", {creative_mode_quickstart_registerd_to = function () return QS.get("mod_name", "not-set") end})
+local qs_interface = {}
+qs_interface.creative_mode_quickstart_registerd_to = function()
+  game.print(QS.get("mod_name", "not-set"))
+  return QS.get("mod_name", "not-set")
+end
+qs_interface.registered_to = function()
+  return QS.get("mod_name", "not-set")
+end
+remote.add_interface("quickstart-script", qs_interface)
+
 
 local Area=require("stdlib.area.area")
-local quickstart = {}
+--local quickstart = {}
+quickstart = {}
 --quickstart.map = require("test")
 function quickstart.on_player_created(event)
   if #game.players == 1 then
@@ -52,7 +63,7 @@ function quickstart.on_player_created(event)
       end
     end
 
-    if QS.get("floor_tile", false) then
+    if QS.get("floor_tile", true) then
       local tiles = {}
       for x, y in Area.spiral_iterate(area) do
         tiles[#tiles+1]={name=QS.get("floor_tile", "concrete"), position={x=x, y=y}}

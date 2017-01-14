@@ -1,3 +1,4 @@
+--luacheck: globals bobmods
 --Change blueprint to use electronic-circuit for earlier building
 data.raw.recipe["blueprint"].ingredients = {{"electronic-circuit", 1}}
 data.raw.recipe["deconstruction-planner"].ingredients = {{"electronic-circuit", 1}}
@@ -16,9 +17,9 @@ tech.unit =
 }
 
 --bobmods recipe changes
-if _G.bobmods and _G.bobmods.lib then
-  local replace=_G.bobmods.lib.recipe.replace_ingredient
-  local add=_G.bobmods.lib.recipe.add_ingredient
+if bobmods and bobmods.lib then
+  local replace = bobmods.lib.recipe.replace_ingredient
+  local add = bobmods.lib.recipe.add_ingredient
   replace("gun-nano-emitter", "electronic-circuit", "basic-circuit-board")
   replace("ammo-nano-constructors", "electronic-circuit", "basic-circuit-board")
   --replace("ammo-nano-scrappers", "electronic-circuit", "basic-circuit-board")

@@ -1,3 +1,5 @@
+--luacheck: globals DEBUG QS
+
 MOD = {}
 MOD.name = "Nanobots"
 MOD.interface = "nanobots"
@@ -19,10 +21,10 @@ local Position = require("stdlib/area/position")
 local Area = require("stdlib/area/area")
 local List = require("stdlib/utils/list")
 
-if _G.DEBUG then
+if DEBUG then
   log(MOD.name .. " Debug mode enabled")
-  _G.QS = MOD.config.quickstart
-  MOD.quickstart = require("stdlib/utils/quickstart")
+  QS = MOD.config.quickstart
+  require("stdlib/utils/quickstart")
 end
 
 -------------------------------------------------------------------------------
@@ -549,7 +551,7 @@ Event.register(defines.events.on_tick, on_tick)
 
 -------------------------------------------------------------------------------
 --[[Init]]--
-function _G.on_init()
+function MOD.on_init()
   global = {}
   global._changes = {}
   global.queued = List.new()
@@ -557,7 +559,7 @@ function _G.on_init()
   global.config = table.deepcopy(MOD.config.control)
   game.print(MOD.name..": Init Complete")
 end
-Event.register(Event.core_events.init, _G.on_init)
+Event.register(Event.core_events.init, MOD.on_init)
 
 local changes = require("changes")
 local function on_configuration_changed(event)

@@ -3,7 +3,7 @@ local List = require("stdlib/utils/list")
 local interface = {}
 
 function interface.reset_mod()
-  _G.on_init()
+  MOD.on_init()
   game.print(MOD.name..": Reset Complete.")
 end
 
