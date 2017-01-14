@@ -10,4 +10,9 @@ changes["1.2.0"] = function (versions)
   global._changes["1.2.0"] = {from = versions.old_version}
 end
 
+changes["1.2.1"] = function (versions)
+  changes["1.2.0"](versions)
+  global._changes["1.2.1"] = {from = versions.old_version}
+end
+
 return changes
