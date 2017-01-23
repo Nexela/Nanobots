@@ -21,7 +21,7 @@ function interface.config(key, value, silent)
   if key then
     if key == "reset" then
       global.config = MOD.config.control
-      if not silent then game.print(MOD.name.." Reset config to default.") end
+      if not silent then game.print(MOD.name..": Reset config to default.") end
       return true
     end
     --key=string.upper(key)
