@@ -15,9 +15,6 @@ if DEBUG then --luacheck: ignore DEBUG
     require("stdlib/debug/quickstart")
 end
 
---local refrence to global.config in on_init and on_load
-local config
-
 -------------------------------------------------------------------------------
 --[[Helper functions]]--
 
@@ -558,6 +555,7 @@ end
 --Future improvments: 1 player per tick, move gun/ammo/equip checks to event handlers.
 
 local function on_tick(event)
+    local config = global.config
     --Handle building from the queue every x ticks.
     if event.tick % config.ticks_per_queue == 0 and List.count(global.queued) > 0 then
         local data = List.pop_left(global.queued)
@@ -596,11 +594,6 @@ Event.register(defines.events.on_tick, on_tick)
 
 -------------------------------------------------------------------------------
 --[[Init]]--
-function MOD.on_load()
-    config = global.config
-end
-Event.register(Event.core_events.load, MOD.on_load)
-
 local changes = require("changes")
 Event.register(Event.core_events.configuration_changed, changes.on_configuration_changed)
 
@@ -610,7 +603,6 @@ function MOD.on_init()
     global.queued = List.new()
     global.current_index = 1
     global.config = table.deepcopy(MOD.config.control)
-    config = global.config
     changes.on_init(game.active_mods[MOD.name])
     game.print(MOD.name..": Init Complete")
 end

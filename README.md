@@ -40,4 +40,9 @@ Change Log:
 * 1.0.7 - Hard Crash on invalid ammo
 * 1.0.8 - More sanity checks
 * 1.0.9 - Remove the shooting event pending more info on crash. Shooting nanobots is now just visual and wastes nanobots. Reverted termite changes,
-* 1.2.0 - Many changes, Nanobots are now smarter and harder working!
+* 1.2.0 - Many changes, Nanobots are now smarter and harder working!  Also Many thanks to Articulating for his work on the project!
+* 1.2.1 - Compatibility changes for mod-pack maker thingie
+* 1.2.2 - Forgot to account for on_config_changed in previous release.  Apologies to all those affected.
+* 1.2.3 - Unreleased
+* 1.3.0 - Technology to increase range, More speed improvements, No longer eats items in inserters hands.
+* 1.3.1 - Fixes for config refrences.
