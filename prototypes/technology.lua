@@ -1,7 +1,8 @@
 local tech1 = {
     type = "technology",
     name = "nano-range1",
-    icon = "__base__/graphics/technology/stack-inserter.png",
+    icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
+    icon_size = 128,
     effects =
     {
         {
@@ -27,7 +28,8 @@ local tech1 = {
 local tech2 = {
     type = "technology",
     name = "nano-range2",
-    icon = "__base__/graphics/technology/stack-inserter.png",
+    icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
+    icon_size = 128,
     effects =
     {
         {
@@ -54,7 +56,8 @@ local tech2 = {
 local tech3 = {
     type = "technology",
     name = "nano-range3",
-    icon = "__base__/graphics/technology/stack-inserter.png",
+    icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
+    icon_size = 128,
     effects =
     {
         {
@@ -81,7 +84,8 @@ local tech3 = {
 local tech4 = {
     type = "technology",
     name = "nano-range4",
-    icon = "__base__/graphics/technology/stack-inserter.png",
+    icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
+    icon_size = 128,
     effects =
     {
         {
