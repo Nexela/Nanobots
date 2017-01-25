@@ -1,6 +1,6 @@
 local tech1 = {
     type = "technology",
-    name = "nano-range1",
+    name = "nano-range-1",
     icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
     icon_size = 128,
     effects =
@@ -27,7 +27,7 @@ local tech1 = {
 
 local tech2 = {
     type = "technology",
-    name = "nano-range2",
+    name = "nano-range-2",
     icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
     icon_size = 128,
     effects =
@@ -38,7 +38,7 @@ local tech2 = {
             modifier = "1"
         }
     },
-    prerequisites = {"nano-range1", "engine"},
+    prerequisites = {"engine", "nano-range-1"},
     unit =
     {
         count = 100,
@@ -55,7 +55,7 @@ local tech2 = {
 
 local tech3 = {
     type = "technology",
-    name = "nano-range3",
+    name = "nano-range-3",
     icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
     icon_size = 128,
     effects =
@@ -66,7 +66,7 @@ local tech3 = {
             modifier = "1"
         }
     },
-    prerequisites = {"electric-engine", "nano-range2"},
+    prerequisites = {"electric-engine", "nano-range-2"},
     unit =
     {
         count = 100,
@@ -83,7 +83,7 @@ local tech3 = {
 
 local tech4 = {
     type = "technology",
-    name = "nano-range4",
+    name = "nano-range-4",
     icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
     icon_size = 128,
     effects =
@@ -94,7 +94,7 @@ local tech4 = {
             modifier = "1"
         }
     },
-    prerequisites = {"flying", "nano-range3"},
+    prerequisites = {"flying", "nano-range-3"},
     unit =
     {
         count = 100,
