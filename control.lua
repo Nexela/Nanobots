@@ -67,12 +67,12 @@ local function are_bots_ready(character)
         and character.logistic_cell.stationed_construction_robot_count > 0) or false
 end
 
--- Attempt to insert an item_stack or array of item_stacks into the player
+-- Attempt to insert an item_stack or array of item_stacks into the entity
 -- Spill to the ground at player anything that doesn't get inserted
--- @param player: the player object
+-- @param entity: the entity or player object
 -- @param item_stacks: a SimpleItemStack or array of SimpleItemStacks to insert
--- @return table : the items stacks inserted or spilled
-local function insert_or_spill_items(player, item_stacks)
+-- @return bool : there was some items inserted or spilled
+local function insert_or_spill_items(entity, item_stacks)
     local new_stacks = {}
     if item_stacks then
         if item_stacks[1] and item_stacks[1].name then
@@ -82,13 +82,33 @@ local function insert_or_spill_items(player, item_stacks)
         end
         for _, stack in pairs(new_stacks) do
             local name, count, health = stack.name, stack.count, stack.health or 1
-            local inserted = player.insert({name=name, count=count, health=health})
+            local inserted = entity.insert({name=name, count=count, health=health})
             if inserted ~= count then
-                player.surface.spill_item_stack(player.position, {name=name, count=count-inserted, health=health}, true)
+                entity.surface.spill_item_stack(entity.position, {name=name, count=count-inserted, health=health}, true)
             end
         end
         return new_stacks[1] and new_stacks[1].name and true
     end
+end
+
+-- Attempt to insert an arrary of items stacks into an entity
+-- @param entity: the entity object
+-- @param item_stacks: a SimpleItemStack or array of SimpleitemStacks to insert
+-- @return table: an array of SimpleItemStacks not inserted
+local function insert_into_entity(entity, item_stacks)
+    item_stacks = item_stacks or {}
+    if item_stacks and item_stacks.name then
+        item_stacks = {item_stacks}
+    end
+    local new_stacks = {}
+    for _, stack in pairs(item_stacks) do
+        local name, count, health = stack.name, stack.count, stack.health or 1
+        local inserted = entity.insert(stack)
+        if inserted ~= count then
+            new_stacks[#new_stacks + 1] = {name=name, count = count - inserted, health=health}
+        end
+    end
+    return new_stacks
 end
 
 -- Remove all items inside an entity and return an array of SimpleItemStacks removed
@@ -96,15 +116,23 @@ end
 -- @return table: a table of SimpleItemStacks or nil if empty
 local function get_all_items_inside(entity, existing_stacks)
     local item_stacks = existing_stacks or {}
-    for _, inv in pairs(defines.inventory) do
-        local inventory = entity.get_inventory(inv)
-        if inventory and inventory.valid then
-            if inventory.get_item_count() > 0 then
-                for i=1, #inventory do
-                    if inventory[i].valid_for_read then
-                        local stack = inventory[i]
-                        item_stacks[#item_stacks+1] = {name=stack.name, count=stack.count, health=stack.health or 1}
-                        stack.clear()
+    if entity.type == "inserter" then
+        local stack = entity.held_stack
+        if stack.valid_for_read then
+            item_stacks[#item_stacks+1] = {name=stack.name, count=stack.count, health=stack.health}
+            stack.clear()
+        end
+    else
+        for _, inv in pairs(defines.inventory) do
+            local inventory = entity.get_inventory(inv)
+            if inventory and inventory.valid then
+                if inventory.get_item_count() > 0 then
+                    for i=1, #inventory do
+                        if inventory[i].valid_for_read then
+                            local stack = inventory[i]
+                            item_stacks[#item_stacks+1] = {name=stack.name, count=stack.count, health=stack.health or 1}
+                            stack.clear()
+                        end
                     end
                 end
             end
@@ -323,9 +351,10 @@ function queue.build_entity_ghost(data)
     local ghost, player, ghost_surf, ghost_pos = data.entity, game.players[data.player_index], data.surface, data.position
     if (player and player.valid) then
         if ghost.valid then
-            if insert_or_spill_items(player, get_all_items_on_ground(ghost)) then
-                create_projectile("nano-projectile-return", ghost_surf, player.force, ghost_pos, player.position)
-            end
+            local item_stacks = get_all_items_on_ground(ghost)
+            -- if insert_or_spill_items(player, get_all_items_on_ground(ghost)) then
+            -- create_projectile("nano-projectile-return", ghost_surf, player.force, ghost_pos, player.position)
+            -- end
 
             if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
                 local module_stacks
@@ -336,6 +365,10 @@ function queue.build_entity_ghost(data)
                 if revived then
                     create_projectile("nano-projectile-constructors", entity.surface, entity.force, player.position, entity.position)
                     entity.health = (entity.health > 0) and ((data.place_item.health or 1) * entity.prototype.max_health)
+                    --item_stacks = insert_into_entity(entity, item_stacks)
+                    if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
+                        create_projectile("nano-projectile-return", ghost_surf, player.force, ghost_pos, player.position)
+                    end
                     local module_inventory = entity.get_module_inventory()
                     if module_inventory and module_stacks then
                         for _,v in pairs(module_stacks) do
@@ -391,11 +424,8 @@ end
 local bot_radius = MOD.config.BOT_RADIUS
 local termite_radius = MOD.config.TERMITE_RADIUS
 local function queue_ghosts_in_range(player, pos, nano_ammo)
-    --game.print(nano_ammo.type)
     local radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7.5
     local area = Position.expand_to_area(pos, radius)
-    local inserters = {}
-    --local tiles = {}
     for _, ghost in pairs(player.surface.find_entities_filtered{area=area, force=player.force}) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if (global.config.no_network_limits or not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)) then
@@ -405,11 +435,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                     if item_name and not table_find(global.queued, _find_match, ghost) then
                         local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
                         local data = {action = "build_entity_ghost", player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position}
-                        if ghost.ghost_type=="inserter" and place_item then -- Add inserters to the end of the build queue.
-                            data.place_item = place_item
-                            inserters[#inserters+1] = data
-                            nano_ammo.drain_ammo(1)
-                        elseif ghost.name == "entity-ghost" and place_item then
+                        if ghost.name == "entity-ghost" and place_item then
                             data.place_item = place_item
                             List.push_right(global.queued, data)
                             nano_ammo.drain_ammo(1)
@@ -422,7 +448,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             end
                         end
                     end
-                -- Check if entity needs repair (robots don't correctly heal so they are excluded.)
+                    -- Check if entity needs repair (robots don't correctly heal so they are excluded.)
                 elseif ghost.health and ghost.health > 0 and ghost.health < ghost.prototype.max_health and not ghost.type:find("robot") then
                     local ghost_area = Area.offset(ghost.prototype.collision_box, ghost.position)
                     if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=ghost_area} == 0 then
@@ -445,10 +471,6 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
             break --we ran out of ammo break out! -- Possible to check on ammo changed before this and re-insert the ammo?
         end --valid ammo
     end --looping through entities
-    --Insert the inserters at the end of the queue, probably not needed anymore
-    for _, data in ipairs(inserters) do
-        List.push_right(global.queued, data)
-    end
 end
 
 --Nano Termites
