@@ -108,7 +108,7 @@ function interface.slow_test_mode()
   game.print(MOD.name..": Slow test mode enabled")
 end
 
-interface.console = require("stdlib/utils/console")
+interface.console = require("stdlib/debug/console")
 
 
 --Register with creative-mode for easy testing

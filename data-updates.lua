@@ -6,24 +6,24 @@ data.raw.recipe["deconstruction-planner"].ingredients = {{"electronic-circuit", 
 --Change automated construction to unlock after automation, using science pack 1
 local tech = data.raw.technology["automated-construction"]
 tech.prerequisites = {"automation"}
+tech.order = "a-b-aa"
 tech.unit =
 {
-  count = 75,
-  ingredients =
-  {
-    {"science-pack-1", 1},
-  },
-  time = 30
+    count = 75,
+    ingredients =
+    {
+        {"science-pack-1", 1},
+    },
+    time = 30
 }
 
 --bobmods recipe changes
 if bobmods and bobmods.lib then
-  local replace = bobmods.lib.recipe.replace_ingredient
-  local add = bobmods.lib.recipe.add_ingredient
-  replace("gun-nano-emitter", "electronic-circuit", "basic-circuit-board")
-  replace("ammo-nano-constructors", "electronic-circuit", "basic-circuit-board")
-  --replace("ammo-nano-scrappers", "electronic-circuit", "basic-circuit-board")
-  replace("ammo-nano-termites", "electronic-circuit", "basic-circuit-board")
-  add("equipment-bot-chip-items", "robot-brain-constuction")
-  add("equipment-bot-chip-trees", "robot-brain-constuction")
+    local replace = bobmods.lib.recipe.replace_ingredient
+    local add = bobmods.lib.recipe.add_ingredient
+    replace("gun-nano-emitter", "electronic-circuit", "basic-circuit-board")
+    replace("ammo-nano-constructors", "electronic-circuit", "basic-circuit-board")
+    replace("ammo-nano-termites", "electronic-circuit", "basic-circuit-board")
+    add("equipment-bot-chip-items", "robot-brain-constuction")
+    add("equipment-bot-chip-trees", "robot-brain-constuction")
 end

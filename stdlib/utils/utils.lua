@@ -4,17 +4,7 @@
 local author_name1 = "Nexela"
 local author_name2 = "Nexela"
 
-require("stdlib.game")
-require("stdlib.surface")
---require("stdlib.iterator")
-require("stdlib.table")
-require("stdlib.string")
-require("stdlib.time")
-
-require("stdlib.utils.colors")
---require("stdlib.utils.list")
 -------------------------------------------------------------------------------
-
 --@return Player Object
 function Game.get_valid_player(player_or_index)
   if not player_or_index then

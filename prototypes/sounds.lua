@@ -1,38 +1,98 @@
-local sound_nanobot_creators = {
-  type = "explosion",
-  name = "nano-sound-build-tiles",
-  flags = {"not-on-map"},
-  animations =
-  {
-    Proto.empty_animation
-  },
-  sound =
-  {
-    aggregation =
+local sound_creators = {
+    type = "explosion",
+    name = "nano-sound-build-tiles",
+    flags = {"not-on-map"},
+    animations =
     {
-      max_count = 1,
-      remove = true
+        Proto.empty_animation
     },
-    variations =
+    sound =
     {
-      {
-        filename = "__base__/sound/walking/grass-01.ogg",
-        volume = 1.0
-      },
-      {
-        filename = "__base__/sound/walking/grass-02.ogg",
-        volume = 1.0
-      },
-      {
-        filename = "__base__/sound/walking/grass-03.ogg",
-        volume = 1.0
-      },
-      {
-        filename = "__base__/sound/walking/grass-04.ogg",
-        volume = 1.0
-      },
+        aggregation =
+        {
+            max_count = 1,
+            remove = true
+        },
+        variations =
+        {
+            {
+                filename = "__base__/sound/walking/grass-01.ogg",
+                volume = 1.0
+            },
+            {
+                filename = "__base__/sound/walking/grass-02.ogg",
+                volume = 1.0
+            },
+            {
+                filename = "__base__/sound/walking/grass-03.ogg",
+                volume = 1.0
+            },
+            {
+                filename = "__base__/sound/walking/grass-04.ogg",
+                volume = 1.0
+            },
+        }
     }
-  }
 }
 
-data:extend({sound_nanobot_creators})
+local sound_deconstruct = {
+    type = "explosion",
+    name = "nano-sound-deconstruct",
+    flags = {"not-on-map"},
+    animations =
+    {
+        Proto.empty_animation
+    },
+    sound =
+    {
+        aggregation =
+        {
+            max_count = 3,
+            remove = true
+        },
+        filename = "__core__/sound/deconstruct-small.ogg",
+        volume = 0.5
+    }
+}
+
+local sound_repair = {
+    type = "explosion",
+    name = "nano-sound-repair",
+    flags = {"not-on-map"},
+    animations =
+    {
+        Proto.empty_animation
+    },
+    sound =
+    {
+        aggregation =
+        {
+            max_count = 1,
+            remove = true
+        },
+        filename = "__core__/sound/manual-repair-advanced-1.ogg",
+        volume = 0.15
+    }
+}
+
+local sound_termites = {
+    type = "explosion",
+    name = "nano-sound-termite",
+    flags = {"not-on-map"},
+    animations =
+    {
+        Proto.empty_animation
+    },
+    sound =
+    {
+        aggregation =
+        {
+            max_count = 1,
+            remove = true
+        },
+        filename = "__Nanobots__/sounds/sawing-wood.ogg",
+        volume = 0.25
+    }
+}
+
+data:extend({sound_creators, sound_deconstruct, sound_repair, sound_termites})

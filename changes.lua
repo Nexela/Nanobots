@@ -13,6 +13,13 @@ local mod_name = MOD.name or "not-set"
 local migrations = {"1.2.0", "1.2.3"}
 local changes = {}
 
+--Mark all migrations as complete during Init.
+function changes.on_init(version)
+    for _, migration in ipairs(migrations) do
+        global._changes[migration] = version
+    end
+end
+
 function changes.on_configuration_changed(event)
     changes["map-change-always-first"]()
     if event.data.mod_changes then

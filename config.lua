@@ -1,11 +1,13 @@
 --luacheck: globals DEBUG
-DEBUG = false
-local NANO             = {}
+DEBUG = true
+local NANO = {}
 
 --Changes here will take effect immediatly
-NANO.BUILD_RADIUS      = 7.5  --default: 7.5, tiles about 1/2 vanilla personal roboport
-NANO.TERMITE_RADIUS    = 7.5  --default: 7.5, tiles
-NANO.CHIP_RADIUS       = 10   --default: 10,  radius of tiles to check for personal bot mark for deconstruction
+NANO.CHIP_RADIUS = 10   --default: 10,  radius of tiles to check for personal bot mark for deconstruction
+
+--Tables linked to technologys, values are the tile radius
+NANO.BOT_RADIUS = {[0] = 7.5, [1] = 9.5, [2]=11.5, [3]=13.5, [4]=15.5}
+NANO.TERMITE_RADIUS = {[0] = 7.5, [1] = 9.5, [2]=11.5, [3]=12.5, [4]=14.5}
 
 
 --Changes here will only affect new games unless you reset the config manually in the save
