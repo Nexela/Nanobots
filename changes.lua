@@ -82,7 +82,7 @@ end
 --Minor changes to reformat the changes made table
 changes["1.2.3"] = function ()
     for _, history in pairs({"1.2.2", "1.2.1", "1.2.0"}) do
-        if global._changes[history] and global._changes[history].from then
+        if global._changes[history] and type(global._changes[history]) == "table" and global._changes[history].from then
             global._changes[history] = global._changes[history].from
         end
     end
