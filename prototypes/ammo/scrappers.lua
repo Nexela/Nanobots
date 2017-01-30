@@ -7,8 +7,9 @@ local recipe = {
     energy_required = 5,
     ingredients =
     {
-        {"steel-axe", 1},
-        {"electronic-circuit", 1}
+        {"iron-axe", 1},
+        {"electronic-circuit", 1},
+        {"copper-wire", 2}
     },
     result = "ammo-nano-scrappers"
 }
@@ -72,7 +73,6 @@ local projectile_scrappers ={
     },
 }
 
---cloud-big is for the gun, cloud-small is for the individual item.
 local cloud_big_scrappers = {
     type = "smoke-with-trigger",
     name = "nano-cloud-big-scrappers",

@@ -9,7 +9,7 @@ local recipe = {
     {
         {"ammo-nano-constructors", 1},
         {"ammo-nano-scrappers", 1},
-        {"advanced-circuit", 1}
+        {"electronic-circuit", 1}
     },
     result = "ammo-nano-deconstructors"
 }

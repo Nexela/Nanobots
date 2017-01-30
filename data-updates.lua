@@ -1,3 +1,4 @@
+local NANO = require("config")
 --luacheck: globals bobmods
 --Change blueprint to use electronic-circuit for earlier building
 data.raw.recipe["blueprint"].ingredients = {{"electronic-circuit", 1}}
@@ -24,6 +25,9 @@ if bobmods and bobmods.lib then
     replace("gun-nano-emitter", "electronic-circuit", "basic-circuit-board")
     replace("ammo-nano-constructors", "electronic-circuit", "basic-circuit-board")
     replace("ammo-nano-termites", "electronic-circuit", "basic-circuit-board")
+    if NANO.EARLY_DECONSTRUCTORS then
+        replace("ammo-nano-deconstructors", "electronic-circuit", "basic-circuit-board")
+    end
     add("equipment-bot-chip-items", "robot-brain-constuction")
     add("equipment-bot-chip-trees", "robot-brain-constuction")
 end

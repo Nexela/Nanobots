@@ -20,7 +20,7 @@ local constructors = {
     name = "ammo-nano-constructors",
     icon="__Nanobots__/graphics/icons/nano-ammo-constructors.png",
     flags = {"goes-to-main-inventory"},
-    magazine_size = 10,
+    magazine_size = 20,
     subgroup = "tool",
     order = "c[automated-construction]-g[gun-nano-emitter]-constructors",
     stack_size = 100,
@@ -46,11 +46,6 @@ local constructors = {
         }
     },
 }
-
--------------------------------------------------------------------------------
--- local color = Color.set(defines.colors.lightblue, .035)
--- color.a = .025
--- --cloud-big is for the gun, cloud-small is for the individual item.
 
 -------------------------------------------------------------------------------
 local projectile_constructors = {
@@ -83,7 +78,7 @@ local cloud_big_constructors = {
     name = "nano-cloud-big-constructors",
     flags = {"not-on-map"},
     show_when_smoke_off = true,
-    animation = constants.cloud_animation(.4),
+    animation = constants.cloud_animation(4),
     slow_down_factor = 0,
     affected_by_wind = false,
     cyclic = true,
@@ -93,7 +88,6 @@ local cloud_big_constructors = {
     color = Color.set(defines.colors.lightblue, .035),
     action = nil,
 }
---cloud_big_constructors.animation.scale = 4
 
 local cloud_small_constructors = {
     type = "smoke-with-trigger",
