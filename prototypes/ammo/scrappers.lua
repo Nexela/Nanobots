@@ -9,7 +9,7 @@ local recipe = {
     {
         {"iron-axe", 1},
         {"electronic-circuit", 1},
-        {"copper-wire", 2}
+        {"copper-cable", 2}
     },
     result = "ammo-nano-scrappers"
 }
@@ -20,7 +20,7 @@ local scrappers = {
     name = "ammo-nano-scrappers",
     icon = "__Nanobots__/graphics/icons/nano-ammo-scrappers.png",
     flags = {"goes-to-main-inventory"},
-    magazine_size = 20,
+    magazine_size = 10,
     subgroup = "tool",
     order = "c[automated-construction]-g[gun-nano-emitter]-scrappers",
     stack_size = 100,
