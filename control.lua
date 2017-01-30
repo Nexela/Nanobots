@@ -18,6 +18,9 @@ end
 -------------------------------------------------------------------------------
 --[[Helper functions]]--
 
+local bot_radius = MOD.config.BOT_RADIUS
+local termite_radius = MOD.config.TERMITE_RADIUS
+
 -- Is the player connected, not afk, and have an attached character
 -- @param player: the player object
 -- @return bool: player is connected and ready
@@ -38,6 +41,14 @@ local function get_valid_equipment_names(player)
         end
     end
     return list
+end
+
+-- Can nanobots repair this entity.
+-- @param entity: the entity object
+-- @return bool: repairable by nanobots
+local function nano_repairable_entity(entity)
+    return (entity.health and entity.health > 0 and entity.health < entity.prototype.max_health) and not
+    (entity.has_flag("breaths-air") or ((entity.type == "car" or entity.type == "train") and entity.speed > 0) or entity.type:find("robot"))
 end
 
 -- TODO: Checking for the gun just wastes time, we could check the ammo directly. id:7
@@ -421,8 +432,6 @@ end
 
 --Nano Constructors
 --queue the ghosts in range for building, heal stuff needing healed
-local bot_radius = MOD.config.BOT_RADIUS
-local termite_radius = MOD.config.TERMITE_RADIUS
 local function queue_ghosts_in_range(player, pos, nano_ammo)
     local radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7.5
     local area = Position.expand_to_area(pos, radius)
@@ -448,8 +457,8 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             end
                         end
                     end
-                    -- Check if entity needs repair (robots don't correctly heal so they are excluded.)
-                elseif ghost.health and ghost.health > 0 and ghost.health < ghost.prototype.max_health and not ghost.type:find("robot") then
+                    -- Check if entity needs repair
+                elseif nano_repairable_entity(ghost) then
                     local ghost_area = Area.offset(ghost.prototype.collision_box, ghost.position)
                     if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=ghost_area} == 0 then
                         ghost.surface.create_entity{
