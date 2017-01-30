@@ -64,7 +64,7 @@ end
 -- @return bool: true or false
 local function are_bots_ready(character)
     return (character.logistic_cell and character.logistic_cell.mobile
-        and character.logistic_cell.stationed_construction_robot_count > 0) or false
+        and character.logistic_cell.stationed_construction_robot_count > 0 and character.logistic_cell.construction_radius > 0) or false
 end
 
 -- Attempt to insert an item_stack or array of item_stacks into the entity
