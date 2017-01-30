@@ -46,3 +46,5 @@ Change Log:
 * 1.2.3 - Unreleased
 * 1.3.0 - Technology to increase range, More speed improvements, No longer eats items in inserters hands.
 * 1.3.1 - Fixes for config refrences.
+* 1.3.2 - Migration sanity check
+* 1.3.3 - Fix disabled personal roboport error, Adjust recipes and add config, Fix healing logic
