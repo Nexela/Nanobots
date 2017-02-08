@@ -1,32 +1,32 @@
 Nanobots:
 
 * Early version of ghost building construction bots. Allows researching automated construction earlier (for blueprints etc)
-* Equip the Nano Emitter and Some Nano ammo, make it your selected gun and any ghosts/blueprints within 7.5 tiles of you will be automatically built if you have the items in your inventory.
-* These early version bots are only capable of building and do not replenish (each Ammo magazine will build 20 items)
+* Equip the Nano Emitter and some Nano ammo, make it your selected gun and any ghosts/blueprints within 7.5 tiles of you will be automatically built if you have the items in your inventory.
+* Technologies exist to slightly increase the range of your nanobots up to about 15 tiles.
+* These early version bots are only capable of building and do not replenish (each Ammo magazine will build 10 items)
 * Nanobots do not work inside logistic networks, or personal roboport zones.
-* Nanobots can now be shot into an area to do their job.
+* Shooting nanobots wastes nanobotes, Don't shoot nanobots.  Hopefully this will be fixed at somepoint.
 
 ---
 Ammo Details:
 
-* Nano Constructors - These nanobots will revive ghosts in their range
-* Nano Termites - These nanobots will kill off trees. Some damage might happen to buildings that are too close to trees.
-* Nano Scrappers - These nanobots will destroy anything in their range that is marked for deconstruction that isn't organic. You will not get an item back.
-* Nano Deconstructors - These nanobots have more programing and will return deconstructed items to you.
+* Nano Constructors - These nanobots will revive ghosts in their range.
+* Nano Termites - These nanobots will kill off trees. This process causes the tree to topple over and may damage nearby entities.
+* Nano Scrappers - These nanobots will destroy anything in their range that is marked for deconstruction that isn't organic. You will not get any items back.
+* Nano Deconstructors - These nanobots have more programing and will return deconstructed items to you. However they are very costly!  (can be changed in config.lua)
 
 ---
 Late Game Additions:
 
-* Adds to new equipment pieces for your armor that enhance your personal roboport.
-* The Item Programmer will mark all items-on-ground (artifacts, etc) in your robo construction range for deconstruction as long as no enemies are around.
+* Adds 2 new equipment pieces for your armor that enhance your personal roboport.
+* The Item Programmer will mark all items-on-ground (artifacts, etc) in your personal roboport construction range for deconstruction as long as no enemies are around.
 * The Tree Programmer will mark all trees within 10 * (Number of equipped programmers) tiles from you for deconstruction.
 
 ---
 Future Plans and Known issues:
 
 * All actions are added to a first in, first out queue system. If a lot of items are queued up (I.E. deconstructing a whole forest). It will take some time before it gets around to doing something else, like building or deconstruction a different area.
-* More optimizations! Around the tick handler/player loop mostly
-* More Personal Roboport Programmers.
+* More Personal Roboport Programmers. Upgrade programmer, Defensive unit launcher,
 
 Change Log:
 
@@ -39,12 +39,13 @@ Change Log:
 * 1.0.6 - Scrappers and Deconstructors added, Small bug fixes/tweaks, Some entites (inserters) are added to the end of the queue.
 * 1.0.7 - Hard Crash on invalid ammo
 * 1.0.8 - More sanity checks
-* 1.0.9 - Remove the shooting event pending more info on crash. Shooting nanobots is now just visual and wastes nanobots. Reverted termite changes,
-* 1.2.0 - Many changes, Nanobots are now smarter and harder working!  Also Many thanks to Articulating for his work on the project!
+* 1.0.9 - Remove the shooting event pending more info on crash. Shooting nanobots is now just visual and wastes nanobots. Reverted termite changes
+* 1.2.0 - Many changes, Nanobots are now smarter and harder working!  Also many thanks to Articulating for his work on the project!
 * 1.2.1 - Compatibility changes for mod-pack maker thingie
-* 1.2.2 - Forgot to account for on_config_changed in previous release.  Apologies to all those affected.
+* 1.2.2 - Forgot to account for on_config_changed in previous release.  Apologies to all those affected
 * 1.2.3 - Unreleased
-* 1.3.0 - Technology to increase range, More speed improvements, No longer eats items in inserters hands.
-* 1.3.1 - Fixes for config refrences.
+* 1.3.0 - Technology to increase range, More speed improvements, No longer eats items in inserters hands
+* 1.3.1 - Fixes for config refrences
 * 1.3.2 - Migration sanity check
 * 1.3.3 - Fix disabled personal roboport error, Adjust recipes and add config, Fix healing logic
+* 1.3.4 - Fix recipe correctly, Fix logic when network limitations are off, Internal updates
