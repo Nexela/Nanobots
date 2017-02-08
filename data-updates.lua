@@ -26,7 +26,7 @@ if bobmods and bobmods.lib then
     replace("ammo-nano-constructors", "electronic-circuit", "basic-circuit-board")
     replace("ammo-nano-termites", "electronic-circuit", "basic-circuit-board")
     if NANO.EARLY_DECONSTRUCTORS then
-        replace("ammo-nano-deconstructors", "electronic-circuit", "basic-circuit-board")
+        replace("ammo-nano-deconstructors", "advanced-circuit", "basic-circuit-board")
     end
     add("equipment-bot-chip-items", "robot-brain-constuction")
     add("equipment-bot-chip-trees", "robot-brain-constuction")
