@@ -574,20 +574,21 @@ local function on_tick(event)
         for _, player in pairs(game.connected_players) do
             --Establish connected, non afk, player character
             if is_connected_player_ready(player) then
-                if config.auto_nanobots and (config.no_network_limits or not player.character.logistic_network) then
-                    local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
-                    if gun then
-                        if ammo_name == "ammo-nano-constructors" then
-                            queue_ghosts_in_range(player, player.position, nano_ammo)
-                        elseif ammo_name == "ammo-nano-termites" then
-                            everyone_hates_trees(player, player.position, nano_ammo)
-                        elseif ammo_name == "ammo-nano-scrappers" then
-                            destroy_marked_items(player, player.position, nano_ammo, false)
-                        elseif ammo_name == "ammo-nano-deconstructors" then
-                            destroy_marked_items(player, player.position, nano_ammo, true)
-                        end
-                    end --Auto Nano Bots
-                    --Do AutoDeconstructMarking
+                if config.auto_nanobots then
+                    if (config.no_network_limits or not player.character.logistic_network) then
+                        local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
+                        if gun then
+                            if ammo_name == "ammo-nano-constructors" then
+                                queue_ghosts_in_range(player, player.position, nano_ammo)
+                            elseif ammo_name == "ammo-nano-termites" then
+                                everyone_hates_trees(player, player.position, nano_ammo)
+                            elseif ammo_name == "ammo-nano-scrappers" then
+                                destroy_marked_items(player, player.position, nano_ammo, false)
+                            elseif ammo_name == "ammo-nano-deconstructors" then
+                                destroy_marked_items(player, player.position, nano_ammo, true)
+                            end
+                        end --Gun and Ammo check
+                    end --Network check
                 elseif config.auto_equipment and are_bots_ready(player.character) then
                     local equipment=get_valid_equipment_names(player)
                     if equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
