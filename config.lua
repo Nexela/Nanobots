@@ -8,7 +8,7 @@ NANO.EARLY_DECONSTRUCTORS = false --default: false, Use earlier circuit board fo
 
 --Tables linked to technologys, values are the tile radius
 NANO.BOT_RADIUS = {[0] = 7.5, [1] = 9.5, [2]=11.5, [3]=13.5, [4]=15.5}
-NANO.TERMITE_RADIUS = {[0] = 7.5, [1] = 9.5, [2]=11.5, [3]=12.5, [4]=14.5}
+NANO.TERMITE_RADIUS = {[0] = 7.5, [1] = 9.5, [2]=11.5, [3]=13.5, [4]=15.5}
 
 
 --Changes here will only affect new games unless you reset the config manually in the save
