@@ -22,12 +22,13 @@ tech.unit =
 if bobmods and bobmods.lib then
     local replace = bobmods.lib.recipe.replace_ingredient
     local add = bobmods.lib.recipe.add_ingredient
+
     replace("gun-nano-emitter", "electronic-circuit", "basic-circuit-board")
     replace("ammo-nano-constructors", "electronic-circuit", "basic-circuit-board")
     replace("ammo-nano-termites", "electronic-circuit", "basic-circuit-board")
-    if NANO.EARLY_DECONSTRUCTORS then
-        replace("ammo-nano-deconstructors", "advanced-circuit", "basic-circuit-board")
-    end
+    replace("ammo-nano-scrappers", "electronic-circuit", "basic-circuit-board")
+    replace("ammo-nano-deconstructors", "advanced-circuit", "electronic-circuit")
+
     add("equipment-bot-chip-items", "robot-brain-constuction")
     add("equipment-bot-chip-trees", "robot-brain-constuction")
 end

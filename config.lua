@@ -4,7 +4,6 @@ local NANO = {}
 
 --Changes here will take effect
 NANO.CHIP_RADIUS = 10   --default: 10,  radius of tiles to check for personal bot mark for deconstruction
-NANO.EARLY_DECONSTRUCTORS = false --default: false, Use earlier circuit board for deconstructors
 
 --Tables linked to technologys, values are the tile radius
 NANO.BOT_RADIUS = {[0] = 7.5, [1] = 9.5, [2]=11.5, [3]=13.5, [4]=15.5}
