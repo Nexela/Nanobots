@@ -197,6 +197,22 @@ end
 -----------------------------------------------------------------------------------
 --Additional Table Helpers
 
+function table.raw_merge(tblA, tblB, safe_merge)
+    --safe_merge, only merge tblB[k] does not already exsist in tblA
+    if safe_merge then
+        for k, v in pairs(tblB) do
+            if not rawget(tblA, k) then
+                rawset(tblA, k, v)
+            end
+        end
+    else
+        for k, v in pairs(tblB) do
+            rawset(tblA, k, v)
+        end
+    end
+    return tblA
+end
+
 function table.val_to_str ( v )
   if "string" == type( v ) then
     v = string.gsub( v, "\n", "\\n" )

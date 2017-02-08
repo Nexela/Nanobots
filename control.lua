@@ -1,4 +1,4 @@
-require("stdlib")
+require("stdlib/loader")
 
 MOD = {}
 MOD.name = "Nanobots"

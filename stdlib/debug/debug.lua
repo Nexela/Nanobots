@@ -1,26 +1,24 @@
---[[
-TODO log levels
-   -1, instant error()
-   0 off
-   1, print and log
-   2, log only
-   3, warn log only
-   4, info log only
-]]
-
-function doDebug(msg, alert)
-    local level = MOD.config.get("LOGLEVEL", 1)
-    if level == 0 and not alert then return end
-
-    if (level >= 1 or alert) and type(msg) == "table" then
-                MOD.logfile.log("vvvvvvvvvvvvvvvvvvvvvvv--Begin Serpent Block--vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv")
+local function print_log(msg, level)
+    level = math.max(level or 0, ((global and global.config and global.config.loglevel) or MOD.config.control.loglevel or 0))
+    if (level > 0) then
+        if (level >= 1) then
+            if type(msg) == "table" then
                 MOD.logfile.log(serpent.block(msg, {comment=false}))
-                MOD.logfile.log("^^^^^^^^^^^^^^^^^^^^^^^--End   Serpent Block--^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
             else
                 MOD.logfile.log(tostring(msg))
             end
-    if (level >= 2 or alert) and game then
-        game.print(MOD.IF .. ":" .. table.tostring(msg))
+        end
+        if (level >= 2) then
+            local message = MOD.fullname .. ": " .. table.tostring(msg)
+            if game and game.players[1] then
+                game.print(message)
+            elseif global then
+                global._mess_queue = global._mess_queue or {}
+                local queue = global._mess_queue
+                queue[#queue+1] = message
+            end
+        end
     end
 end
-doDebug("vvvvvvvvvvvvvvvvvvvvvvv--Begin Logging--vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv") --Start the debug log with a header
+
+return print_log
