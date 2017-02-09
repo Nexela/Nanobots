@@ -49,3 +49,4 @@ Change Log:
 * 1.3.2 - Migration sanity check
 * 1.3.3 - Fix disabled personal roboport error, Adjust recipes and add config, Fix healing logic
 * 1.3.4 - Fix recipe correctly, Fix logic when network limitations are off, Internal updates
+* 1.3.5 - New Icons courtesy of Arch666Angel

@@ -1,4 +1,3 @@
-local NANO = require("config")
 --luacheck: globals bobmods
 --Change blueprint to use electronic-circuit for earlier building
 data.raw.recipe["blueprint"].ingredients = {{"electronic-circuit", 1}}

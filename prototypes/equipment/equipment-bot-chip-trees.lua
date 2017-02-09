@@ -52,7 +52,7 @@ local equipment_chip = {
   {
     type = "electric",
     usage_priority = "secondary-input",
-    buffer_capacity = "1kJ"
+    buffer_capacity = "5kJ"
   },
   attack_parameters =
   {
@@ -63,7 +63,6 @@ local equipment_chip = {
     projectile_center = {0, 0},
     projectile_creation_distance = 0.6,
     range = 0,
-    -- --sound = _G.make_laser_sounds(),
     ammo_type =
     {
       type = "projectile",
@@ -76,14 +75,7 @@ local equipment_chip = {
           type = "area",
           perimeter = NANO.CHIP_RADIUS,
           force = "enemy",
-          action_delivery =
-          {
-            {
-              type = "projectile",
-              projectile = "blue-laser",
-              starting_speed = 0.28
-            }
-          }
+          action_delivery = nil,
         }
       }
     },

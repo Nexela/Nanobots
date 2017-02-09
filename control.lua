@@ -16,10 +16,13 @@ if DEBUG then --luacheck: ignore DEBUG
 end
 
 -------------------------------------------------------------------------------
---[[Helper functions]]--
+--[[Helper Functions]]--
+-------------------------------------------------------------------------------
 
 local bot_radius = MOD.config.BOT_RADIUS
 local termite_radius = MOD.config.TERMITE_RADIUS
+
+local min, random, max, floor, ceil = math.min, math.random, math.max, math.floor, math.ceil --luacheck: ignore
 
 -- Is the player connected, not afk, and have an attached character
 -- @param player: the player object
@@ -32,12 +35,16 @@ end
 -- Loop through armor and return a table of valid equipment names and counts
 -- @param player: the player object
 -- @return table: a table of valid equipment, name as key, count as value .
-local function get_valid_equipment_names(player)
+local function get_valid_equipment(player)
     local armor = player.get_inventory(defines.inventory.player_armor)
     local list = {}
     if armor[1].valid_for_read and armor[1].grid and armor[1].grid.equipment then
         for _, equip in pairs(armor[1].grid.equipment) do
-            if equip.energy > 0 then list[equip.name]=(list[equip.name] or 0) + 1 end
+            if equip.energy >= 5000 then
+                --list[equip.name]=(list[equip.name] or 0) + 1
+                list[equip.name] = list[equip.name] or {}
+                list[equip.name][#list[equip.name] + 1] = equip
+            end
         end
     end
     return list
@@ -279,6 +286,7 @@ end
 
 -------------------------------------------------------------------------------
 --[[Nano Emitter Queue Handler]]--
+-------------------------------------------------------------------------------
 --Queued items are handled one at a time,
 --check validity of all stored objects at this point, They could have become
 --invalidated between the time the where entered into the queue and now.
@@ -316,9 +324,9 @@ function queue.deconstruction(data)
                 if products then
                     this_product = #item_stacks + 1
                     for _, item in pairs(products) do
-                        local max = entity.health and entity.prototype.max_health
-                        local health = (entity.health and entity.health/max) or 1
-                        item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or math.random(item.amount_min, item.amount_max), health=health}
+                        local max_health = entity.health and entity.prototype.max_health
+                        local health = (entity.health and entity.health/max_health) or 1
+                        item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or random(item.amount_min, item.amount_max), health=health}
                     end
                     this_product = item_stacks[this_product]
                 end
@@ -334,12 +342,12 @@ function queue.deconstruction(data)
                     insert_or_spill_items(player, item_stacks)
                     create_projectile("nano-projectile-return", entity.surface, entity.force, entity.position, player.position)
                 end
-
             else --not deconstructors
                 create_projectile("nano-projectile-scrappers", entity.surface, entity.force, player.position, entity.position)
                 if entity.has_items_inside() then
                     entity.clear_items_inside()
                 end
+                this_product = {name=entity.name, count=1}
             end
 
             if entity.name ~= "deconstructible-tile-proxy" then -- Destroy Entities
@@ -426,7 +434,8 @@ function queue.build_tile_ghost(data)
 end
 
 -------------------------------------------------------------------------------
---[[Nano Emitter - Functions]]--
+--[[Nano Emmitter]]--
+-------------------------------------------------------------------------------
 --Extension of the tick handler, This functions decide what to do with their
 --assigned robots and insert them intot the queue accordingly.
 
@@ -532,22 +541,24 @@ local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
 end
 
 -------------------------------------------------------------------------------
---[[Personal Roboport Stuff]]--
+--[[BOT CHIPS]]--
+-------------------------------------------------------------------------------
+--At this point player is valid, not afk and has a character
+
 --Mark items for deconstruction if player has roboport
-local function gobble_items(player, eq_names)
-    local rad = player.character.logistic_cell.construction_radius
+local function gobble_items(player, equipment)
+    local rad = min(100, player.character.logistic_cell.construction_radius)
     local area = Position.expand_to_area(player.position, rad)
-    if not player.surface.find_nearest_enemy{position=player.position ,max_distance=rad+20,force=player.force} then
-        if eq_names["equipment-bot-chip-items"] then
-            --local range = get_build_area(player.position, eq_names["equipment-bot-chip-items"] * MOD.config.CHIP_RADIUS)
+    if are_bots_ready(player.character) and not player.surface.find_nearest_enemy{position=player.position ,max_distance=rad+20,force=player.force} then
+        if equipment["equipment-bot-chip-items"] then
             for _, item in pairs(player.surface.find_entities_filtered{area=area, name="item-on-ground"}) do
                 if not item.to_be_deconstructed(player.force) then
                     item.order_deconstruction(player.force)
                 end
             end
         end
-        if eq_names["equipment-bot-chip-trees"] then
-            local range = Position.expand_to_area(player.position, math.min(rad + 100, eq_names["equipment-bot-chip-trees"] * MOD.config.CHIP_RADIUS))
+        if equipment["equipment-bot-chip-trees"] then
+            local range = Position.expand_to_area(player.position, min(100, #equipment["equipment-bot-chip-trees"] * MOD.config.CHIP_RADIUS))
             for _, item in pairs(player.surface.find_entities_filtered{area=range, type="tree"}) do
                 if not item.to_be_deconstructed(player.force) then
                     item.order_deconstruction(player.force)
@@ -557,9 +568,48 @@ local function gobble_items(player, eq_names)
     end
 end
 
--------------------------------------------------------------------------------
---[[Events]]--
+local combat_robots = MOD.config.COMBAT_ROBOTS
+local function get_best_follower_capsule(player)
+    for capsule, robot in pairs(combat_robots) do
+        local count = player.get_item_count(capsule)
+        if count > 0 then return capsule, count, robot end
+    end
+end
 
+local function launch_units(player, launchers)
+    local num_launchers = #launchers
+    local capsule, count, robot = get_best_follower_capsule(player)
+    local rad = min(100, num_launchers * MOD.config.CHIP_RADIUS)
+    if capsule and player.surface.find_nearest_enemy{position=player.position, max_distance=rad, force=player.force} then
+        local max_bots = player.force.maximum_following_robot_count + player.character_maximum_following_robot_count_bonus
+        local range = Position.expand_to_area(player.position, 30)
+        local existing = player.surface.count_entities_filtered{area=range, type="combat-robot", force=player.force}
+        if existing < (max_bots - (num_launchers * 5)) then
+            for i = 1, min(num_launchers, count) do
+                local launcher = launchers[i]
+                local removed = player.remove_item({name=capsule, count=1})
+                if removed then
+                    player.surface.create_entity{name=robot, position=player.position, force = player.force, target=player.character}
+                    launcher.energy = 0
+                end
+            end
+        end
+    end
+end
+
+local function prepare_chips(player)
+    local equipment=get_valid_equipment(player)
+    if equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
+        gobble_items(player, equipment)
+    end
+    if equipment["equipment-bot-chip-launcher"] then
+        launch_units(player, equipment["equipment-bot-chip-launcher"])
+    end
+end
+
+-------------------------------------------------------------------------------
+--[[EVENTS]]--
+-------------------------------------------------------------------------------
 --The Tick Handler!
 --Future improvments: 1 player per tick, move gun/ammo/equip checks to event handlers.
 
@@ -588,12 +638,9 @@ local function on_tick(event)
                         end
                     end --Gun and Ammo check
                 end
-                if config.auto_equipment and are_bots_ready(player.character) then
-                    local equipment=get_valid_equipment_names(player)
-                    if equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
-                        gobble_items(player, equipment)
-                    end
-                end --Auto Equipoment
+                if config.auto_equipment then
+                    prepare_chips(player)
+                end --Auto Equipment
             end --Player Ready
         end --For Players
     end --NANO Automatic scripts
@@ -602,7 +649,8 @@ Event.register(defines.events.on_tick, on_tick)
 --script.on_event(defines.events.on_tick, on_tick)
 
 -------------------------------------------------------------------------------
---[[Init]]--
+--[[INIT]]--
+-------------------------------------------------------------------------------
 local changes = require("changes")
 Event.register(Event.core_events.configuration_changed, changes.on_configuration_changed)
 
