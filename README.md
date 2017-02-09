@@ -13,7 +13,7 @@ Ammo Details:
 * Nano Constructors - These nanobots will revive ghosts in their range.
 * Nano Termites - These nanobots will kill off trees. This process causes the tree to topple over and may damage nearby entities.
 * Nano Scrappers - These nanobots will destroy anything in their range that is marked for deconstruction that isn't organic. You will not get any items back.
-* Nano Deconstructors - These nanobots have more programing and will return deconstructed items to you. However they are very costly!  (can be changed in config.lua)
+* Nano Deconstructors - These nanobots have more programing and will return deconstructed items to you. However they are more costly.
 
 ---
 Late Game Additions:
