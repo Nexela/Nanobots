@@ -18,15 +18,16 @@ Ammo Details:
 ---
 Late Game Additions:
 
-* Adds 2 new equipment pieces for your armor that enhance your personal roboport.
+* Adds 3 new equipment pieces for your armor that enhance your late game experience.
 * The Item Programmer will mark all items-on-ground (artifacts, etc) in your personal roboport construction range for deconstruction as long as no enemies are around.
 * The Tree Programmer will mark all trees within 10 * (Number of equipped programmers) tiles from you for deconstruction.
+* The Unit Launcher will launch Destroys/Defenders/Distractors when enemies get too close to you.
 
 ---
 Future Plans and Known issues:
 
 * All actions are added to a first in, first out queue system. If a lot of items are queued up (I.E. deconstructing a whole forest). It will take some time before it gets around to doing something else, like building or deconstruction a different area.
-* More Personal Roboport Programmers. Upgrade programmer, Defensive unit launcher,
+* More Personal Roboport Programmers. Upgrade programmer,
 
 Change Log:
 
@@ -49,4 +50,4 @@ Change Log:
 * 1.3.2 - Migration sanity check
 * 1.3.3 - Fix disabled personal roboport error, Adjust recipes and add config, Fix healing logic
 * 1.3.4 - Fix recipe correctly, Fix logic when network limitations are off, Internal updates
-* 1.3.5 - New Icons courtesy of Arch666Angel
+* 1.4.0 - New Icons courtesy of Arch666Angel, New personal roboport unit deployer, automatically deploys follower capsules when near enemies
