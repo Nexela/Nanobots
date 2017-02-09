@@ -22,7 +22,7 @@ local deconstructors = {
     flags = {"goes-to-main-inventory"},
     magazine_size = 10,
     subgroup = "tool",
-    order = "c[automated-construction]-g[gun-nano-emitter]-deconstructors",
+    order = "c[automated-construction]-g[gun-nano-emitter]-c-deconstructors",
     stack_size = 100,
     ammo_type =
     {

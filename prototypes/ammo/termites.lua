@@ -21,7 +21,7 @@ local termites = {
     flags = {"goes-to-main-inventory"},
     magazine_size = 10,
     subgroup = "tool",
-    order = "c[automated-construction]-g[gun-nano-emitter]-termites",
+    order = "c[automated-construction]-g[gun-nano-emitter]-d-termites",
     stack_size = 100,
     ammo_type =
     {

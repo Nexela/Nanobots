@@ -22,7 +22,7 @@ local scrappers = {
     flags = {"goes-to-main-inventory"},
     magazine_size = 10,
     subgroup = "tool",
-    order = "c[automated-construction]-g[gun-nano-emitter]-scrappers",
+    order = "c[automated-construction]-g[gun-nano-emitter]-b-scrappers",
     stack_size = 100,
     ammo_type =
     {

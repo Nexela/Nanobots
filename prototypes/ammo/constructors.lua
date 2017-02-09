@@ -22,7 +22,7 @@ local constructors = {
     flags = {"goes-to-main-inventory"},
     magazine_size = 10,
     subgroup = "tool",
-    order = "c[automated-construction]-g[gun-nano-emitter]-constructors",
+    order = "c[automated-construction]-g[gun-nano-emitter]-a-constructors",
     stack_size = 100,
     ammo_type =
     {
