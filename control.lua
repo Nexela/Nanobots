@@ -333,7 +333,9 @@ function queue.deconstruction(data)
 
                 --Get all of the items on ground.
                 if entity.type == "item-entity" then
+                    if not this_product then this_product = #item_stacks + 1 end
                     item_stacks[#item_stacks+1] = {name=entity.stack.name, count=entity.stack.count, health=entity.stack.health or 1}
+                    if type(this_product) == "number" then this_product = item_stacks[this_product] end
                 end
 
                 create_projectile("nano-projectile-deconstructors", entity.surface, entity.force, player.position, entity.position)
@@ -347,7 +349,7 @@ function queue.deconstruction(data)
                 if entity.has_items_inside() then
                     entity.clear_items_inside()
                 end
-                this_product = {name=entity.name, count=1}
+                this_product = {name=(entity.stack and entity.stack.name) or entity.name, count=1}
             end
 
             if entity.name ~= "deconstructible-tile-proxy" then -- Destroy Entities
