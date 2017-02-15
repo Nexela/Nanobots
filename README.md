@@ -51,3 +51,4 @@ Change Log:
 * 1.3.3 - Fix disabled personal roboport error, Adjust recipes and add config, Fix healing logic
 * 1.3.4 - Fix recipe correctly, Fix logic when network limitations are off, Internal updates
 * 1.4.0 - New Icons courtesy of Arch666Angel, New personal roboport unit deployer, automatically deploys follower capsules when near enemies
+* 1.4.1 - Fix errors with item_stacks with some mods. Fix raw wood health.
