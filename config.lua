@@ -32,8 +32,8 @@ NANO.quickstart = {
     clear_items = true,
     power_armor = true,
     destroy_everything = true,
-    disable_rso_start = true,
-    disable_rso_chunk = false,
+    disable_rso_starting = true,
+    disable_rso_chunk = true,
     floor_tile = "concrete",
     mod_name = "Nanobots",
     stacks = {
@@ -52,6 +52,8 @@ NANO.quickstart = {
         "equipment-bot-chip-launcher",
         "equipment-bot-chip-trees",
         "equipment-bot-chip-items",
+        "chain-gun",
+        "chain-ammo"
     }
 }
 
