@@ -325,7 +325,10 @@ function queue.deconstruction(data)
                     this_product = #item_stacks + 1
                     for _, item in pairs(products) do
                         local max_health = entity.health and entity.prototype.max_health
-                        local health = (entity.health and entity.health/max_health) or 1
+                        local health = 1
+                        if entity.force == player.force then
+                            health = (entity.health and entity.health/max_health) or 1
+                        end
                         item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or random(item.amount_min, item.amount_max), health=health}
                     end
                     this_product = item_stacks[this_product]
