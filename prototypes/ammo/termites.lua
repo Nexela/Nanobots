@@ -151,11 +151,6 @@ local projectile_termites = {
                     entity_name = "nano-cloud-small-termites",
                     check_buildability = false
                 },
-                {
-                    type = "create-entity",
-                    entity_name = "nano-proxy-health",
-                    check_buildability = false,
-                },
             }
         }
     },
