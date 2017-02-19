@@ -2,6 +2,7 @@ local sound_creators = {
     type = "explosion",
     name = "nano-sound-build-tiles",
     flags = {"not-on-map"},
+    rotate = false,
     animations =
     {
         Proto.empty_animation
@@ -39,6 +40,7 @@ local sound_deconstruct = {
     type = "explosion",
     name = "nano-sound-deconstruct",
     flags = {"not-on-map"},
+    rotate = false,
     animations =
     {
         Proto.empty_animation
@@ -59,6 +61,7 @@ local sound_repair = {
     type = "explosion",
     name = "nano-sound-repair",
     flags = {"not-on-map"},
+    rotate = false,
     animations =
     {
         Proto.empty_animation
@@ -78,6 +81,7 @@ local sound_repair = {
 local sound_termites = {
     type = "explosion",
     name = "nano-sound-termite",
+    rotate = false,
     flags = {"not-on-map"},
     animations =
     {
@@ -91,7 +95,7 @@ local sound_termites = {
             remove = true
         },
         filename = "__Nanobots__/sounds/sawing-wood.ogg",
-        volume = 0.25
+        volume = 0.15
     }
 }
 
