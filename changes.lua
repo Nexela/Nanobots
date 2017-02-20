@@ -15,9 +15,11 @@ local changes = {}
 
 --Mark all migrations as complete during Init.
 function changes.on_init(version)
+    local list = {}
     for _, migration in ipairs(migrations) do
-        global._changes[migration] = version
+        list[migration] = version
     end
+    return list
 end
 
 function changes.on_configuration_changed(event)
@@ -36,7 +38,7 @@ end
 
 function changes.on_mod_changed(this_mod_changes)
     global._changes = global._changes or {}
-    local old = this_mod_changes.old_version
+    local old = this_mod_changes.old_version or MOD.version
     local migration_index = 1
     if old then -- Find the last installed version
         for i, ver in ipairs(migrations) do

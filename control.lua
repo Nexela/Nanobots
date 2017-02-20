@@ -4,6 +4,7 @@ MOD = {}
 MOD.name = "Nanobots"
 MOD.interface = "nanobots"
 MOD.config = require("config")
+MOD.version = "1.4.3"
 
 local Position = require("stdlib/area/position")
 local Area = require("stdlib/area/area")
@@ -661,7 +662,7 @@ Event.register(Event.core_events.configuration_changed, changes.on_configuration
 
 function MOD.on_init()
     global = {}
-    global._changes = {}
+    global._changes = changes.on_init(game.active_mods[MOD.name] or MOD.version)
     global.queued = List.new()
     global.current_index = 1
     global.config = table.deepcopy(MOD.config.control)
