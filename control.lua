@@ -148,7 +148,7 @@ local function get_all_items_inside(entity, existing_stacks)
             item_stacks[#item_stacks+1] = {name=stack.name, count=stack.count, health=stack.health}
             stack.clear()
         end
-    --Entities with transport lines only need to check each line individually
+        --Entities with transport lines only need to check each line individually
     elseif transport_types[entity.type] then
         for i=1, transport_types[entity.type] do
             local lane = entity.get_transport_line(i)
@@ -159,7 +159,7 @@ local function get_all_items_inside(entity, existing_stacks)
             end
         end
     else
-    --Loop through regular inventories
+        --Loop through regular inventories
         for _, inv in pairs(defines.inventory) do
             local inventory = entity.get_inventory(inv)
             if inventory and inventory.valid then
@@ -620,12 +620,14 @@ local function launch_units(player, launchers)
 end
 
 local function prepare_chips(player)
-    local equipment=get_valid_equipment(player)
-    if are_bots_ready(player.character) and equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
-        gobble_items(player, equipment)
-    end
-    if equipment["equipment-bot-chip-launcher"] then
-        launch_units(player, equipment["equipment-bot-chip-launcher"])
+    if are_bots_ready(player.character) then
+        local equipment=get_valid_equipment(player)
+        if (equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"]) then
+            gobble_items(player, equipment)
+        end
+        if equipment["equipment-bot-chip-launcher"] then
+            launch_units(player, equipment["equipment-bot-chip-launcher"])
+        end
     end
 end
 
