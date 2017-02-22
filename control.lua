@@ -22,6 +22,12 @@ end
 
 local bot_radius = MOD.config.BOT_RADIUS
 local termite_radius = MOD.config.TERMITE_RADIUS
+local transport_types = {
+    ["transport-belt"] = 2,
+    ["underground-belt"] = 2,
+    ["splitter"] = 8,
+    ["loader"] = 2,
+}
 
 local min, random, max, floor, ceil = math.min, math.random, math.max, math.floor, math.ceil --luacheck: ignore
 
@@ -87,7 +93,7 @@ local function are_bots_ready(character)
 end
 
 -- Attempt to insert an item_stack or array of item_stacks into the entity
--- Spill to the ground at player anything that doesn't get inserted
+-- Spill to the ground at the entity/player anything that doesn't get inserted
 -- @param entity: the entity or player object
 -- @param item_stacks: a SimpleItemStack or array of SimpleItemStacks to insert
 -- @return bool : there was some items inserted or spilled
@@ -135,13 +141,25 @@ end
 -- @return table: a table of SimpleItemStacks or nil if empty
 local function get_all_items_inside(entity, existing_stacks)
     local item_stacks = existing_stacks or {}
+    --Inserters need to check held_stack
     if entity.type == "inserter" then
         local stack = entity.held_stack
         if stack.valid_for_read then
             item_stacks[#item_stacks+1] = {name=stack.name, count=stack.count, health=stack.health}
             stack.clear()
         end
+    --Entities with transport lines only need to check each line individually
+    elseif transport_types[entity.type] then
+        for i=1, transport_types[entity.type] do
+            local lane = entity.get_transport_line(i)
+            for name, count in pairs(lane.get_contents()) do
+                local cur_stack = {name=name, count=count, health=1}
+                item_stacks[#item_stacks+1] = cur_stack
+                lane.remove_item(cur_stack)
+            end
+        end
     else
+    --Loop through regular inventories
         for _, inv in pairs(defines.inventory) do
             local inventory = entity.get_inventory(inv)
             if inventory and inventory.valid then
@@ -299,49 +317,48 @@ function queue.deconstruction(data)
     local entity, player = data.entity, game.players[data.player_index]
     if player and player.valid then
         if entity and entity.valid then
-            local item_stacks, this_product = {}, nil
+            local item_stacks, this_product = {}, {}
+
+            --Get all items inside of the entity.
+            if entity.has_items_inside() then
+                item_stacks = get_all_items_inside(entity, item_stacks)
+            end
+
+            --Loop through the minable products and add the item(s) to the list
+            local products
+            if (entity.name ~= "deconstructible-tile-proxy"
+                and entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable) then
+                products = entity.prototype.mineable_properties.products
+            elseif entity.name == "deconstructible-tile-proxy" then
+                local tile = entity.surface.get_tile(entity.position)
+                if tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
+                    products = tile.prototype.mineable_properties.products
+                else
+                    --Can't mine the tile so destroy the proxy.
+                    entity.destroy()
+                    return
+                end
+            end
+
+            if products then
+                for _, item in pairs(products) do
+                    local max_health = entity.health and entity.prototype.max_health
+                    local health = 1
+                    if entity.force == player.force then
+                        health = (entity.health and entity.health/max_health) or 1
+                    end
+                    item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or random(item.amount_min, item.amount_max), health=health}
+                end
+                this_product = item_stacks[#item_stacks]
+            end
+
+            --Get all of the items on ground.
+            if entity.type == "item-entity" then
+                local cur_item = {name=entity.stack.name, count=entity.stack.count, health=entity.stack.health or 1}
+                item_stacks[#item_stacks+1] = cur_item
+                if not this_product.name then this_product = item_stacks[#item_stacks] end
+            end
             if data.deconstructors then
-                --Get all items inside of the entity.
-                if entity.has_items_inside() then
-                    item_stacks = get_all_items_inside(entity, item_stacks)
-                end
-
-                --Loop through the minable products and add the item(s) to the list
-                local products
-                if (entity.name ~= "deconstructible-tile-proxy"
-                    and entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable) then
-                    products = entity.prototype.mineable_properties.products
-                elseif entity.name == "deconstructible-tile-proxy" then
-                    local tile = entity.surface.get_tile(entity.position)
-                    if tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
-                        products = tile.prototype.mineable_properties.products
-                    else
-                        --Can't mine the tile so destroy the proxy.
-                        entity.destroy()
-                        return
-                    end
-                end
-
-                if products then
-                    this_product = #item_stacks + 1
-                    for _, item in pairs(products) do
-                        local max_health = entity.health and entity.prototype.max_health
-                        local health = 1
-                        if entity.force == player.force then
-                            health = (entity.health and entity.health/max_health) or 1
-                        end
-                        item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or random(item.amount_min, item.amount_max), health=health}
-                    end
-                    this_product = item_stacks[this_product]
-                end
-
-                --Get all of the items on ground.
-                if entity.type == "item-entity" then
-                    if not this_product then this_product = #item_stacks + 1 end
-                    item_stacks[#item_stacks+1] = {name=entity.stack.name, count=entity.stack.count, health=entity.stack.health or 1}
-                    if type(this_product) == "number" then this_product = item_stacks[this_product] end
-                end
-
                 create_projectile("nano-projectile-deconstructors", entity.surface, entity.force, player.position, entity.position)
                 --Start inserting items!
                 if #item_stacks > 0 then
@@ -353,9 +370,11 @@ function queue.deconstruction(data)
                 if entity.has_items_inside() then
                     entity.clear_items_inside()
                 end
-                this_product = {name=(entity.stack and entity.stack.name) or entity.name, count=1}
             end
-
+            --This shouldn't be needed but it won't hurt.
+            if not this_product.name then
+                this_product = {name=(entity.type == "item-entity" and entity.stack.name) or entity.name, count=1}
+            end
             if entity.name ~= "deconstructible-tile-proxy" then -- Destroy Entities
                 game.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
                 game.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
@@ -377,10 +396,6 @@ function queue.build_entity_ghost(data)
     if (player and player.valid) then
         if ghost.valid then
             local item_stacks = get_all_items_on_ground(ghost)
-            -- if insert_or_spill_items(player, get_all_items_on_ground(ghost)) then
-            -- create_projectile("nano-projectile-return", ghost_surf, player.force, ghost_pos, player.position)
-            -- end
-
             if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
                 local module_stacks
                 local old_item_requests = table.deepcopy(ghost.item_requests)
@@ -431,7 +446,6 @@ function queue.build_tile_ghost(data)
                 game.raise_event(defines.events.on_player_built_tile, {player_index=player.index, positions={position}})
             else --Can't place entity
                 insert_or_spill_items(player, {data.place_item})
-                --ghost.destroy()
             end
         else --Give the item back ghost isn't valid anymore.
             insert_or_spill_items(player, {data.place_item})
