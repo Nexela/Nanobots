@@ -54,3 +54,4 @@ Change Log:
 * 1.4.1 - Fix errors with item_stacks with some mods. Fix raw wood health.
 * 1.4.2 - Fix for sound entities keeping chunks active. Adjust projectile acceleration.
 * 1.4.3 - Adjust logic checking for ready personal bots.
+* 1.4.4 - Better existing termite check, Transport lines pickup and return items, Really fix item_stacks errors this time.
