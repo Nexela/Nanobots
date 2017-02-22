@@ -518,7 +518,7 @@ local function everyone_hates_trees(player, pos, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
     for _, stupid_tree in pairs(player.surface.find_entities_filtered{area=area, type="tree"}) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
-            local tree_area = Area.offset(stupid_tree.prototype.collision_box, stupid_tree.position)
+            local tree_area = Area.expand(Area.offset(stupid_tree.prototype.collision_box, stupid_tree.position), .5)
             if player.surface.count_entities_filtered{area=tree_area, name="nano-cloud-small-termites"} == 0 then
                 player.surface.create_entity{
                     name="nano-projectile-termites",
