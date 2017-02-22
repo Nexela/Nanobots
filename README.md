@@ -20,8 +20,8 @@ Late Game Additions:
 
 * Adds 3 new equipment pieces for your armor that enhance your late game experience.
 * The Item Programmer will mark all items-on-ground (artifacts, etc) in your personal roboport construction range for deconstruction as long as no enemies are around.
-* The Tree Programmer will mark all trees within 10 * (Number of equipped programmers) tiles from you for deconstruction.
-* The Unit Launcher will launch Destroys/Defenders/Distractors when enemies get too close to you.
+* The Tree Programmer will mark all trees within your personal roboport range for deconstruction.
+* The Unit Launcher will launch Destroys/Defenders/Distractors when enemies get inside your roborport range.
 
 ---
 Future Plans and Known issues:
@@ -55,3 +55,4 @@ Change Log:
 * 1.4.2 - Fix for sound entities keeping chunks active. Adjust projectile acceleration.
 * 1.4.3 - Adjust logic checking for ready personal bots.
 * 1.4.4 - Better existing termite check, Transport lines pickup and return items, Really fix item_stacks errors this time.
+* 1.4.5 - Fix error with bot chips, Add electric logic to bot chips. Using the chips now as an energy cost.
