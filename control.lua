@@ -22,12 +22,8 @@ end
 
 local bot_radius = MOD.config.BOT_RADIUS
 local termite_radius = MOD.config.TERMITE_RADIUS
-local transport_types = {
-    ["transport-belt"] = 2,
-    ["underground-belt"] = 2,
-    ["splitter"] = 8,
-    ["loader"] = 2,
-}
+local combat_robots = MOD.config.COMBAT_ROBOTS
+local transport_types = MOD.config.TRANSPORT_TYPES
 
 local min, random, max, floor, ceil = math.min, math.random, math.max, math.floor, math.ceil --luacheck: ignore
 
@@ -39,16 +35,15 @@ local function is_connected_player_ready(player)
     return (player.afk_time < 180 and player.character) or false
 end
 
--- Loop through armor and return a table of valid equipment names and counts
+-- Loop through armor and return a table of valid equipment tables indexed by equipment name
 -- @param player: the player object
--- @return table: a table of valid equipment, name as key, count as value .
+-- @return table: a table of valid equipment, name as key, array of named equipment as value .
 local function get_valid_equipment(player)
     local armor = player.get_inventory(defines.inventory.player_armor)
     local list = {}
     if armor[1].valid_for_read and armor[1].grid and armor[1].grid.equipment then
         for _, equip in pairs(armor[1].grid.equipment) do
-            if equip.energy >= 5000 then
-                --list[equip.name]=(list[equip.name] or 0) + 1
+            if equip.energy > 0 then
                 list[equip.name] = list[equip.name] or {}
                 list[equip.name][#list[equip.name] + 1] = equip
             end
@@ -569,28 +564,50 @@ end
 
 --Mark items for deconstruction if player has roboport
 local function gobble_items(player, equipment)
-    local rad = min(100, player.character.logistic_cell.construction_radius)
+    local rad = player.character.logistic_cell.construction_radius
     local area = Position.expand_to_area(player.position, rad)
-    if not player.surface.find_nearest_enemy{position=player.position ,max_distance=rad+20,force=player.force} then
+    if not player.surface.find_nearest_enemy{position=player.position, max_distance=rad+20, force=player.force} then
         if equipment["equipment-bot-chip-items"] then
-            for _, item in pairs(player.surface.find_entities_filtered{area=area, name="item-on-ground"}) do
-                if not item.to_be_deconstructed(player.force) then
-                    item.order_deconstruction(player.force)
+
+            local items = player.surface.find_entities_filtered{area=area, name="item-on-ground"}
+            local num_items = #items
+            local num_item_chips = #equipment["equipment-bot-chip-items"]
+
+            while num_items > 0 and num_item_chips > 0 do
+                local chip = equipment["equipment-bot-chip-items"][num_item_chips]
+                while num_items > 0 and chip and chip.energy > 100 do
+                    local item = items[num_items]
+                    if item and not item.to_be_deconstructed(player.force) then
+                        item.order_deconstruction(player.force)
+                        chip.energy = chip.energy - 100
+                    end
+                    num_items = num_items - 1
                 end
+                num_item_chips = num_item_chips - 1
             end
         end
         if equipment["equipment-bot-chip-trees"] then
-            local range = Position.expand_to_area(player.position, min(100, #equipment["equipment-bot-chip-trees"] * MOD.config.CHIP_RADIUS))
-            for _, item in pairs(player.surface.find_entities_filtered{area=range, type="tree"}) do
-                if not item.to_be_deconstructed(player.force) then
-                    item.order_deconstruction(player.force)
+
+            local items = player.surface.find_entities_filtered{area=area, type="tree"}
+            local num_items = #items
+            local num_item_chips = #equipment["equipment-bot-chip-trees"]
+
+            while num_items > 0 and num_item_chips > 0 do
+                local chip = equipment["equipment-bot-chip-trees"][num_item_chips]
+                while num_items > 0 and chip and chip.energy > 25 do
+                    local item = items[num_items]
+                    if item and not item.to_be_deconstructed(player.force) then
+                        item.order_deconstruction(player.force)
+                        chip.energy = chip.energy - 25
+                    end
+                    num_items = num_items - 1
                 end
+                num_item_chips = num_item_chips - 1
             end
         end
     end
 end
 
-local combat_robots = MOD.config.COMBAT_ROBOTS
 local function get_best_follower_capsule(player)
     for capsule, robot in pairs(combat_robots) do
         local count = player.get_item_count(capsule)
@@ -599,20 +616,22 @@ local function get_best_follower_capsule(player)
 end
 
 local function launch_units(player, launchers)
+    local rad = player.character.logistic_cell.construction_radius
     local num_launchers = #launchers
     local capsule, count, robot = get_best_follower_capsule(player)
-    local rad = min(100, num_launchers * MOD.config.CHIP_RADIUS)
     if capsule and player.surface.find_nearest_enemy{position=player.position, max_distance=rad, force=player.force} then
         local max_bots = player.force.maximum_following_robot_count + player.character_maximum_following_robot_count_bonus
-        local range = Position.expand_to_area(player.position, 30)
+        local range = Position.expand_to_area(player.position, rad)
         local existing = player.surface.count_entities_filtered{area=range, type="combat-robot", force=player.force}
         if existing < (max_bots - (num_launchers * 5)) then
             for i = 1, min(num_launchers, count) do
                 local launcher = launchers[i]
-                local removed = player.remove_item({name=capsule, count=1})
-                if removed then
-                    player.surface.create_entity{name=robot, position=player.position, force = player.force, target=player.character}
-                    launcher.energy = 0
+                if launcher.energy >= 500 then
+                    local removed = player.remove_item({name=capsule, count=1})
+                    if removed then
+                        player.surface.create_entity{name=robot, position=player.position, force = player.force, target=player.character}
+                        launcher.energy = launcher.energy - 500
+                    end
                 end
             end
         end
@@ -622,7 +641,7 @@ end
 local function prepare_chips(player)
     if are_bots_ready(player.character) then
         local equipment=get_valid_equipment(player)
-        if (equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"]) then
+        if equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
             gobble_items(player, equipment)
         end
         if equipment["equipment-bot-chip-launcher"] then

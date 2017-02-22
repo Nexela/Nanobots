@@ -9,8 +9,15 @@ NANO.COMBAT_ROBOTS = {
     ["distractor-capsule"] = "distractor"
 }
 
+NANO.TRANSPORT_TYPES = {
+    ["transport-belt"] = 2,
+    ["underground-belt"] = 2,
+    ["splitter"] = 8,
+    ["loader"] = 2,
+}
+
 --Changes here will take effect
-NANO.CHIP_RADIUS = 10 --default: 10, radius of tiles to check for personal bot mark for deconstruction and unit launcher
+NANO.CHIP_RADIUS = 50 --default: 50, radius of tiles to check for personal bot mark for deconstruction and unit launcher
 
 --Tables linked to technologys, values are the tile radius
 NANO.BOT_RADIUS = {[0] = 7.5, [1] = 9.5, [2]=11.5, [3]=13.5, [4]=15.5}
