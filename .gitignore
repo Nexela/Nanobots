@@ -1,0 +1,9 @@
+/.imdone
+scratchpad/
+.project
+*.tags
+.tags*
+/.script-output
+/.legacy
+/build
+/.build
