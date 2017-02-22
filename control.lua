@@ -354,10 +354,10 @@ function queue.deconstruction(data)
 
             --Get all of the items on ground.
             if entity.type == "item-entity" then
-                local cur_item = {name=entity.stack.name, count=entity.stack.count, health=entity.stack.health or 1}
-                item_stacks[#item_stacks+1] = cur_item
+                item_stacks[#item_stacks+1] = {name=entity.stack.name, count=entity.stack.count, health=entity.stack.health or 1}
                 if not this_product.name then this_product = item_stacks[#item_stacks] end
             end
+
             if data.deconstructors then
                 create_projectile("nano-projectile-deconstructors", entity.surface, entity.force, player.position, entity.position)
                 --Start inserting items!
@@ -371,10 +371,12 @@ function queue.deconstruction(data)
                     entity.clear_items_inside()
                 end
             end
+
             --This shouldn't be needed but it won't hurt.
             if not this_product.name then
                 this_product = {name=(entity.type == "item-entity" and entity.stack.name) or entity.name, count=1}
             end
+
             if entity.name ~= "deconstructible-tile-proxy" then -- Destroy Entities
                 game.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
                 game.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
