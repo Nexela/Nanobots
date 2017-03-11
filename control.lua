@@ -79,12 +79,26 @@ local function get_gun_ammo_name(player, gun_name)
     return nil, nil, nil
 end
 
--- Does the character have a personal robort and construction robots
+-- Does the character have a personal robort and construction robots. Or is in range of a roboport with bots.
 -- character: the player character
 -- @return bool: true or false
-local function are_bots_ready(character)
-    return (character.logistic_cell and character.logistic_cell.mobile
-        and character.logistic_cell.stationed_construction_robot_count > 0 and character.logistic_cell.construction_radius > 0) or false
+local function are_bots_ready(c)
+    if c.logistic_cell and c.logistic_cell.mobile and c.logistic_cell.construction_radius > 0 then
+        if c.logistic_cell.stationed_construction_robot_count > 0 then
+            return true
+        else
+            local port = c.surface.find_entities_filtered{
+                type = "roboport",
+                area=Position.expand_to_area(c.position, c.logistic_cell.construction_radius),
+                limit = 1,
+                force = c.force
+            }[1]
+            if port and port.logistic_network and port.logistic_network.all_construction_robots > 0 then
+                game.print(port.logistic_network.all_construction_robots)
+                return true
+            end
+        end
+    end
 end
 
 -- Attempt to insert an item_stack or array of item_stacks into the entity

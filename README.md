@@ -56,3 +56,4 @@ Change Log:
 * 1.4.3 - Adjust logic checking for ready personal bots.
 * 1.4.4 - Better existing termite check, Transport lines pickup and return items, Really fix item_stacks errors this time.
 * 1.4.5 - Fix error with bot chips, Add electric logic to bot chips. Using the chips now as an energy cost.
+* 1.4.6 - Power armor modules now also check for total robots if in range of a roboport. (No longer necessary to always have robots on you)
