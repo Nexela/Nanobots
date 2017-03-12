@@ -94,7 +94,6 @@ local function are_bots_ready(c)
                 force = c.force
             }[1]
             if port and port.logistic_network and port.logistic_network.all_construction_robots > 0 then
-                game.print(port.logistic_network.all_construction_robots)
                 return true
             end
         end
