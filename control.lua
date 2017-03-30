@@ -252,6 +252,18 @@ local function get_one_item_from_inv(entity, item, cheat)
     end
 end
 
+local function ammo_drain(player, ammo)
+    local name = ammo.name
+    ammo.drain_ammo(1)
+    if not ammo.valid_for_read then
+        local new = player.get_inventory(defines.inventory.player_main).find_item_stack(name)
+        if new then
+            ammo.set_stack(new)
+            new.clear()
+        end
+    end
+end
+
 -- Get the stacks of modules not inserted and modules to insert
 -- @param player: the entity to get modules from
 -- @param entity: the ghost entity to get requests from (.15 can switch to item-proxy)
@@ -493,7 +505,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if (global.config.no_network_limits or nano_network_check(player, ghost)) then
                 if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(global.queued, _find_match, ghost)) then
-                    nano_ammo.drain_ammo(1)
+                    ammo_drain(player, nano_ammo)
                     data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost}
                     List.push_right(global.queued, data)
                 elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
@@ -505,13 +517,13 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                         if ghost.name == "entity-ghost" and place_item then
                             data.place_item = place_item
                             List.push_right(global.queued, data)
-                            nano_ammo.drain_ammo(1)
+                            ammo_drain(player, nano_ammo)
                         elseif ghost.name == "tile-ghost" then
                             if ghost.surface.count_entities_filtered{name="entity-ghost", position=ghost.position, limit=1} == 0 and place_item then
                                 data.place_item = place_item
                                 data.action="build_tile_ghost"
                                 List.push_right(global.queued, data)
-                                nano_ammo.drain_ammo(1)
+                                ammo_drain(player, nano_ammo)
                             end
                         end
                     end
@@ -530,7 +542,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             name="nano-sound-repair",
                             position=ghost.position,
                         }
-                        nano_ammo.drain_ammo(1)
+                        ammo_drain(player, nano_ammo)
                     end --repair
                 end --deconstruct, ghost or heal
             end --network check
@@ -560,7 +572,8 @@ local function everyone_hates_trees(player, pos, nano_ammo)
                     name="nano-sound-termite",
                     position=stupid_tree.position,
                 }
-                nano_ammo.drain_ammo(1)
+                --nano_ammo.drain_ammo(1)
+                ammo_drain(player, nano_ammo)
             end
         else
             break
@@ -658,7 +671,6 @@ local function get_health_capsules(player)
     end
     return 10
 end
-
 
 local function emergency_heal(player, feeder)
     local count = #feeder
