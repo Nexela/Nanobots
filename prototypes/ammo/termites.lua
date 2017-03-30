@@ -10,6 +10,7 @@ local recipe = {
         {"iron-axe", 1},
         {"electronic-circuit", 1}
     },
+    results =
     {
         {type = "item" , name = "ammo-nano-termites", amount = 2}
     }
@@ -21,10 +22,10 @@ local termites = {
     name = "ammo-nano-termites",
     icon = "__Nanobots__/graphics/icons/nano-ammo-termites.png",
     flags = {"goes-to-main-inventory"},
-    magazine_size = 20,
+    magazine_size = 20, --20
     subgroup = "tool",
     order = "c[automated-construction]-g[gun-nano-emitter]-d-termites",
-    stack_size = 100,
+    stack_size = 100, --100
     ammo_type =
     {
         category = "nano-ammo",
