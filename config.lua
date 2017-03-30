@@ -9,6 +9,13 @@ NANO.COMBAT_ROBOTS = {
     ["distractor-capsule"] = "distractor"
 }
 
+NANO.FOOD = {
+    ["cooked-biter-meat"] = 50,
+    ["cooked-fish"] = 40,
+    ["raw-fish"] = 20,
+    ["raw-biter-meat"] = 20,
+}
+
 NANO.TRANSPORT_TYPES = {
     ["transport-belt"] = 2,
     ["underground-belt"] = 2,

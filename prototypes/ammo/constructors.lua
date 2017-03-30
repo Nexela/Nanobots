@@ -4,14 +4,16 @@ local recipe = {
     type = "recipe",
     name = "ammo-nano-constructors",
     enabled = false,
-    energy_required = 5,
+    energy_required = 1,
     ingredients =
     {
-        {"copper-plate", 5},
-        {"electronic-circuit", 1},
+        {"iron-axe", 1},
         {"repair-pack", 1}
     },
-    result = "ammo-nano-constructors"
+    results =
+    {
+        {type = "item" , name = "ammo-nano-constructors", amount = 1}
+    }
 }
 
 -------------------------------------------------------------------------------
@@ -105,6 +107,61 @@ local cloud_small_constructors = {
     action = nil,
 }
 
+local projectile_deconstructors ={
+    type = "projectile",
+    name = "nano-projectile-deconstructors",
+    flags = {"not-on-map"},
+    acceleration =0.005,
+    direction_only = false,
+    animation = constants.projectile_animation,
+    final_action =
+    {
+        type = "direct",
+        action_delivery =
+        {
+            type = "instant",
+            target_effects =
+            {
+                {
+                    type = "create-entity",
+                    entity_name = "nano-cloud-small-deconstructors",
+                    check_buildability = false
+                },
+            }
+        }
+    },
+}
+
+local cloud_small_deconstructors = {
+    type = "smoke-with-trigger",
+    name = "nano-cloud-small-deconstructors",
+    flags = {"not-on-map"},
+    show_when_smoke_off = true,
+    animation = constants.cloud_animation(.4),
+    slow_down_factor = 0,
+    affected_by_wind = false,
+    cyclic = true,
+    duration = 60*2,
+    fade_away_duration = 60,
+    spread_duration = 10,
+    color = Color.set(defines.colors.lightred, .35),
+    action_frequency = 120,
+    action = {
+        type = "direct",
+        action_delivery =
+        {
+            type = "instant",
+            target_effects =
+            {
+                {
+                    type = "create-explosion",
+                    entity_name = "nano-sound-deconstruct",
+                },
+            }
+        }
+    },
+}
+
 -------------------------------------------------------------------------------
 --Projectile for the healers, shoots from player to target,
 --release healing cloud.
@@ -179,11 +236,11 @@ local cloud_small_repair = {
 }
 
 -------------------------------------------------------------------------------
-data:extend({
-        recipe, constructors,
-        projectile_constructors, cloud_big_constructors, cloud_small_constructors,
-        projectile_repair, cloud_small_repair
-    })
+data:extend{
+    recipe, constructors,
+    projectile_constructors, cloud_big_constructors, cloud_small_constructors,
+    projectile_repair, cloud_small_repair, projectile_deconstructors, cloud_small_deconstructors
+}
 
 local effects = data.raw.technology["automated-construction"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-constructors"}

@@ -1,8 +1,8 @@
-local NANO = require("config")
+--local NANO = require("config")
 
 local recipe_chip = {
     type = "recipe",
-    name = "equipment-bot-chip-trees",
+    name = "equipment-bot-chip-feeder",
     enabled = false,
     energy_required = 10,
     ingredients =
@@ -11,23 +11,23 @@ local recipe_chip = {
         {"battery", 1},
         --bobmods add construction brain
     },
-    result = "equipment-bot-chip-trees"
+    result = "equipment-bot-chip-feeder"
 }
 
 local item_chip = {
     type = "item",
-    name = "equipment-bot-chip-trees",
-    icon = "__Nanobots__/graphics/icons/equipment-bot-chip-trees.png",
-    placed_as_equipment_result = "equipment-bot-chip-trees",
+    name = "equipment-bot-chip-feeder",
+    icon = "__Nanobots__/graphics/icons/equipment-bot-chip-feeder.png",
+    placed_as_equipment_result = "equipment-bot-chip-feeder",
     flags = {"goes-to-main-inventory"},
     subgroup = "equipment",
-    order = "e[robotics]-ad[personal-roboport-equipment]",
+    order = "e[robotics]-ae[personal-roboport-equipment]",
     stack_size = 20
 }
 
 local equipment_chip = {
     type = "active-defense-equipment",
-    name = "equipment-bot-chip-trees",
+    name = "equipment-bot-chip-feeder",
     ability_icon =
     {
         filename = "__base__/graphics/equipment/discharge-defense-equipment-ability.png",
@@ -37,7 +37,7 @@ local equipment_chip = {
     },
     sprite =
     {
-        filename = "__Nanobots__/graphics/equipment/equipment-bot-chip-trees.png",
+        filename = "__Nanobots__/graphics/equipment/equipment-bot-chip-feeder.png",
         width = 32,
         height = 32,
         priority = "medium"
@@ -52,9 +52,9 @@ local equipment_chip = {
     {
         type = "electric",
         usage_priority = "secondary-input",
-        buffer_capacity = "2kJ",
-        input_flow_limit = ".5kW",
-        drain = "50W"
+        buffer_capacity = "480J",
+        input_flow_limit = ".5J",
+        drain = "1W"
     },
     attack_parameters =
     {
@@ -75,7 +75,7 @@ local equipment_chip = {
             {
                 {
                     type = "area",
-                    perimeter = NANO.CHIP_RADIUS,
+                    perimeter = 30,
                     force = "enemy",
                     action_delivery = nil,
                 }
@@ -88,4 +88,4 @@ local equipment_chip = {
 
 data:extend({item_chip, recipe_chip, equipment_chip})
 local effects = data.raw.technology["personal-roboport-equipment"].effects
-effects[#effects + 1] = {type = "unlock-recipe", recipe="equipment-bot-chip-trees"}
+effects[#effects + 1] = {type = "unlock-recipe", recipe="equipment-bot-chip-feeder"}

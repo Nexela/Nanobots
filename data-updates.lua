@@ -30,4 +30,8 @@ if bobmods and bobmods.lib then
 
     add("equipment-bot-chip-items", "robot-brain-constuction")
     add("equipment-bot-chip-trees", "robot-brain-constuction")
+    add("equipment-bot-chip-nanointerface", "robot-brain-constuction")
+    add("equipment-bot-chip-nanointerface", "gun-nano-emitter")
+    add("equipment-bot-chip-launcher", "robot-brain-combat")
+    add("equipment-bot-chip-feeder", "robot-brain-combat")
 end

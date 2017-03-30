@@ -4,7 +4,7 @@ MOD = {}
 MOD.name = "Nanobots"
 MOD.interface = "nanobots"
 MOD.config = require("config")
-MOD.version = "1.4.3"
+MOD.version = "1.5.0"
 
 local Position = require("stdlib/area/position")
 local Area = require("stdlib/area/area")
@@ -24,8 +24,9 @@ local bot_radius = MOD.config.BOT_RADIUS
 local termite_radius = MOD.config.TERMITE_RADIUS
 local combat_robots = MOD.config.COMBAT_ROBOTS
 local transport_types = MOD.config.TRANSPORT_TYPES
+local healer_capsules = MOD.config.FOOD
 
-local min, random, max, floor, ceil = math.min, math.random, math.max, math.floor, math.ceil --luacheck: ignore
+local min, random, max, floor, ceil, abs = math.min, math.random, math.max, math.floor, math.ceil, math.abs --luacheck: ignore
 
 -- Is the player connected, not afk, and have an attached character
 -- @param player: the player object
@@ -41,7 +42,7 @@ end
 local function get_valid_equipment(player)
     local armor = player.get_inventory(defines.inventory.player_armor)
     local list = {}
-    if armor[1].valid_for_read and armor[1].grid and armor[1].grid.equipment then
+    if armor and armor[1] and armor[1].valid_for_read and armor[1].grid and armor[1].grid.equipment then
         for _, equip in pairs(armor[1].grid.equipment) do
             if equip.energy > 0 then
                 list[equip.name] = list[equip.name] or {}
@@ -50,6 +51,27 @@ local function get_valid_equipment(player)
         end
     end
     return list
+end
+
+-- Is the player not in a logistic network or has a working nano-interface
+-- @param player: the player object
+-- @return bool: true if has chip or not in network
+local function nano_network_check(player, entity)
+    if entity then
+        return get_valid_equipment(player)["equipment-bot-chip-nanointerface"] or not entity.surface.find_logistic_network_by_position(entity.position, entity.force)
+    else
+        return get_valid_equipment(player)["equipment-bot-chip-nanointerface"] or not player.character.logistic_network
+    end
+end
+
+--Increment the y position for flying text
+local function increment_position(position)
+    local x = position.x
+    local y = position.y - .5
+    return function ()
+        y=y+0.5
+        return {x=x, y=y}
+    end
 end
 
 -- Can nanobots repair this entity.
@@ -366,18 +388,11 @@ function queue.deconstruction(data)
                 if not this_product.name then this_product = item_stacks[#item_stacks] end
             end
 
-            if data.deconstructors then
-                create_projectile("nano-projectile-deconstructors", entity.surface, entity.force, player.position, entity.position)
-                --Start inserting items!
-                if #item_stacks > 0 then
-                    insert_or_spill_items(player, item_stacks)
-                    create_projectile("nano-projectile-return", entity.surface, entity.force, entity.position, player.position)
-                end
-            else --not deconstructors
-                create_projectile("nano-projectile-scrappers", entity.surface, entity.force, player.position, entity.position)
-                if entity.has_items_inside() then
-                    entity.clear_items_inside()
-                end
+            create_projectile("nano-projectile-deconstructors", entity.surface, entity.force, player.position, entity.position)
+            --Start inserting items!
+            if #item_stacks > 0 then
+                insert_or_spill_items(player, item_stacks)
+                create_projectile("nano-projectile-return", entity.surface, entity.force, entity.position, player.position)
             end
 
             --This shouldn't be needed but it won't hurt.
@@ -474,10 +489,14 @@ end
 local function queue_ghosts_in_range(player, pos, nano_ammo)
     local radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7.5
     local area = Position.expand_to_area(pos, radius)
-    for _, ghost in pairs(player.surface.find_entities_filtered{area=area, force=player.force}) do
+    for _, ghost in pairs(player.surface.find_entities(area)) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
-            if (global.config.no_network_limits or not ghost.surface.find_logistic_network_by_position(ghost.position, ghost.force)) then
-                if (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") then
+            if (global.config.no_network_limits or nano_network_check(player, ghost)) then
+                if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(global.queued, _find_match, ghost)) then
+                    nano_ammo.drain_ammo(1)
+                    data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost}
+                    List.push_right(global.queued, data)
+                elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
                     --get first available item that places entity from inventory that is not in our hand.
                     local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
                     if item_name and not table_find(global.queued, _find_match, ghost) then
@@ -497,7 +516,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                         end
                     end
                     -- Check if entity needs repair
-                elseif nano_repairable_entity(ghost) then
+                elseif nano_repairable_entity(ghost) and ghost.force == player.force then
                     local ghost_area = Area.offset(ghost.prototype.collision_box, ghost.position)
                     if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=ghost_area} == 0 then
                         ghost.surface.create_entity{
@@ -513,7 +532,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                         }
                         nano_ammo.drain_ammo(1)
                     end --repair
-                end --ghost or heal
+                end --deconstruct, ghost or heal
             end --network check
         else --not valid ammo
             break --we ran out of ammo break out! -- Possible to check on ammo changed before this and re-insert the ammo?
@@ -545,27 +564,6 @@ local function everyone_hates_trees(player, pos, nano_ammo)
             end
         else
             break
-        end
-    end
-end
-
---Nano Scrappers and deconstructors
-local function destroy_marked_items(player, pos, nano_ammo, deconstructors)
-    local radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7.5
-    local area = Position.expand_to_area(pos, radius)
-    for _, entity in pairs(player.surface.find_entities(area)) do
-        local data
-        if (entity.to_be_deconstructed(player.force) and entity.minable
-            and (nano_ammo.valid and nano_ammo.valid_for_read) and not table_find(global.queued, _find_match, entity)) then
-            if deconstructors then
-                nano_ammo.drain_ammo(1)
-                data = {player_index=player.index, action="deconstruction", deconstructors=deconstructors, entity=entity}
-                List.push_right(global.queued, data)
-            elseif not entity.has_flag("breaths-air") then -- Scrappers
-                nano_ammo.drain_ammo(1)
-                data = {player_index=player.index, action="deconstruction", deconstructors=false, entity=entity}
-                List.push_right(global.queued, data)
-            end
         end
     end
 end
@@ -651,14 +649,44 @@ local function launch_units(player, launchers)
     end
 end
 
+local function get_health_capsules(player)
+    for name, health in pairs(healer_capsules) do
+        if player.get_item_count(name) > 1 then
+            player.remove_item({name=name, count = 1})
+            return max(health, 10)
+        end
+    end
+    return 10
+end
+
+
+local function emergency_heal(player, feeder)
+    local count = #feeder
+    local pos = increment_position(player.character.position)
+    while (player.character.health < (player.character.prototype.max_health * .75)) and count > 0 do
+        if feeder[count].energy >= 480 then
+            local last_health = player.character.health
+            local heal = get_health_capsules(player)
+            player.character.health = last_health + heal
+            local line = "+" .. ceil(abs(player.character.health - last_health)) .. "hp"
+            feeder[count].energy = 0
+            player.surface.create_entity{name="flying-text", text = line, color = defines.colors.green, position = pos()}
+        end
+        count = count - 1
+    end
+end
+
 local function prepare_chips(player)
     if are_bots_ready(player.character) then
-        local equipment=get_valid_equipment(player)
+        local equipment = get_valid_equipment(player)
         if equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
             gobble_items(player, equipment)
         end
         if equipment["equipment-bot-chip-launcher"] then
             launch_units(player, equipment["equipment-bot-chip-launcher"])
+        end
+        if equipment["equipment-bot-chip-feeder"] then
+            emergency_heal(player, equipment["equipment-bot-chip-feeder"])
         end
     end
 end
@@ -680,17 +708,13 @@ local function on_tick(event)
         for _, player in pairs(game.connected_players) do
             --Establish connected, non afk, player character
             if is_connected_player_ready(player) then
-                if config.auto_nanobots and (config.no_network_limits or not player.character.logistic_network) then
+                if config.auto_nanobots and (config.no_network_limits or nano_network_check(player)) then
                     local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
                     if gun then
                         if ammo_name == "ammo-nano-constructors" then
                             queue_ghosts_in_range(player, player.position, nano_ammo)
                         elseif ammo_name == "ammo-nano-termites" then
                             everyone_hates_trees(player, player.position, nano_ammo)
-                        elseif ammo_name == "ammo-nano-scrappers" then
-                            destroy_marked_items(player, player.position, nano_ammo, false)
-                        elseif ammo_name == "ammo-nano-deconstructors" then
-                            destroy_marked_items(player, player.position, nano_ammo, true)
                         end
                     end --Gun and Ammo check
                 end

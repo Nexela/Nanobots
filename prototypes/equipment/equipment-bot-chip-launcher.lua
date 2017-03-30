@@ -9,7 +9,7 @@ local recipe_chip = {
     {
         {"processing-unit", 1},
         {"battery", 1},
-        --bobmods add construction brain
+        --bobmods add combat brain
     },
     result = "equipment-bot-chip-launcher"
 }
@@ -21,7 +21,7 @@ local item_chip = {
     placed_as_equipment_result = "equipment-bot-chip-launcher",
     flags = {"goes-to-main-inventory"},
     subgroup = "equipment",
-    order = "e[robotics]-ab[personal-roboport-equipment]",
+    order = "e[robotics]-ac[personal-roboport-equipment]",
     stack_size = 20
 }
 

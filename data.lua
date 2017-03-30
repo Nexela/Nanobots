@@ -8,7 +8,8 @@ require("prototypes/technology")
 require("prototypes/equipment/equipment-bot-chip-items")
 require("prototypes/equipment/equipment-bot-chip-trees")
 require("prototypes/equipment/equipment-bot-chip-launcher")
-
+require("prototypes/equipment/equipment-bot-chip-nanointerface")
+require("prototypes/equipment/equipment-bot-chip-feeder")
 
 --Gun, When equipped and selected will automaticly revive ghosts around it
 require("prototypes/gun-nano-emitter")
@@ -16,8 +17,6 @@ require("prototypes/gun-nano-emitter")
 require("prototypes/ammo/proxies")
 require("prototypes/ammo/constructors")
 require("prototypes/ammo/termites")
-require("prototypes/ammo/scrappers")
-require("prototypes/ammo/deconstructors")
 
 --Sounds
 require("prototypes/sounds")

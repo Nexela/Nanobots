@@ -23,6 +23,7 @@ function changes.on_init(version)
 end
 
 function changes.on_configuration_changed(event)
+    --game.print(serpent.block(global._changes, {comment=false}))
     changes["map-change-always-first"]()
     if event.data.mod_changes then
         changes["any-change-always-first"]()
@@ -38,21 +39,19 @@ end
 
 function changes.on_mod_changed(this_mod_changes)
     global._changes = global._changes or {}
-    local old = this_mod_changes.old_version or MOD.version
+    --local old = this_mod_changes.old_version or MOD.version or "0.0.0"
     local migration_index = 1
-    if old then -- Find the last installed version
+    -- Find the last installed version
         for i, ver in ipairs(migrations) do
-            if old == ver and global._changes[ver] then
-                --previous version found
-                migration_index = i + 1
-            end
+            if global._changes[ver] then
+            migration_index = i + 1
         end
     end
-    changes["mod-change-always-first"]()
+        changes["mod-change-always-first"]()
     for i = migration_index, #migrations do
         if changes[migrations[i]] then
             changes[migrations[i]](this_mod_changes)
-            global._changes[migrations[i]] = this_mod_changes.old_version or 0
+            global._changes[migrations[i]] = this_mod_changes.old_version or "0.0.0"
             game.print(mod_name..": Migration complete for ".. migrations[i])
         end
     end
