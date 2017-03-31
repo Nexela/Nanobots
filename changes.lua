@@ -101,9 +101,11 @@ changes["1.6.1"] = function ()
     local _old_queued = table.deepcopy(global.queued)
     global.queued = {}
     local next_tick = Queue.next(game.tick, "player")
-    for _, qdata in pairs(_old_queued) do
-        if type("qdata") == "table" and qdata.action then
-            Queue.insert(next_tick(), qdata)
+    if _old_queued and type(_old_queued) == "table" and _old_queued.next then
+        for _, qdata in pairs(_old_queued) do
+            if type("qdata") == "table" and qdata.action then
+                Queue.insert(next_tick(), qdata)
+            end
         end
     end
 end
