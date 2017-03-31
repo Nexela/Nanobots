@@ -1,12 +1,12 @@
 local tech1 = {
     type = "technology",
-    name = "nano-range-1",
-    icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
+    name = "nano-speed-1",
+    icon = "__Nanobots__/graphics/technology/tech-nano-speed.png",
     icon_size = 128,
     effects =
     {
         {
-            type = "ammo-damage",
+            type = "gun-speed",
             ammo_category = "nano-ammo",
             modifier = "1"
         }
@@ -27,18 +27,18 @@ local tech1 = {
 
 local tech2 = {
     type = "technology",
-    name = "nano-range-2",
-    icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
+    name = "nano-speed-2",
+    icon = "__Nanobots__/graphics/technology/tech-nano-speed.png",
     icon_size = 128,
     effects =
     {
         {
-            type = "ammo-damage",
+            type = "gun-speed",
             ammo_category = "nano-ammo",
             modifier = "1"
         }
     },
-    prerequisites = {"engine", "nano-range-1"},
+    prerequisites = {"engine", "nano-speed-1"},
     unit =
     {
         count = 100,
@@ -55,18 +55,18 @@ local tech2 = {
 
 local tech3 = {
     type = "technology",
-    name = "nano-range-3",
-    icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
+    name = "nano-speed-3",
+    icon = "__Nanobots__/graphics/technology/tech-nano-speed.png",
     icon_size = 128,
     effects =
     {
         {
-            type = "ammo-damage",
+            type = "gun-speed",
             ammo_category = "nano-ammo",
             modifier = "1"
         }
     },
-    prerequisites = {"electric-engine", "nano-range-2"},
+    prerequisites = {"electric-engine", "nano-speed-2"},
     unit =
     {
         count = 100,
@@ -83,25 +83,26 @@ local tech3 = {
 
 local tech4 = {
     type = "technology",
-    name = "nano-range-4",
-    icon = "__Nanobots__/graphics/technology/tech-nano-range.png",
+    name = "nano-speed-4",
+    icon = "__Nanobots__/graphics/technology/tech-nano-speed.png",
     icon_size = 128,
     effects =
     {
         {
-            type = "ammo-damage",
+            type = "gun-speed",
             ammo_category = "nano-ammo",
             modifier = "1"
         }
     },
-    prerequisites = {"flying", "nano-range-3"},
+    prerequisites = {"flying", "nano-speed-3"},
     unit =
     {
         count = 100,
         ingredients =
         {
             {"science-pack-1", 4},
-            {"science-pack-2", 4}
+            {"science-pack-2", 4},
+            {"science-pack-3", 4}
         },
         time = 120
     },

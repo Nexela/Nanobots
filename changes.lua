@@ -94,7 +94,7 @@ local Player = require("scripts/player")
 local Force = require("scripts/force")
 changes["1.6.0"] = function ()
     global.forces = Force.init()
-    global.player = Player.init()
+    global.players = Player.init()
     global.config.ticks_per_queue = 12
     if global.forces["player"] and global.queued then
         global.forces["player"].queued = global.queued

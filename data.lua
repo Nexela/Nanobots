@@ -2,7 +2,8 @@ defines = defines or {}
 require("stdlib/colors/colors")
 require("stdlib/utils/protohelpers")
 
-require("prototypes/technology")
+require("prototypes/technology/nano-range")
+require("prototypes/technology/nano-speed")
 
 --Modular Equipment, When inserted into an equipment grid will automaticly mark items on ground for deconstruction
 require("prototypes/equipment/equipment-bot-chip-items")

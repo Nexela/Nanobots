@@ -543,25 +543,25 @@ end
 --[[Nano Emmitter]]--
 -------------------------------------------------------------------------------
 --Extension of the tick handler, This functions decide what to do with their
---assigned robots and insert them intot the queue accordingly.
+--assigned robots and insert them into the queue accordingly.
 
 --Nano Constructors
 --queue the ghosts in range for building, heal stuff needing healed
 local function queue_ghosts_in_range(player, pos, nano_ammo)
-    local queued = global.forces[player.force].queued
+    local queued = global.forces[player.force.name].queued
     local radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7.5
     local area = Position.expand_to_area(pos, radius)
     for _, ghost in pairs(player.surface.find_entities(area)) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if (global.config.no_network_limits or nano_network_check(player, ghost)) then
-                if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(global.queued, _find_entity_match, ghost)) then
+                if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(queued, _find_entity_match, ghost)) then
                     ammo_drain(player, nano_ammo)
                     data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost}
                     List.push_right(queued, data)
                 elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
                     --get first available item that places entity from inventory that is not in our hand.
                     local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
-                    if item_name and not table_find(global.queued, _find_entity_match, ghost) then
+                    if item_name and not table_find(queued, _find_entity_match, ghost) then
                         local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
                         local data = {action = "build_entity_ghost", player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position}
                         if ghost.name == "entity-ghost" and place_item then
