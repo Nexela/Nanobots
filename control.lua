@@ -26,6 +26,21 @@ local combat_robots = MOD.config.COMBAT_ROBOTS
 local transport_types = MOD.config.TRANSPORT_TYPES
 local healer_capsules = MOD.config.FOOD
 
+local train_types = {
+    ["locomotive"] = true,
+    ["cargo-wagon"] = true
+}
+
+local inv_list = {
+    defines.inventory.player_main,
+    defines.inventory.player_quickbar,
+    defines.inventory.chest,
+    defines.inventory.player_vehicle,
+    defines.inventory.player_trash,
+    defines.inventory.car_trunk,
+    defines.inventory.cargo_wagon
+}
+
 local min, random, max, floor, ceil, abs = math.min, math.random, math.max, math.floor, math.ceil, math.abs --luacheck: ignore
 
 -- Is the player connected, not afk, and have an attached character
@@ -236,14 +251,25 @@ end
 -- @return item_stack; SimpleItemStack
 local function get_one_item_from_inv(entity, item, cheat)
     if not cheat then
-        for _, inv in pairs(defines.inventory) do
-            local inventory = entity.get_inventory(inv)
-            if inventory and inventory.valid then
-                local stack=inventory.find_item_stack(item)
-                if stack then
-                    local item_stack = {name=stack.name, count=1, health=stack.health or 1}
-                    stack.count = stack.count - 1
-                    return item_stack
+        local sources
+        if entity.vehicle and train_types[entity.vehicle.type] and entity.vehicle.train then
+            sources = entity.vehicle.train.cargo_wagons
+            sources[#sources+1] = entity
+        elseif entity.vehicle then
+            sources = {entity.vehicle, entity}
+        else
+            sources = {entity}
+        end
+        for _, source in pairs(sources) do
+            for _, inv in pairs(inv_list) do
+                local inventory = source.get_inventory(inv)
+                if inventory and inventory.valid then
+                    local stack=inventory.find_item_stack(item)
+                    if stack then
+                        local item_stack = {name=stack.name, count=1, health=stack.health or 1}
+                        stack.count = stack.count - 1
+                        return item_stack
+                    end
                 end
             end
         end
@@ -338,7 +364,8 @@ end
 local table_find = table.find
 -- return true for table.find if we found at least 1 item or cheat_mode is enabled.
 local _find_item=function(_, k, p)
-    return get_cheat_mode(p) or p.get_item_count(k) > 0
+    return get_cheat_mode(p) or p.get_item_count(k) > 0 or
+    (p.vehicle and (p.vehicle.get_item_count(k) > 0 or (train_types[p.vehicle.type] and p.vehicle.train.get_item_count(k) > 0)))
 end
 -- return true for table.find if entity equals stored entity
 local _find_match=function(v, _, entity)
@@ -515,9 +542,11 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                         local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
                         local data = {action = "build_entity_ghost", player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position}
                         if ghost.name == "entity-ghost" and place_item then
-                            data.place_item = place_item
-                            List.push_right(global.queued, data)
-                            ammo_drain(player, nano_ammo)
+                            if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
+                                data.place_item = place_item
+                                List.push_right(global.queued, data)
+                                ammo_drain(player, nano_ammo)
+                            end
                         elseif ghost.name == "tile-ghost" then
                             if ghost.surface.count_entities_filtered{name="entity-ghost", position=ghost.position, limit=1} == 0 and place_item then
                                 data.place_item = place_item
