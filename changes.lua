@@ -10,7 +10,7 @@ old_version :: string: Old version of the mod. May be nil if the mod wasn't prev
 new_version :: string: New version of the mod. May be nil if the mod is no longer present (i.e. it was just removed).
 --]]
 local mod_name = MOD.name or "not-set"
-local migrations = {"1.2.0", "1.2.3"}
+local migrations = {"1.2.0", "1.2.3", "1.6.0"}
 local changes = {}
 
 --Mark all migrations as complete during Init.
@@ -86,6 +86,19 @@ changes["1.2.3"] = function ()
         if global._changes[history] and type(global._changes[history]) == "table" and global._changes[history].from then
             global._changes[history] = global._changes[history].from
         end
+    end
+end
+
+--Major changes, add in player and force global tables
+local Player = require("scripts/player")
+local Force = require("scripts/force")
+changes["1.6.0"] = function ()
+    global.forces = Force.init()
+    global.player = Player.init()
+    global.config.ticks_per_queue = 12
+    if global.forces["player"] and global.queued then
+        global.forces["player"].queued = global.queued
+        global.queued = nil
     end
 end
 

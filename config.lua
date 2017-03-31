@@ -42,7 +42,7 @@ NANO.QUEUE_SPEED_BONUS = {[0] = 0, [1] = 2, [2] = 4, [3] = 6, [4] = 8}
 NANO.control = {}
 NANO.control.no_network_limits = false --disable checking for existing logistic networks
 NANO.control.tick_mod = 60 --default: 60, (1 seconds), ticks between checks, set to 0 to disable all automatic events
-NANO.control.ticks_per_queue = 4 --default: 4, builds from queue 1 item every 4 ticks.
+NANO.control.ticks_per_queue = 12 --default: 4, builds from queue 1 item every 4 ticks.
 NANO.control.auto_equipment = true --default: true, set to false to disable automatic power armor equipment (item will need to be used) (soon)
 NANO.control.auto_nanobots = true --default: true, set to false to disable automatic nanobots when emitter is selected gun.
 NANO.control.run_ticks = true --default: true, run the tick handler.

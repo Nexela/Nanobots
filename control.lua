@@ -9,6 +9,8 @@ MOD.version = "1.5.0"
 local Position = require("stdlib/area/position")
 local Area = require("stdlib/area/area")
 local List = require("stdlib/utils/list")
+local Force = require("scripts/force")
+local Player = require("scripts/player")
 
 if DEBUG then --luacheck: ignore DEBUG
     log(MOD.name .. " Debug mode enabled")
@@ -23,7 +25,7 @@ end
 -- Local constants from config
 local bot_radius = MOD.config.BOT_RADIUS
 local termite_radius = MOD.config.TERMITE_RADIUS
---local queue_speed = MOD.config.QUEUE_SPEED_BONUS
+local queue_speed = MOD.config.QUEUE_SPEED_BONUS
 local combat_robots = MOD.config.COMBAT_ROBOTS
 local transport_types = MOD.config.TRANSPORT_TYPES
 local healer_capsules = MOD.config.FOOD
@@ -546,6 +548,7 @@ end
 --Nano Constructors
 --queue the ghosts in range for building, heal stuff needing healed
 local function queue_ghosts_in_range(player, pos, nano_ammo)
+    local queued = global.forces[player.force].queued
     local radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7.5
     local area = Position.expand_to_area(pos, radius)
     for _, ghost in pairs(player.surface.find_entities(area)) do
@@ -554,7 +557,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                 if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(global.queued, _find_entity_match, ghost)) then
                     ammo_drain(player, nano_ammo)
                     data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost}
-                    List.push_right(global.queued, data)
+                    List.push_right(queued, data)
                 elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
                     --get first available item that places entity from inventory that is not in our hand.
                     local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
@@ -564,14 +567,14 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                         if ghost.name == "entity-ghost" and place_item then
                             if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
                                 data.place_item = place_item
-                                List.push_right(global.queued, data)
+                                List.push_right(queued, data)
                                 ammo_drain(player, nano_ammo)
                             end
                         elseif ghost.name == "tile-ghost" then
                             if ghost.surface.count_entities_filtered{name="entity-ghost", position=ghost.position, limit=1} == 0 and place_item then
                                 data.place_item = place_item
                                 data.action="build_tile_ghost"
-                                List.push_right(global.queued, data)
+                                List.push_right(queued, data)
                                 ammo_drain(player, nano_ammo)
                             end
                         end
@@ -761,9 +764,13 @@ end
 local function on_tick(event)
     local config = global.config
     --Handle building from the queue every x ticks.
-    if event.tick % config.ticks_per_queue == 0 and List.count(global.queued) > 0 then
-        local data = List.pop_left(global.queued)
-        queue[data.action](data)
+    for _, force_name in ipairs(global.force_list) do
+        local force, fdata = Force.get_object_and_data(force_name)
+        local tick_modifier = max(1, config.ticks_per_queue - queue_speed[force.get_gun_speed_modifier("nano-ammo")])
+        if event.tick % tick_modifier == 0 and List.count(fdata.queued) > 0 then
+            local data = List.pop_left(fdata.queued)
+            queue[data.action](data)
+        end
     end
     if config.run_ticks and event.tick % config.tick_mod == 0 then
         for _, player in pairs(game.connected_players) do
@@ -787,7 +794,9 @@ local function on_tick(event)
     end --NANO Automatic scripts
 end
 Event.register(defines.events.on_tick, on_tick)
---script.on_event(defines.events.on_tick, on_tick)
+
+Event.register(defines.events.on_player_created, Player.on_player_created)
+Event.register(defines.events.on_force_created, function(event) Force.init(event.force.name) end)
 
 -------------------------------------------------------------------------------
 --[[INIT]]--
@@ -798,7 +807,8 @@ Event.register(Event.core_events.configuration_changed, changes.on_configuration
 function MOD.on_init()
     global = {}
     global._changes = changes.on_init(game.active_mods[MOD.name] or MOD.version)
-    global.queued = List.new()
+    global.forces = Force.init()
+    global.players = Player.init()
     global.current_index = 1
     global.config = table.deepcopy(MOD.config.control)
     changes.on_init(game.active_mods[MOD.name])
