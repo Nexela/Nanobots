@@ -90,15 +90,21 @@ changes["1.2.3"] = function ()
 end
 
 --Major changes, add in player and force global tables
+local Queue = require("scripts/queue")
 local Player = require("scripts/player")
 local Force = require("scripts/force")
 changes["1.6.0"] = function ()
     global.forces = Force.init()
     global.players = Player.init()
+    global.robointerfaces = {}
     global.config.ticks_per_queue = 12
-    if global.forces["player"] and global.queued then
-        global.forces["player"].queued = global.queued
-        global.queued = nil
+    local _old_queued = table.deepcopy(global.queued)
+    global.queued = {}
+    local next_tick = Queue.next(game.tick, "player")
+    for _, qdata in pairs(_old_queued) do
+        if type("qdata") == "table" and qdata.action then
+            Queue.insert(next_tick(), qdata)
+        end
     end
 end
 

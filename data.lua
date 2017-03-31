@@ -19,6 +19,8 @@ require("prototypes/ammo/proxies")
 require("prototypes/ammo/constructors")
 require("prototypes/ammo/termites")
 
+require("prototypes/roboport-interface")
+
 --Sounds
 require("prototypes/sounds")
 
