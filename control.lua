@@ -20,18 +20,27 @@ end
 --[[Helper Functions]]--
 -------------------------------------------------------------------------------
 
+-- Local constants from config
 local bot_radius = MOD.config.BOT_RADIUS
 local termite_radius = MOD.config.TERMITE_RADIUS
+--local queue_speed = MOD.config.QUEUE_SPEED_BONUS
 local combat_robots = MOD.config.COMBAT_ROBOTS
 local transport_types = MOD.config.TRANSPORT_TYPES
 local healer_capsules = MOD.config.FOOD
+local train_types = MOD.config.TRAIN_TYPES
 
-local train_types = {
-    ["locomotive"] = true,
-    ["cargo-wagon"] = true
-}
-
-local inv_list = {
+-- Limited list of inventorys to search
+local function cull_inventory_list(list)
+    local temp , culled_list = {}, {}
+    for _, value in pairs(list) do
+        temp[value] = true
+    end
+    for ind in pairs(temp) do
+        culled_list[#culled_list+1] = ind
+    end
+    return culled_list
+end
+local inv_list = cull_inventory_list{
     defines.inventory.player_main,
     defines.inventory.player_quickbar,
     defines.inventory.chest,
@@ -41,7 +50,27 @@ local inv_list = {
     defines.inventory.cargo_wagon
 }
 
+-- Local functions for commonly used math functions
 local min, random, max, floor, ceil, abs = math.min, math.random, math.max, math.floor, math.ceil, math.abs --luacheck: ignore
+
+-- Is cheat mode active and are we syncing with cheat mode
+-- @param p: the player object
+-- @return bool: cheating
+local function get_cheat_mode(p)
+    return p.cheat_mode and global.config.sync_cheat_mode
+end
+
+--table.find functions
+local table_find = table.find
+-- return true for table.find if we found at least 1 item or cheat_mode is enabled.
+local _find_item = function(_, k, p)
+    return get_cheat_mode(p) or p.get_item_count(k) > 0 or
+    (p.vehicle and (p.vehicle.get_item_count(k) > 0 or (train_types[p.vehicle.type] and p.vehicle.train.get_item_count(k) > 0)))
+end
+-- return true for table.find if entity equals stored entity
+local _find_entity_match = function(v, _, entity)
+    if type(v) == "table" then return v.entity == entity end
+end
 
 -- Is the player connected, not afk, and have an attached character
 -- @param player: the player object
@@ -79,9 +108,11 @@ local function nano_network_check(player, entity)
     end
 end
 
---Increment the y position for flying text
+-- Increment the y position for flying text to keep text from overlapping
+-- @param position: position table - start position
+-- @return function: increments position all subsequent calls
 local function increment_position(position)
-    local x = position.x
+    local x = position.x - 1
     local y = position.y - .5
     return function ()
         y=y+0.5
@@ -278,6 +309,10 @@ local function get_one_item_from_inv(entity, item, cheat)
     end
 end
 
+-- Manually drain ammo, if it is the last bit of ammo in the stack pull in more ammo from inventory if available
+-- @param player: the player object
+-- @param ammo: the ammo itemstack
+-- @return bool: this was the last one to be drained
 local function ammo_drain(player, ammo)
     local name = ammo.name
     ammo.drain_ammo(1)
@@ -287,6 +322,7 @@ local function ammo_drain(player, ammo)
             ammo.set_stack(new)
             new.clear()
         end
+        return true
     end
 end
 
@@ -354,22 +390,6 @@ local function create_projectile(name, surface, force, source, target, speed)
     speed = speed or 1
     force = force or "player"
     surface.create_entity{name=name, force=force, position=source, target=target, speed=speed}
-end
-
-local function get_cheat_mode(p)
-    return p.cheat_mode and global.config.sync_cheat_mode
-end
-
---table.find functions
-local table_find = table.find
--- return true for table.find if we found at least 1 item or cheat_mode is enabled.
-local _find_item=function(_, k, p)
-    return get_cheat_mode(p) or p.get_item_count(k) > 0 or
-    (p.vehicle and (p.vehicle.get_item_count(k) > 0 or (train_types[p.vehicle.type] and p.vehicle.train.get_item_count(k) > 0)))
-end
--- return true for table.find if entity equals stored entity
-local _find_match=function(v, _, entity)
-    if type(v) == "table" then return v.entity == entity end
 end
 
 -------------------------------------------------------------------------------
@@ -531,14 +551,14 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
     for _, ghost in pairs(player.surface.find_entities(area)) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if (global.config.no_network_limits or nano_network_check(player, ghost)) then
-                if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(global.queued, _find_match, ghost)) then
+                if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(global.queued, _find_entity_match, ghost)) then
                     ammo_drain(player, nano_ammo)
                     data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost}
                     List.push_right(global.queued, data)
                 elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
                     --get first available item that places entity from inventory that is not in our hand.
                     local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
-                    if item_name and not table_find(global.queued, _find_match, ghost) then
+                    if item_name and not table_find(global.queued, _find_entity_match, ghost) then
                         local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
                         local data = {action = "build_entity_ghost", player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position}
                         if ghost.name == "entity-ghost" and place_item then
@@ -693,12 +713,11 @@ end
 
 local function get_health_capsules(player)
     for name, health in pairs(healer_capsules) do
-        if player.get_item_count(name) > 1 then
-            player.remove_item({name=name, count = 1})
-            return max(health, 10)
+        if game.item_prototypes[name] and player.remove_item({name=name, count = 1}) > 0 then
+            return max(health, 10), game.item_prototypes[name].localised_name or {"nanobots.free-food-unknown"}
         end
     end
-    return 10
+    return 10, {"nanobots.free-food"}
 end
 
 local function emergency_heal(player, feeder)
@@ -707,11 +726,12 @@ local function emergency_heal(player, feeder)
     while (player.character.health < (player.character.prototype.max_health * .75)) and count > 0 do
         if feeder[count].energy >= 480 then
             local last_health = player.character.health
-            local heal = get_health_capsules(player)
+            local heal, locale = get_health_capsules(player)
             player.character.health = last_health + heal
-            local line = "+" .. ceil(abs(player.character.health - last_health)) .. "hp"
+            --local health_line = "+"..ceil(abs(player.character.health - last_health)).."hp from "..locale
+            local health_line = {"nanobots.health_line", ceil(abs(player.character.health - last_health)), locale}
             feeder[count].energy = 0
-            player.surface.create_entity{name="flying-text", text = line, color = defines.colors.green, position = pos()}
+            player.surface.create_entity{name="flying-text", text = health_line, color = defines.colors.green, position = pos()}
         end
         count = count - 1
     end
