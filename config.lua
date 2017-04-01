@@ -10,7 +10,7 @@ NANO.COMBAT_ROBOTS = {
 }
 
 NANO.FOOD = {
-    ["crap"] = 60,
+    ["alien-goop-cracking-cotton-candy"] = 100,
     ["cooked-biter-meat"] = 50,
     ["cooked-fish"] = 40,
     ["raw-fish"] = 20,
