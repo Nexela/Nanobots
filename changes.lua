@@ -10,7 +10,7 @@ old_version :: string: Old version of the mod. May be nil if the mod wasn't prev
 new_version :: string: New version of the mod. May be nil if the mod is no longer present (i.e. it was just removed).
 --]]
 local mod_name = MOD.name or "not-set"
-local migrations = {"1.2.0", "1.2.3", "1.6.1"}
+local migrations = {"1.2.0", "1.2.3", "1.6.2"}
 local changes = {}
 
 --Mark all migrations as complete during Init.
@@ -90,13 +90,15 @@ changes["1.2.3"] = function ()
 end
 
 --Major changes, add in player and force global tables
+local robointerface = require("scripts/robointerface")
 local Queue = require("scripts/queue")
 local Player = require("scripts/player")
 local Force = require("scripts/force")
-changes["1.6.1"] = function ()
+changes["1.6.2"] = function ()
     global.forces = Force.init()
     global.players = Player.init()
-    global.robointerfaces = {}
+    global.networks = {}
+    global.robointerfaces = robointerface.init()
     global.config.ticks_per_queue = 12
     local _old_queued = table.deepcopy(global.queued)
     global.queued = {}
@@ -108,6 +110,8 @@ changes["1.6.1"] = function ()
             end
         end
     end
+    global._changes["1.6.0"] = nil
+    global._changes["1.6.1"] = nil
 end
 
 -------------------------------------------------------------------------------

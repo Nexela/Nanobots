@@ -2,6 +2,8 @@ defines = defines or {}
 require("stdlib/colors/colors")
 require("stdlib/utils/protohelpers")
 
+require("prototypes/signals")
+
 require("prototypes/technology/nano-range")
 require("prototypes/technology/nano-speed")
 

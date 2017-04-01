@@ -1,5 +1,6 @@
---luacheck: globals DEBUG
+--luacheck: globals DEBUG LOGLEVEL
 DEBUG = true
+LOGLEVEL = 2
 local NANO = {}
 
 --Combat robot names, indexed by capsule name
