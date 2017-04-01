@@ -43,7 +43,9 @@ Color = {}
 
 function Color.set(color, alpha)
     color = color or defines.colors.white
-    color.a = alpha or nil
+    if alpha then
+        color.a = alpha
+    end
     return color
 end
 
