@@ -58,6 +58,7 @@ NANO.quickstart = {
     disable_rso_chunk = true,
     floor_tile = "concrete",
     mod_name = "Nanobots",
+    area_box = {{-200, -200}, {200, 200}},
     stacks = {
         "blueprint",
         "deconstruction-planner",

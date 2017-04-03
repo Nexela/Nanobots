@@ -28,6 +28,7 @@ local item_chip = {
 local equipment_chip = {
     type = "active-defense-equipment",
     name = "equipment-bot-chip-launcher",
+    take_result = "equipment-bot-chip-launcher",
     ability_icon =
     {
         filename = "__base__/graphics/equipment/discharge-defense-equipment-ability.png",
@@ -86,6 +87,12 @@ local equipment_chip = {
     categories = {"armor"}
 }
 
-data:extend({item_chip, recipe_chip, equipment_chip})
+local disabled = table.deepcopy(equipment_chip)
+--Keep the same localised name if none is specified
+disabled.localised_name = {"nanobots.disabled-eq", disabled.localised_name or {"equipment-name."..disabled.name}}
+disabled.name = "nano-disabled-" .. disabled.name
+
 local effects = data.raw.technology["personal-roboport-equipment"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="equipment-bot-chip-launcher"}
+
+data:extend({item_chip, recipe_chip, equipment_chip, disabled})

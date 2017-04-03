@@ -6,9 +6,9 @@
 -- recipe_ri.energy_required = 30
 -- recipe_ri.enabled = false
 -- recipe_ri.ingredients = {
---   {"constant-combinator", 1},
---   {"roboport", 1},
---   {"radar", 1},
+-- {"constant-combinator", 1},
+-- {"roboport", 1},
+-- {"radar", 1},
 -- }
 --
 -- --Create item
@@ -20,6 +20,7 @@
 --Create entity
 local ri = Proto.dupli_proto( "constant-combinator", "constant-combinator", "roboport-interface-cc", false )
 ri.item_slot_count = 5
+ri.minable = nil
 --ri.collision_box = nil
 ri.order = "zzzzz"
 ri.sprites.north=Proto.empty_sprite
@@ -32,10 +33,10 @@ local recipe_radar = Proto.dupli_proto("recipe", "radar", "roboport-interface")
 recipe_radar.energy_required = 30
 recipe_radar.enabled = false
 recipe_radar.ingredients = {
-   {"constant-combinator", 1},
-   {"roboport", 1},
-   {"radar", 1},
- }
+    {"constant-combinator", 1},
+    {"roboport", 1},
+    {"radar", 1},
+}
 
 --Frame 153, 131
 local item_radar = Proto.dupli_proto("item", "radar", "roboport-interface")

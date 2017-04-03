@@ -146,6 +146,18 @@ local function build_roboport_interface(event)
 end
 Event.register(Event.build_events, build_roboport_interface)
 
+local function on_sector_scanned(event)
+    if event.radar.name == "roboport-interface" then
+        local entity = event.radar
+        local interface = global.robointerfaces[entity.unit_number]
+        if interface[entity.unit_number] then
+            game.print("Running interface for "..entity.unit_number)
+            --run_interface(interface)
+        end
+    end
+end
+Event.register(defines.events.on_sector_scanned, on_sector_scanned)
+
 --Process 1 interface every 60 ticks
 local function roboport_interface_tick(event)
     if event.tick % 16 == 0 then
@@ -157,16 +169,16 @@ local function roboport_interface_tick(event)
                 end
             end
             global.cell_queue[qindex] = nil
-        else
-            local index, interface = next(global.robointerfaces, global._next_interface)
-            if index then
-                if interface and interface.entity.valid then
-                    run_interface(interface)
-                else
-                    interface[index] = nil
-                end
-            end
-            global._next_interface = index
+            -- else
+            -- local index, interface = next(global.robointerfaces, global._next_interface)
+            -- if index then
+            -- if interface and interface.entity.valid then
+            -- run_interface(interface)
+            -- else
+            -- interface[index] = nil
+            -- end
+            -- end
+            -- global._next_interface = index
         end
         global._next_cell = qindex
     end

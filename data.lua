@@ -3,8 +3,13 @@ local NANO = require("config")
 require("stdlib/colors/colors")
 require("stdlib/utils/protohelpers")
 
+--Custom hotkeys
+require("prototypes/hotkeys")
+
+--Custom virtual signals
 require("prototypes/signals")
 
+--Custom Technologies
 require("prototypes/technology/nano-range")
 require("prototypes/technology/nano-speed")
 
@@ -17,11 +22,12 @@ require("prototypes/equipment/equipment-bot-chip-feeder")
 
 --Gun, When equipped and selected will automaticly revive ghosts around it
 require("prototypes/gun-nano-emitter")
---Ammos
+--Ammo for nano guns
 require("prototypes/ammo/proxies")
 require("prototypes/ammo/constructors")
 require("prototypes/ammo/termites")
 
+--Roboport reprogramming interface
 require("prototypes/roboport-interface")
 
 --Sounds

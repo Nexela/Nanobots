@@ -170,9 +170,95 @@ local function emergency_heal(player, feeder)
 end
 
 -------------------------------------------------------------------------------
+--[[Equipment toggle hotkeys]]--
+-------------------------------------------------------------------------------
+local function place_bot_chip(event)
+    local filtered_name = function(name) return name:gsub("^nano%-disabled%-", "") end
+    local grid = event.grid
+    local placed = event.equipment
+    if game.equipment_prototypes["nano-disabled-"..placed.name] then
+        for _, equipment in pairs(grid.equipment) do
+            if equipment ~= placed then
+                if placed.name == filtered_name(equipment.name) and placed.name ~= equipment.name then
+                    local new = {name = equipment.name, position = placed.position}
+                    grid.take(placed)
+                    grid.put(new)
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function toggle_armor_modules(event, name, types)
+    local player = game.players[event.player_index]
+    local armor = player.get_inventory(defines.inventory.player_armor)[1]
+    if armor and armor.valid_for_read and armor.grid then
+        local grid = armor.grid
+        local status = "notfound"
+        local replace_equipment = {}
+
+        for eq_name in pairs(types or {[name] = true}) do
+
+            for _, equipment in pairs(grid.equipment) do
+                if equipment.name:gsub("^nano%-disabled%-", "") == eq_name then
+                    replace_equipment[#replace_equipment+1] = equipment
+                    if status == "notfound" then
+                        status = equipment.name:find("^nano%-disabled%-") and "enable" or "disable"
+                    end
+                end
+            end
+            for _, equipment in pairs(replace_equipment) do
+                local position, energy = equipment.position, equipment.energy
+                local new_name = status == "enable" and eq_name or status == "disable" and "nano-disabled-"..eq_name
+                grid.take(equipment)
+                local new_equip = grid.put{name = new_name, position = position}
+                if new_equip then
+                    new_equip.energy = energy
+                end
+            end
+            -- LOGIC for not spamming everything needed.
+            player.print({"equipment-hotkeys."..status, {"equipment-name."..eq_name}})
+        end
+    end
+end
+
+--Store this in global and update on config changed
+local function get_eq_type_names(type)
+    --Add non disabled equipment prototype names to a table if they have a disabled prototype
+    local t = {}
+    for _, eq in pairs(game.equipment_prototypes) do
+        if eq.type == type and not eq.name:find("^nano%-disabled%-") and game.equipment_prototypes["nano-disabled-"..eq.name] then
+            t[eq.name] = eq.name
+        end
+    end
+    return t
+end
+
+Event.hotkeys = Event.hotkeys or {}
+Event.hotkeys["toggle-equipment-roboport"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("roboport-equipment")) end
+Event.hotkeys["toggle-equipment-movement-bonus"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("movement-bonus-equipment")) end
+Event.hotkeys["toggle-equipment-night-vision"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("night-vision-equipment")) end
+Event.hotkeys["toggle-equipment-bot-chip-all"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("active-defense-equipment")) end
+Event.hotkeys["toggle-equipment-bot-chip-trees"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-trees") end
+Event.hotkeys["toggle-equipment-bot-chip-items"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-items") end
+Event.hotkeys["toggle-equipment-bot-chip-launcher"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-launcher") end
+Event.hotkeys["toggle-equipment-bot-chip-feeder"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-feeder") end
+Event.hotkeys["toggle-equipment-bot-chip-nanointerface"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-nanointerface") end
+
+for event_name in pairs(Event.hotkeys) do
+    script.on_event(event_name, Event.hotkeys[event_name])
+end
+
+Event.equipment_events = {
+    --defines.events.on_player_armor_inventory_changed,
+    defines.events.on_player_placed_equipment,
+    --defines.events.on_player_removed_equipment
+}
+Event.register(Event.equipment_events, place_bot_chip)
+-------------------------------------------------------------------------------
 --[[BOT CHIPS]]--
 -------------------------------------------------------------------------------
-
 function armormods.prepare_chips(player)
     if are_bots_ready(player.character) then
         local equipment = get_valid_equipment(player)

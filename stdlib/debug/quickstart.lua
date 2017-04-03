@@ -48,7 +48,7 @@ function quickstart.on_player_created(event)
         end
 
         local surface = player.surface
-        local area = {{-250, -250}, {250, 250}}
+        local area = QS.get("area_box", {{-100, -100}, {100, 100}})
 
         if QS.get("disable_rso_starting", false) and remote.interfaces["RSO"] and remote.interfaces["RSO"]["disableStartingArea"] then
             remote.call("RSO", "disableStartingArea")
