@@ -1,4 +1,5 @@
 defines = defines or {}
+local NANO = require("config")
 require("stdlib/colors/colors")
 require("stdlib/utils/protohelpers")
 
@@ -26,6 +27,6 @@ require("prototypes/roboport-interface")
 --Sounds
 require("prototypes/sounds")
 
-if DEBUG then --luacheck: ignore DEBUG
+if NANO.DEBUG then
     data.raw["furnace"]["stone-furnace"].max_health = 10000
 end

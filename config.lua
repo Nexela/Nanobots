@@ -1,7 +1,6 @@
---luacheck: globals DEBUG LOGLEVEL
-DEBUG = true
-LOGLEVEL = 2
 local NANO = {}
+
+NANO.DEBUG = true
 
 --Combat robot names, indexed by capsule name
 NANO.COMBAT_ROBOTS = {
@@ -41,6 +40,7 @@ NANO.QUEUE_SPEED_BONUS = {[0] = 0, [1] = 2, [2] = 4, [3] = 6, [4] = 8}
 --Changes here will only affect new games unless you reset the config manually in the save
 --/c remote.call("nanobots", "reset_config")
 NANO.control = {}
+NANO.control.loglevel = 2
 NANO.control.no_network_limits = false --disable checking for existing logistic networks
 NANO.control.tick_mod = 60 --default: 60, (1 seconds), ticks between checks, set to 0 to disable all automatic events
 NANO.control.ticks_per_queue = 12 --default: 4, builds from queue 1 item every 4 ticks.
@@ -67,6 +67,7 @@ NANO.quickstart = {
         "creative-mode_super-electric-pole",
         "construction-robot",
         "creative-mode_magic-wand-modifier",
+        "creative-mode_super-roboport",
         "gun-nano-emitter",
         "ammo-nano-constructors",
         "stone-furnace",
@@ -75,7 +76,8 @@ NANO.quickstart = {
         "equipment-bot-chip-trees",
         "equipment-bot-chip-items",
         "chain-gun",
-        "chain-ammo"
+        "chain-ammo",
+        "roboport-interface"
     }
 }
 

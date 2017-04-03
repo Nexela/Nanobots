@@ -8,9 +8,9 @@ local queue_speed = MOD.config.QUEUE_SPEED_BONUS
 local Queue = {}
 
 function Queue.insert(tick, data)
-    local queued = global.queued[tick] or {}
-    queued[#queued + 1] = data
-    global.queued[tick] = queued
+    local queue = global.nano_queue[tick] or {}
+    queue[#queue + 1] = data
+    global.nano_queue[tick] = queue
 end
 
 function Queue.next(tick, force_name)

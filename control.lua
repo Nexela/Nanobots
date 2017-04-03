@@ -18,7 +18,7 @@ local Player = require("scripts/player")
 Event.build_events = {defines.events.on_built_entity, defines.events.on_robot_built_entity}
 Event.death_events = {defines.events.on_preplayer_mined_item, defines.events.on_robot_pre_mined, defines.events.on_entity_died}
 
-if DEBUG then --luacheck: ignore DEBUG
+if MOD.config.DEBUG then --luacheck: ignore DEBUG
     log(MOD.name .. " Debug mode enabled")
     QS = MOD.config.quickstart --luacheck: ignore QS
     require("stdlib/debug/quickstart")
@@ -523,21 +523,21 @@ end
 --queue the ghosts in range for building, heal stuff needing healed
 local function queue_ghosts_in_range(player, pos, nano_ammo)
     --local queued = global.forces[player.force.name].queued
-    local queued = global.queued
+    local queue = global.nano_queue
     local next_tick = Queue.next(game.tick, player.force.name)
     local radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7.5
     local area = Position.expand_to_area(pos, radius)
     for _, ghost in pairs(player.surface.find_entities(area)) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if (global.config.no_network_limits or nano_network_check(player, ghost)) then
-                if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(queued, _find_entity_match, ghost)) then
+                if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(queue, _find_entity_match, ghost)) then
                     ammo_drain(player, nano_ammo)
                     data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost}
                     Queue.insert(next_tick(), data)
                 elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
                     --get first available item that places entity from inventory that is not in our hand.
                     local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
-                    if item_name and not table_find(queued, _find_entity_match, ghost) then
+                    if item_name and not table_find(queue, _find_entity_match, ghost) then
                         local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
                         local data = {action = "build_entity_ghost", player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position}
                         if ghost.name == "entity-ghost" and place_item then
@@ -618,12 +618,11 @@ end
 local function on_tick(event)
     local config = global.config
     --Handle building from the queue
-    if global.queued[event.tick] then
-        --local queued = global.queued[event.tick]
-        for _, queue in ipairs(global.queued[event.tick]) do
+    if global.nano_queue[event.tick] then
+        for _, queue in ipairs(global.nano_queue[event.tick]) do
             Queue[queue.action](queue)
         end
-        global.queued[event.tick] = nil
+        global.nano_queue[event.tick] = nil
     end
 
     --Run logic for nanobots and power armor modules
@@ -662,12 +661,11 @@ Event.register(Event.core_events.configuration_changed, changes.on_configuration
 function MOD.on_init()
     global = {}
     global._changes = changes.on_init(game.active_mods[MOD.name] or MOD.version)
-    global.queued = {}
+    global.nano_queue = {}
+    global.cell_queue = {}
     global.robointerfaces = robointerface.init()
-    global.networks = {}
     global.forces = Force.init()
     global.players = Player.init()
-    global.current_index = 1
     global.config = table.deepcopy(MOD.config.control)
     changes.on_init(game.active_mods[MOD.name])
     game.print(MOD.name..": Init Complete")

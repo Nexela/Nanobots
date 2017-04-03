@@ -10,7 +10,7 @@ old_version :: string: Old version of the mod. May be nil if the mod wasn't prev
 new_version :: string: New version of the mod. May be nil if the mod is no longer present (i.e. it was just removed).
 --]]
 local mod_name = MOD.name or "not-set"
-local migrations = {"1.2.0", "1.2.3", "1.6.2"}
+local migrations = {"1.2.0", "1.2.3", "1.6.3"}
 local changes = {}
 
 --Mark all migrations as complete during Init.
@@ -94,17 +94,19 @@ local robointerface = require("scripts/robointerface")
 local Queue = require("scripts/queue")
 local Player = require("scripts/player")
 local Force = require("scripts/force")
-changes["1.6.2"] = function ()
+changes["1.6.3"] = function ()
     global.forces = Force.init()
     global.players = Player.init()
-    global.networks = {}
+    global.networks = nil
     global.robointerfaces = robointerface.init()
     global.config.ticks_per_queue = 12
-    local _old_queued = table.deepcopy(global.queued)
-    global.queued = {}
+    local old_queue = table.deepcopy(global.queued)
+    global.queued = nil
+    global.nano_queue = {}
+    global.cell_queue = {}
     local next_tick = Queue.next(game.tick, "player")
-    if _old_queued and type(_old_queued) == "table" and _old_queued.next then
-        for _, qdata in pairs(_old_queued) do
+    if old_queue and type(old_queue) == "table" and old_queue.next then
+        for _, qdata in pairs(old_queue) do
             if type("qdata") == "table" and qdata.action then
                 Queue.insert(next_tick(), qdata)
             end
@@ -112,6 +114,8 @@ changes["1.6.2"] = function ()
     end
     global._changes["1.6.0"] = nil
     global._changes["1.6.1"] = nil
+    global._changes["1.6.2"] = nil
+    global.config.loglevel = MOD.config.control.loglevel or 0
 end
 
 -------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ local signal1 = {
   special_signal = false,
   icon = "__Nanobots__/graphics/icons/signals/chop-trees.png",
   subgroup = "nanobot-signals",
-  order = "a"
+  order = "[nano-signal]-a"
 }
 local signal2 = {
   type = "virtual-signal",
@@ -19,15 +19,15 @@ local signal2 = {
   special_signal = false,
   icon = "__Nanobots__/graphics/icons/signals/item-on-ground.png",
   subgroup = "nanobot-signals",
-  order = "b"
+  order = "[nano-signal]-b"
 }
 local signal3 = {
   type = "virtual-signal",
-  name = "nano-signal-network-neighboors",
+  name = "nano-signal-closest-roboport",
   special_signal = false,
-  icon = "__Nanobots__/graphics/icons/signals/network-neighboors.png",
+  icon = "__Nanobots__/graphics/icons/signals/closest-roboport.png",
   subgroup = "nanobot-signals",
-  order = "c"
+  order = "[nano-signal]-c"
 }
 
 data:extend{group, signal1, signal2, signal3}

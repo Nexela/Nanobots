@@ -1,4 +1,5 @@
 local function print_log(msg, level)
+    local fullname = MOD.fullname or MOD.name or "Error"
     level = math.max(level or 0, ((global and global.config and global.config.loglevel) or MOD.config.control.loglevel or 0))
     if (level > 0) then
         if (level >= 1) then
@@ -9,7 +10,7 @@ local function print_log(msg, level)
             end
         end
         if (level >= 2) then
-            local message = MOD.fullname .. ": " .. table.tostring(msg)
+            local message = fullname .. ": " .. table.tostring(msg)
             if game and game.players[1] then
                 game.print(message)
             elseif global then
