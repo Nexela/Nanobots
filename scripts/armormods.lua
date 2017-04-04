@@ -131,6 +131,7 @@ local function gobble_items(player, equipment)
 end
 
 local function launch_units(player, launchers)
+    --TODO queue launching units. remove robot count check.
     local rad = player.character.logistic_cell.construction_radius
     local num_launchers = #launchers
     local capsule, count, robot = get_best_follower_capsule(player)
@@ -172,23 +173,6 @@ end
 -------------------------------------------------------------------------------
 --[[Equipment toggle hotkeys]]--
 -------------------------------------------------------------------------------
-local function place_bot_chip(event)
-    local filtered_name = function(name) return name:gsub("^nano%-disabled%-", "") end
-    local grid = event.grid
-    local placed = event.equipment
-    if game.equipment_prototypes["nano-disabled-"..placed.name] then
-        for _, equipment in pairs(grid.equipment) do
-            if equipment ~= placed then
-                if placed.name == filtered_name(equipment.name) and placed.name ~= equipment.name then
-                    local new = {name = equipment.name, position = placed.position}
-                    grid.take(placed)
-                    grid.put(new)
-                    break
-                end
-            end
-        end
-    end
-end
 
 local function toggle_armor_modules(event, name, types)
     local player = game.players[event.player_index]
@@ -224,7 +208,26 @@ local function toggle_armor_modules(event, name, types)
     end
 end
 
---Store this in global and update on config changed
+local function place_equipment(event)
+    local filtered_name = function(name) return name:gsub("^nano%-disabled%-", "") end
+    local grid = event.grid
+    local placed = event.equipment
+    if game.equipment_prototypes["nano-disabled-"..placed.name] then
+        for _, equipment in pairs(grid.equipment) do
+            if equipment ~= placed then
+                if placed.name == filtered_name(equipment.name) and placed.name ~= equipment.name then
+                    local new = {name = equipment.name, position = placed.position}
+                    grid.take(placed)
+                    grid.put(new)
+                    break
+                end
+            end
+        end
+    end
+end
+Event.register(defines.events.on_player_placed_equipment, place_equipment)
+
+--TODO Store this in global and update on config changed?
 local function get_eq_type_names(type)
     --Add non disabled equipment prototype names to a table if they have a disabled prototype
     local t = {}
@@ -251,12 +254,6 @@ for event_name in pairs(Event.hotkeys) do
     script.on_event(event_name, Event.hotkeys[event_name])
 end
 
-Event.equipment_events = {
-    --defines.events.on_player_armor_inventory_changed,
-    defines.events.on_player_placed_equipment,
-    --defines.events.on_player_removed_equipment
-}
-Event.register(Event.equipment_events, place_bot_chip)
 -------------------------------------------------------------------------------
 --[[BOT CHIPS]]--
 -------------------------------------------------------------------------------
