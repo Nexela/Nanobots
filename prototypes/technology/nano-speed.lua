@@ -102,7 +102,7 @@ local tech4 = {
         {
             {"science-pack-1", 4},
             {"science-pack-2", 4},
-            {"science-pack-3", 4}
+            --{"science-pack-3", 4}
         },
         time = 120
     },
