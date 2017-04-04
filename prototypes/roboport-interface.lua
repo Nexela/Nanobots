@@ -21,6 +21,7 @@
 local ri = Proto.dupli_proto( "constant-combinator", "constant-combinator", "roboport-interface-cc", false )
 ri.item_slot_count = 5
 ri.minable = nil
+--ri.minable.result = "roboport-interface"
 --ri.collision_box = nil
 ri.order = "zzzzz"
 ri.sprites.north=Proto.empty_sprite
