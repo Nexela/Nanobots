@@ -10,7 +10,7 @@ old_version :: string: Old version of the mod. May be nil if the mod wasn't prev
 new_version :: string: New version of the mod. May be nil if the mod is no longer present (i.e. it was just removed).
 --]]
 local mod_name = MOD.name or "not-set"
-local migrations = {"1.2.0", "1.2.3", "1.6.3"}
+local migrations = {"1.2.0", "1.2.3", "1.7.0"}
 local changes = {}
 
 --Mark all migrations as complete during Init.
@@ -42,12 +42,12 @@ function changes.on_mod_changed(this_mod_changes)
     --local old = this_mod_changes.old_version or MOD.version or "0.0.0"
     local migration_index = 1
     -- Find the last installed version
-        for i, ver in ipairs(migrations) do
-            if global._changes[ver] then
+    for i, ver in ipairs(migrations) do
+        if global._changes[ver] then
             migration_index = i + 1
         end
     end
-        changes["mod-change-always-first"]()
+    changes["mod-change-always-first"]()
     for i = migration_index, #migrations do
         if changes[migrations[i]] then
             changes[migrations[i]](this_mod_changes)
@@ -94,16 +94,16 @@ local robointerface = require("scripts/robointerface")
 local Queue = require("scripts/queue")
 local Player = require("scripts/player")
 local Force = require("scripts/force")
-changes["1.6.3"] = function ()
+changes["1.7.0"] = function ()
     global.forces = Force.init()
     global.players = Player.init()
-    global.networks = nil
     global.robointerfaces = robointerface.init()
     global.config.ticks_per_queue = 12
-    local old_queue = table.deepcopy(global.queued)
-    global.queued = nil
+    global.config.loglevel = MOD.config.control.loglevel or 0
+    global.config.inside_area_radius = MOD.config.control.inside_area_radius or 40
     global.nano_queue = {}
     global.cell_queue = {}
+    local old_queue = table.deepcopy(global.queued)
     local next_tick = Queue.next(game.tick, "player")
     if old_queue and type(old_queue) == "table" and old_queue.next then
         for _, qdata in pairs(old_queue) do
@@ -112,10 +112,12 @@ changes["1.6.3"] = function ()
             end
         end
     end
+    --Cleanup un-needed changes
+    global.queued = nil
+    global.networks = nil
     global._changes["1.6.0"] = nil
     global._changes["1.6.1"] = nil
-    global._changes["1.6.2"] = nil
-    global.config.loglevel = MOD.config.control.loglevel or 0
+    global._changes["1.6.3"] = nil
 end
 
 -------------------------------------------------------------------------------

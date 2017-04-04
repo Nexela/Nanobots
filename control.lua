@@ -36,8 +36,6 @@ local termite_radius = MOD.config.TERMITE_RADIUS
 local transport_types = MOD.config.TRANSPORT_TYPES
 local train_types = MOD.config.TRAIN_TYPES
 
-
-
 -- Limited list of inventorys to search
 local function cull_inventory_list(list)
     local temp , culled_list = {}, {}
@@ -382,71 +380,73 @@ function Queue.deconstruction(data)
     local entity, player = data.entity, game.players[data.player_index]
     if player and player.valid then
         if entity and entity.valid then
-            local item_stacks, this_product = {}, {}
+            if Area.inside(Position.expand_to_area(entity.position, 40), player.position) then
+                local item_stacks, this_product = {}, {}
 
-            --Get all items inside of the entity.
-            if entity.has_items_inside() then
-                item_stacks = get_all_items_inside(entity, item_stacks)
-            end
-
-            --Loop through the minable products and add the item(s) to the list
-            local products
-            if (entity.name ~= "deconstructible-tile-proxy"
-                and entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable) then
-                products = entity.prototype.mineable_properties.products
-            elseif entity.name == "deconstructible-tile-proxy" then
-                local tile = entity.surface.get_tile(entity.position)
-                if tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
-                    products = tile.prototype.mineable_properties.products
-                else
-                    --Can't mine the tile so destroy the proxy.
-                    entity.destroy()
-                    return
+                --Get all items inside of the entity.
+                if entity.has_items_inside() then
+                    item_stacks = get_all_items_inside(entity, item_stacks)
                 end
-            end
 
-            if products then
-                for _, item in pairs(products) do
-                    local max_health = entity.health and entity.prototype.max_health
-                    local health = 1
-                    if entity.force == player.force then
-                        health = (entity.health and entity.health/max_health) or 1
+                --Loop through the minable products and add the item(s) to the list
+                local products
+                if (entity.name ~= "deconstructible-tile-proxy"
+                    and entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable) then
+                    products = entity.prototype.mineable_properties.products
+                elseif entity.name == "deconstructible-tile-proxy" then
+                    local tile = entity.surface.get_tile(entity.position)
+                    if tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
+                        products = tile.prototype.mineable_properties.products
+                    else
+                        --Can't mine the tile so destroy the proxy.
+                        entity.destroy()
+                        return
                     end
-                    item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or random(item.amount_min, item.amount_max), health=health}
                 end
-                this_product = item_stacks[#item_stacks]
-            end
 
-            --Get all of the items on ground.
-            if entity.type == "item-entity" then
-                item_stacks[#item_stacks+1] = {name=entity.stack.name, count=entity.stack.count, health=entity.stack.health or 1}
-                if not this_product.name then this_product = item_stacks[#item_stacks] end
-            end
+                if products then
+                    for _, item in pairs(products) do
+                        local max_health = entity.health and entity.prototype.max_health
+                        local health = 1
+                        if entity.force == player.force then
+                            health = (entity.health and entity.health/max_health) or 1
+                        end
+                        item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or random(item.amount_min, item.amount_max), health=health}
+                    end
+                    this_product = item_stacks[#item_stacks]
+                end
 
-            create_projectile("nano-projectile-deconstructors", entity.surface, entity.force, player.position, entity.position)
-            --Start inserting items!
-            if #item_stacks > 0 then
-                insert_or_spill_items(player, item_stacks)
-                create_projectile("nano-projectile-return", entity.surface, entity.force, entity.position, player.position)
-            end
+                --Get all of the items on ground.
+                if entity.type == "item-entity" then
+                    item_stacks[#item_stacks+1] = {name=entity.stack.name, count=entity.stack.count, health=entity.stack.health or 1}
+                    if not this_product.name then this_product = item_stacks[#item_stacks] end
+                end
 
-            --This shouldn't be needed but it won't hurt.
-            if not this_product.name then
-                this_product = {name=(entity.type == "item-entity" and entity.stack.name) or entity.name, count=1}
-            end
+                create_projectile("nano-projectile-deconstructors", entity.surface, entity.force, player.position, entity.position)
+                --Start inserting items!
+                if #item_stacks > 0 then
+                    insert_or_spill_items(player, item_stacks)
+                    create_projectile("nano-projectile-return", entity.surface, entity.force, entity.position, player.position)
+                end
 
-            if entity.name ~= "deconstructible-tile-proxy" then -- Destroy Entities
-                game.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
-                game.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
-                entity.destroy()
-            else -- Destroy tiles
-                local surface, position = entity.surface, entity.position
-                game.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
-                entity.destroy()
-                surface.set_tiles({{name=surface.get_hidden_tile(position), position=position}})
-                game.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
-                game.raise_event(defines.events.on_player_mined_tile, {player_index=player.index, positions={position}})
-            end
+                --This shouldn't be needed but it won't hurt.
+                if not this_product.name then
+                    this_product = {name=(entity.type == "item-entity" and entity.stack.name) or entity.name, count=1}
+                end
+
+                if entity.name ~= "deconstructible-tile-proxy" then -- Destroy Entities
+                    game.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
+                    game.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
+                    entity.destroy()
+                else -- Destroy tiles
+                    local surface, position = entity.surface, entity.position
+                    game.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
+                    entity.destroy()
+                    surface.set_tiles({{name=surface.get_hidden_tile(position), position=position}})
+                    game.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
+                    game.raise_event(defines.events.on_player_mined_tile, {player_index=player.index, positions={position}})
+                end
+            end -- Inside working area
         end--Valid entity
     end--Valid player
 end
@@ -455,40 +455,44 @@ function Queue.build_entity_ghost(data)
     local ghost, player, ghost_surf, ghost_pos = data.entity, game.players[data.player_index], data.surface, data.position
     if (player and player.valid) then
         if ghost.valid then
-            local item_stacks = get_all_items_on_ground(ghost)
-            if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
-                local module_stacks
-                local old_item_requests = table.deepcopy(ghost.item_requests)
-                ghost.item_requests, module_stacks = get_insertable_module_requests(player, ghost)
+            if Area.inside(Position.expand_to_area(ghost.position, 40), player.position) then
+                local item_stacks = get_all_items_on_ground(ghost)
+                if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
+                    local module_stacks
+                    local old_item_requests = table.deepcopy(ghost.item_requests)
+                    ghost.item_requests, module_stacks = get_insertable_module_requests(player, ghost)
 
-                local revived, entity = ghost.revive()
-                if revived then
-                    create_projectile("nano-projectile-constructors", entity.surface, entity.force, player.position, entity.position)
-                    entity.health = (entity.health > 0) and ((data.place_item.health or 1) * entity.prototype.max_health)
-                    --item_stacks = insert_into_entity(entity, item_stacks)
-                    if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
-                        create_projectile("nano-projectile-return", ghost_surf, player.force, ghost_pos, player.position)
-                    end
-                    local module_inventory = entity.get_module_inventory()
-                    if module_inventory and module_stacks then
-                        for _,v in pairs(module_stacks) do
-                            module_inventory.insert(v)
+                    local revived, entity = ghost.revive()
+                    if revived then
+                        create_projectile("nano-projectile-constructors", entity.surface, entity.force, player.position, entity.position)
+                        entity.health = (entity.health > 0) and ((data.place_item.health or 1) * entity.prototype.max_health)
+                        --item_stacks = insert_into_entity(entity, item_stacks)
+                        if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
+                            create_projectile("nano-projectile-return", ghost_surf, player.force, ghost_pos, player.position)
                         end
-                    end
-                    game.raise_event(defines.events.on_built_entity, {player_index=player.index, created_entity=entity, revived=true})
-                else --not revived, return item
-                    if module_stacks then
-                        insert_or_spill_items(player, module_stacks)
-                        if ghost.valid then
-                            ghost.item_requests = old_item_requests
+                        local module_inventory = entity.get_module_inventory()
+                        if module_inventory and module_stacks then
+                            for _,v in pairs(module_stacks) do
+                                module_inventory.insert(v)
+                            end
                         end
-                    end
+                        game.raise_event(defines.events.on_built_entity, {player_index=player.index, created_entity=entity, revived=true})
+                    else --not revived, return item
+                        if module_stacks then
+                            insert_or_spill_items(player, module_stacks)
+                            if ghost.valid then
+                                ghost.item_requests = old_item_requests
+                            end
+                        end
+                        insert_or_spill_items(player, {data.place_item})
+                    end --revived
+                else --can't build
                     insert_or_spill_items(player, {data.place_item})
-                end --revived
-            else --can't build
+                end --can build
+            else --not inside area
                 insert_or_spill_items(player, {data.place_item})
-            end --can build
-        else --invalid player
+            end --inside area
+        else --not valid ghost
             insert_or_spill_items(player, {data.place_item})
         end --valid ghost
     end --valid player
@@ -498,15 +502,19 @@ function Queue.build_tile_ghost(data)
     local ghost, surface, position, player = data.entity, data.surface, data.position, game.players[data.player_index]
     if (player and player.valid) then
         if ghost.valid then
-            local tile = surface.get_tile(position)
-            if not tile.hidden_tile or not (tile.hidden_tile and tile.prototype.can_be_part_of_blueprint) then
-                create_projectile("nano-projectile-constructors", surface, ghost.force, player.position, ghost.position)
-                surface.create_entity{name="nano-sound-build-tiles",position=position}
-                surface.set_tiles({{name=ghost.ghost_name, position=position}})
-                game.raise_event(defines.events.on_player_built_tile, {player_index=player.index, positions={position}})
-            else --Can't place entity
+            if Area.inside(Position.expand_to_area(ghost.position, 40), player.position) then
+                local tile = surface.get_tile(position)
+                if not tile.hidden_tile or not (tile.hidden_tile and tile.prototype.can_be_part_of_blueprint) then
+                    create_projectile("nano-projectile-constructors", surface, ghost.force, player.position, ghost.position)
+                    surface.create_entity{name="nano-sound-build-tiles",position=position}
+                    surface.set_tiles({{name=ghost.ghost_name, position=position}})
+                    game.raise_event(defines.events.on_player_built_tile, {player_index=player.index, positions={position}})
+                else --Can't place entity
+                    insert_or_spill_items(player, {data.place_item})
+                end --build tile
+            else --not inside area
                 insert_or_spill_items(player, {data.place_item})
-            end
+            end --inside area
         else --Give the item back ghost isn't valid anymore.
             insert_or_spill_items(player, {data.place_item})
         end --valid ghost

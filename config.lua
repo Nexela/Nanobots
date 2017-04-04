@@ -29,10 +29,7 @@ NANO.TRAIN_TYPES = {
     ["cargo-wagon"] = true
 }
 
---Changes here will take effect
-NANO.CHIP_RADIUS = 50 --default: 50, radius of tiles to check for personal bot mark for deconstruction and unit launcher
-
---Tables linked to technologys, values are the tile radius
+--Tables linked to technologies, values are the tile radius
 NANO.BOT_RADIUS = {[0] = 7.5, [1] = 9.5, [2]=11.5, [3]=13.5, [4]=15.5}
 NANO.TERMITE_RADIUS = {[0] = 7.5, [1] = 7.5, [2]=7.5, [3]=7.5, [4]=7.5}
 NANO.QUEUE_SPEED_BONUS = {[0] = 0, [1] = 2, [2] = 4, [3] = 6, [4] = 8}
@@ -48,6 +45,7 @@ NANO.control.auto_equipment = true --default: true, set to false to disable auto
 NANO.control.auto_nanobots = true --default: true, set to false to disable automatic nanobots when emitter is selected gun.
 NANO.control.run_ticks = true --default: true, run the tick handler.
 NANO.control.sync_cheat_mode = true --default: true, if cheat mode is enabled nanobots place buildings without cost.
+NANO.control.inside_area_radius = 40
 
 --These settings only affect debug mode, no need to change them
 NANO.quickstart = {

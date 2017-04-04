@@ -76,7 +76,7 @@ local equipment_chip = {
             {
                 {
                     type = "area",
-                    perimeter = NANO.CHIP_RADIUS,
+                    perimeter = 50,
                     force = "enemy",
                     action_delivery = nil,
                 }
