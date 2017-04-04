@@ -43,6 +43,7 @@ optimize:
 nodebug:
 	sed -i 's/^\(.*DEBUG.*=\).*/\1 false/' ./$(OUTPUT_DIR)/config.lua
 	sed -i 's/^\(.*LOGLEVEL.*=\).*/\1 0/' ./$(OUTPUT_DIR)/config.lua
+	sed -i 's/^\(.*loglevel.*=\).*/\1 0/' ./$(OUTPUT_DIR)/config.lua
 
 check:
 	luacheck2.bat config.lua
