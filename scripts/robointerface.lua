@@ -4,6 +4,7 @@
 local robointerface = {}
 local Area = require("stdlib/area/area") --luacheck: ignore Area
 local Position = require("stdlib/area/position")
+local Entity = require("stdlib/entity/entity")
 
 --[[
 raw-wood-cutting, scan for trees, if value is negative only scan for trees if wood in network is less then that amount
@@ -33,14 +34,7 @@ parameters ={
 
 --]]--
 
-function robointerface.new(entity, interface)
-    return {
-        name = entity.name,
-        unit_number = entity.unit_number,
-        entity = entity,
-        interface = interface
-    }
-end
+
 
 local function get_parameters(params)
     local parameters = {}
@@ -128,9 +122,31 @@ local function run_interface(interface)
     end
 end
 
+--Process 1 queued interface every 15 ticks
+local function roboport_interface_tick(event)
+    if event.tick % 15 == 0 then
+        local qindex, data = next(global.cell_queue)
+        if qindex then
+            if data.logistic_cell.valid and data.logistic_network.valid and data.logistic_network.available_construction_robots > 0 then
+                for signal_name, signal_data in pairs(data.actions) do
+                    pop_queue[params_to_check[signal_name].action](data, signal_data)
+                end
+            end
+            global.cell_queue[qindex] = nil
+        end
+        global._next_cell = qindex
+    end
+
+end
+Event.register(defines.events.on_tick, roboport_interface_tick)
+
 local function destroy_roboport_interface(event)
-    if event.entity.name == "roboport-interface" then
-        global.robointerfaces[event.entity.unit_number] = nil
+    if event.entity.name == "roboport-interface-cc" then
+        local scanner = global.robointerfaces[event.entity.unit_number]
+        if scanner and scanner.entity and scanner.entity.valid then
+          scanner.entity.destroy()
+        end
+        scanner = nil --luacheck: ignore
     end
 end
 Event.register(Event.death_events, destroy_roboport_interface)
@@ -140,8 +156,7 @@ local function build_roboport_interface(event)
         local entity = event.created_entity
         local pos = {x=entity.position.x, y=entity.position.y+1}
         local cc = entity.surface.create_entity{name="roboport-interface-cc", position=pos, direction=defines.direction.south, force=entity.force}
-        local interface = robointerface.new(entity, cc)
-        global.robointerfaces[interface.unit_number] = interface
+        global.robointerfaces[entity.unit_number] = robointerface.new(entity, cc)
     end
 end
 Event.register(Event.build_events, build_roboport_interface)
@@ -153,47 +168,39 @@ local function on_sector_scanned(event)
         if interface[entity.unit_number] then
             game.print("Running interface for "..entity.unit_number)
             --run_interface(interface)
+        else
+          build_roboport_interface({created_entity = entity})
         end
     end
 end
 Event.register(defines.events.on_sector_scanned, on_sector_scanned)
 
---Process 1 interface every 60 ticks
-local function roboport_interface_tick(event)
-    if event.tick % 16 == 0 then
-        local qindex, data = next(global.cell_queue)
-        if qindex then
-            if data.logistic_cell.valid and data.logistic_network.valid and data.logistic_network.available_construction_robots > 0 then
-                for signal_name, signal_data in pairs(data.actions) do
-                    pop_queue[params_to_check[signal_name].action](data, signal_data)
-                end
-            end
-            global.cell_queue[qindex] = nil
-            -- else
-            -- local index, interface = next(global.robointerfaces, global._next_interface)
-            -- if index then
-            -- if interface and interface.entity.valid then
-            -- run_interface(interface)
-            -- else
-            -- interface[index] = nil
-            -- end
-            -- end
-            -- global._next_interface = index
-        end
-        global._next_cell = qindex
-    end
-
+function robointerface.new(entity, interface)
+    return {
+        name = entity.name,
+        unit_number = entity.unit_number,
+        entity = entity,
+        interface = interface
+    }
 end
-Event.register(defines.events.on_tick, roboport_interface_tick)
 
 function robointerface.init()
-    local interfaces = {}
+    local robointerfaces = {}
     for _, surface in pairs(game.surfaces) do
-        for _, interface in pairs(surface.find_entities_filtered{name = "roboport-interface"}) do
-            interfaces[interface.unit_number] = robointerface.new(interface)
+        for _, scanner in pairs(surface.find_entities_filtered{name = "roboport-interface"}) do
+          local cc = surface.find_entities_filtered{
+            name = "roboport-interface-cc",
+            area = Entity.to_collision_area(scanner),
+            limit = 1
+          }[1]
+          if cc then
+            robointerfaces[scanner.unit_number] = robointerface.new(scanner, cc)
+          else
+            build_roboport_interface({created_entity = scanner})
+          end
         end
     end
-    return interfaces
+    return robointerfaces
 end
 
 return robointerface
