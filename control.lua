@@ -535,13 +535,16 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
     local next_tick = Queue.next(game.tick, player.force.name)
     local radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7.5
     local area = Position.expand_to_area(pos, radius)
+    local queue_count = 0
     for _, ghost in pairs(player.surface.find_entities(area)) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if (global.config.no_network_limits or nano_network_check(player, ghost)) then
+              if queue_count <= 30 then
                 if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(queue, _find_entity_match, ghost)) then
                     ammo_drain(player, nano_ammo)
                     data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost}
                     Queue.insert(next_tick(), data)
+                    queue_count = queue_count + 1
                 elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
                     --get first available item that places entity from inventory that is not in our hand.
                     local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
@@ -552,6 +555,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
                                 data.place_item = place_item
                                 Queue.insert(next_tick(), data)
+                                queue_count = queue_count + 1
                                 ammo_drain(player, nano_ammo)
                             end
                         elseif ghost.name == "tile-ghost" then
@@ -559,10 +563,12 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                 data.place_item = place_item
                                 data.action="build_tile_ghost"
                                 Queue.insert(next_tick(), data)
+                                queue_count = queue_count + 1
                                 ammo_drain(player, nano_ammo)
                             end
                         end
                     end
+                  end
                     -- Check if entity needs repair
                 elseif nano_repairable_entity(ghost) and ghost.force == player.force then
                     local ghost_area = Area.offset(ghost.prototype.collision_box, ghost.position)
