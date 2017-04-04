@@ -1,0 +1,29 @@
+-   1.0.0 - Initial Release
+-   1.0.1 - Raise event when building entity
+-   1.0.2 - Remove Debug line
+-   1.0.3 - Better entity-to-item logic
+-   1.0.4 - Constructors now do floor tiles, Ghost building is queued, Visual enhancements. (Scrappers/deconstructors don't do anything yet)
+-   1.0.5 - Silly 5 am bobmods typo
+-   1.0.6 - Scrappers and Deconstructors added, Small bug fixes/tweaks, Some entites (inserters) are added to the end of the queue.
+-   1.0.7 - Hard Crash on invalid ammo
+-   1.0.8 - More sanity checks
+-   1.0.9 - Remove the shooting event pending more info on crash. Shooting nanobots is now just visual and wastes nanobots. Reverted termite changes
+-   1.2.0 - Many changes, Nanobots are now smarter and harder working! Also many thanks to Articulating for his work on the project!
+-   1.2.1 - Compatibility changes for mod-pack maker thingie
+-   1.2.2 - Forgot to account for on_config_changed in previous release. Apologies to all those affected
+-   1.2.3 - Unreleased
+-   1.3.0 - Technology to increase range, More speed improvements, No longer eats items in inserters hands
+-   1.3.1 - Fixes for config refrences
+-   1.3.2 - Migration sanity check
+-   1.3.3 - Fix disabled personal roboport error, Adjust recipes and add config, Fix healing logic
+-   1.3.4 - Fix recipe correctly, Fix logic when network limitations are off, Internal updates
+-   1.4.0 - New Icons courtesy of Arch666Angel, New personal roboport unit deployer, automatically deploys follower capsules when near enemies
+-   1.4.1 - Fix errors with item_stacks with some mods. Fix raw wood health.
+-   1.4.2 - Fix for sound entities keeping chunks active. Adjust projectile acceleration.
+-   1.4.3 - Adjust logic checking for ready personal bots.
+-   1.4.4 - Better existing termite check, Transport lines pickup and return items, Really fix item_stacks errors this time.
+-   1.4.5 - Fix error with bot chips, Add electric logic to bot chips. Using the chips now as an energy cost.
+-   1.4.6 - Power armor modules now also check for total robots if in range of a roboport. (No longer necessary to always have robots on you)
+-   1.4.7 - Remove debug message.
+-   1.6.0 - Many logic improvements, Many new features added including roboport interface, speed technologies, Per force queues and logic. removed scrappers/deconstructors.
+-   1.7.0 - Hotkeys added, license added. Readme updated.

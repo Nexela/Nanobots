@@ -1,60 +1,47 @@
-Nanobots:
+# NANOBOTS
+#### Robot enhancements from the start of the game.
+Learn how to create powerfull but consumable robots after learning automation. Get up and running fast by using these robots to help you build your way up to Roboports and even smarter robots. Add modules to your power armor to reprogram your personal roboport to complete mundane tasks automatically. Place roboport interfaces to have your logistic networks perform tasks while you are away.
 
-* Early version of ghost building construction bots. Allows researching automated construction earlier (for blueprints etc)
-* Equip the Nano Emitter and some Nano ammo, make it your selected gun and any ghosts/blueprints within 7.5 tiles of you will be automatically built if you have the items in your inventory.
-* Technologies exist to slightly increase the range of your nanobots up to about 15 tiles.
-* These early version bots are only capable of building and do not replenish (each Ammo magazine will build 10 items)
-* Nanobots do not work inside logistic networks, or personal roboport zones.
-* Shooting nanobots wastes nanobotes, Don't shoot nanobots.  Hopefully this will be fixed at somepoint.
+#### Nanobots:
+-   Pre bot version of ghost building construction bots. Allows researching automated construction earlier (for blueprints etc).
+-   Equip the Nano Emitter and some Nano ammo, make it your selected gun and any ghosts/blueprints within 7.5 tiles of you will be automatically built if you have the items in your inventory.
+-   Technologies exist to slightly increase the range and speed of your nanobots.
+-   These earlier version bots are capable of building, deconstructing and healing. They do not replenish (each Ammo magazine will build 10 items)
+-   Nanobots do not work inside logistic networks, or personal roboport zones without an interface module installed in your power armor.
+-   Manually shooting nanobots releases a pretty cloud of nanobots and nothing else. This is a good way to waste nanobots.
 
----
-Ammo Details:
+#### Ammo Details:
+-   Nano Constructors - These nanobots will revive ghosts in their range, heal damaged structures, and deconstruct marked items.
+-   Nano Termites - These nanobots will kill off trees. This process causes the tree to topple over and may damage nearby structures.
 
-* Nano Constructors - These nanobots will revive ghosts in their range.
-* Nano Termites - These nanobots will kill off trees. This process causes the tree to topple over and may damage nearby entities.
-* Nano Scrappers - These nanobots will destroy anything in their range that is marked for deconstruction that isn't organic. You will not get any items back.
-* Nano Deconstructors - These nanobots have more programing and will return deconstructed items to you. However they are more costly.
+--------------------------------------------------------------------------------
 
----
-Late Game Additions:
+#### Modular Armor Equipment:
 
-* Adds 3 new equipment pieces for your armor that enhance your late game experience.
-* The Item Programmer will mark all items-on-ground (artifacts, etc) in your personal roboport construction range for deconstruction as long as no enemies are around.
-* The Tree Programmer will mark all trees within your personal roboport range for deconstruction.
-* The Unit Launcher will launch Destroys/Defenders/Distractors when enemies get inside your roborport range.
+Reprogram your personal roboport to do a lot of the mundane tasks for you. Most modules require an active personal roboport and construction bots to fully work.
+-   Adds new equipment pieces for your power armor that will enhance your late game experience.
+-   The item retriever module will mark all items on the ground (artifacts, etc) in your personal roboport construction range for deconstruction as long as no enemies are around.
+-   The tree cutter module will mark all trees within your personal roboport range for deconstruction.
+-   The unit launcher module will launch Destroys/Defenders/Distractors when enemies get inside your roborport range.
+-   The feeder will automaticly heal you when you are low on health. For a bigger healing bonus keep a stack of healing capsules in your inventory.
+-   The Nano interface will allow your nanobots to work even while you are inside logistic networks.
 
----
-Future Plans and Known issues:
+Hotkeys are available to toggle equipment on or off. Personal Roboports, Exoskeletons, Nightvision, All or individual Nanobot equipment modules.
+If a piece of equipment in your armor is not enabled, adding more pieces of that equipment will install the disabled version.
+Equipment states will stay with the power armor making it easy to swap out power armors without having to remember to also toggle the equipment.
 
-* All actions are added to a first in, first out queue system. If a lot of items are queued up (I.E. deconstructing a whole forest). It will take some time before it gets around to doing something else, like building or deconstruction a different area.
-* More Personal Roboport Programmers. Upgrade programmer,
+--------------------------------------------------------------------------------
 
-Change Log:
+#### Roboport Interface:
 
-* 1.0.0 - Initial Release
-* 1.0.1 - Raise event when building entity
-* 1.0.2 - Remove Debug line
-* 1.0.3 - Better entity-to-item logic
-* 1.0.4 - Constructors now do floor tiles, Ghost building is queued, Visual enhancements.  (Scrappers/deconstructors don't do anything yet)
-* 1.0.5 - Silly 5 am bobmods typo
-* 1.0.6 - Scrappers and Deconstructors added, Small bug fixes/tweaks, Some entites (inserters) are added to the end of the queue.
-* 1.0.7 - Hard Crash on invalid ammo
-* 1.0.8 - More sanity checks
-* 1.0.9 - Remove the shooting event pending more info on crash. Shooting nanobots is now just visual and wastes nanobots. Reverted termite changes
-* 1.2.0 - Many changes, Nanobots are now smarter and harder working!  Also many thanks to Articulating for his work on the project!
-* 1.2.1 - Compatibility changes for mod-pack maker thingie
-* 1.2.2 - Forgot to account for on_config_changed in previous release.  Apologies to all those affected
-* 1.2.3 - Unreleased
-* 1.3.0 - Technology to increase range, More speed improvements, No longer eats items in inserters hands
-* 1.3.1 - Fixes for config refrences
-* 1.3.2 - Migration sanity check
-* 1.3.3 - Fix disabled personal roboport error, Adjust recipes and add config, Fix healing logic
-* 1.3.4 - Fix recipe correctly, Fix logic when network limitations are off, Internal updates
-* 1.4.0 - New Icons courtesy of Arch666Angel, New personal roboport unit deployer, automatically deploys follower capsules when near enemies
-* 1.4.1 - Fix errors with item_stacks with some mods. Fix raw wood health.
-* 1.4.2 - Fix for sound entities keeping chunks active. Adjust projectile acceleration.
-* 1.4.3 - Adjust logic checking for ready personal bots.
-* 1.4.4 - Better existing termite check, Transport lines pickup and return items, Really fix item_stacks errors this time.
-* 1.4.5 - Fix error with bot chips, Add electric logic to bot chips. Using the chips now as an energy cost.
-* 1.4.6 - Power armor modules now also check for total robots if in range of a roboport. (No longer necessary to always have robots on you)
-* 1.4.7 - Remove debug message.
+--------------------------------------------------------------------------------
+
+#### Future Plans and Known issues:
+-   Better grapics for the roboport interface
+-   More power armor equipment modules
+-   More roboport interface logic
+-   Even more script optimizations
+
+#### Latest changes
+1.7.0 - Major logic re-write, New enhancements and features added including hotkeys.
+Full changelog available in CHANGELOG.md
