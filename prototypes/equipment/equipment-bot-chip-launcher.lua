@@ -87,7 +87,7 @@ local equipment_chip = {
 
 local disabled = table.deepcopy(equipment_chip)
 --Keep the same localised name if none is specified
-disabled.localised_name = {"nanobots.disabled-eq", disabled.localised_name or {"equipment-name."..disabled.name}}
+disabled.localised_name = {"equipment-hotkeys.disabled-eq", disabled.localised_name or {"equipment-name."..disabled.name}}
 disabled.name = "nano-disabled-" .. disabled.name
 
 local effects = data.raw.technology["personal-roboport-equipment"].effects

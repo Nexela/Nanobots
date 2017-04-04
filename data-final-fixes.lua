@@ -4,7 +4,7 @@ if not data.raw["custom-input"]["equipment-toggle-personal-roboport"] then
     for _, v in pairs(data.raw["roboport-equipment"]) do
         local t = table.deepcopy(v)
         -- Keep the same localised name if none is specified
-        t.localised_name = {"nanobots.disabled-eq", t.localised_name or {"equipment-name."..t.name}}
+        t.localised_name = {"equipment-hotkeys.disabled-eq", t.localised_name or {"equipment-name."..t.name}}
         -- Some mods don't specify take_result making it default to the equipment name.
         -- If we don't set it the game is going to look for an item with the wrong name.
         t.take_result = t.take_result or t.name
@@ -15,7 +15,7 @@ if not data.raw["custom-input"]["equipment-toggle-personal-roboport"] then
     for _, v in pairs(data.raw["movement-bonus-equipment"]) do
         local t = table.deepcopy(v)
         -- Keep the same localised name if none is specified
-        t.localised_name = {"nanobots.disabled-eq", t.localised_name or {"equipment-name."..t.name}}
+        t.localised_name = {"equipment-hotkeys.disabled-eq", t.localised_name or {"equipment-name."..t.name}}
         -- Some mods don't specify take_result making it default to the equipment name.
         -- If we don't set it the game is going to look for an item with the wrong name.
         t.take_result = t.take_result or t.name
@@ -27,7 +27,7 @@ if not data.raw["custom-input"]["equipment-toggle-personal-roboport"] then
     for _, v in pairs(data.raw["night-vision-equipment"]) do
         local t = table.deepcopy(v)
         -- Keep the same localised name if none is specified
-        t.localised_name = {"nanobots.disabled-eq", t.localised_name or {"equipment-name."..t.name}}
+        t.localised_name = {"equipment-hotkeys.disabled-eq", t.localised_name or {"equipment-name."..t.name}}
         -- Some mods don't specify take_result making it default to the equipment name.
         -- If we don't set it the game is going to look for an item with the wrong name.
         t.take_result = t.take_result or t.name

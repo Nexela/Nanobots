@@ -197,6 +197,7 @@ local function toggle_armor_modules(event, name, types)
         local grid = armor.grid
         local status = "notfound"
         local replace_equipment = {}
+        local equip_locale
 
         for eq_name in pairs(types or {[name] = true}) do
 
@@ -217,9 +218,9 @@ local function toggle_armor_modules(event, name, types)
                     new_equip.energy = energy
                 end
             end
-            -- LOGIC for not spamming everything needed.
-            player.print({"equipment-hotkeys."..status, {"equipment-name."..eq_name}})
+            equip_locale = types and types[eq_name] or {"equipment-name."..eq_name}
         end
+        player.print({"equipment-hotkeys."..status, equip_locale})
     end
 end
 
@@ -229,7 +230,7 @@ local function get_eq_type_names(type)
     local t = {}
     for _, eq in pairs(game.equipment_prototypes) do
         if eq.type == type and not eq.name:find("^nano%-disabled%-") and game.equipment_prototypes["nano-disabled-"..eq.name] then
-            t[eq.name] = eq.name
+            t[eq.name] = {"equipment-types."..eq.type}
         end
     end
     return t
