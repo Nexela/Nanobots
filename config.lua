@@ -34,7 +34,7 @@ NANO.CHIP_RADIUS = 50 --default: 50, radius of tiles to check for personal bot m
 
 --Tables linked to technologys, values are the tile radius
 NANO.BOT_RADIUS = {[0] = 7.5, [1] = 9.5, [2]=11.5, [3]=13.5, [4]=15.5}
-NANO.TERMITE_RADIUS = {[0] = 7.5, [1] = 9.5, [2]=11.5, [3]=13.5, [4]=15.5}
+NANO.TERMITE_RADIUS = {[0] = 7.5, [1] = 7.5, [2]=7.5, [3]=7.5, [4]=7.5}
 NANO.QUEUE_SPEED_BONUS = {[0] = 0, [1] = 2, [2] = 4, [3] = 6, [4] = 8}
 
 --Changes here will only affect new games unless you reset the config manually in the save
