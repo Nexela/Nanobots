@@ -53,8 +53,8 @@ local equipment_chip = {
     {
         type = "electric",
         usage_priority = "secondary-input",
-        buffer_capacity = "2kJ",
-        input_flow_limit = ".5kW",
+        buffer_capacity = "1kJ",
+        input_flow_limit = "500W",
         drain = "50W"
     },
     attack_parameters =

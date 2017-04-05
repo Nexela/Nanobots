@@ -539,7 +539,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
     for _, ghost in pairs(player.surface.find_entities(area)) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if (global.config.no_network_limits or nano_network_check(player, ghost)) then
-                if queue_count <= 30 then
+                if queue_count <= 40 then
                     if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(queue, _find_entity_match, ghost)) then
                         ammo_drain(player, nano_ammo)
                         data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost}
@@ -599,7 +599,7 @@ end
 local function everyone_hates_trees(player, pos, nano_ammo)
     local radius = termite_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7.5
     local area = Position.expand_to_area(pos, radius)
-    for _, stupid_tree in pairs(player.surface.find_entities_filtered{area=area, type="tree"}) do
+    for _, stupid_tree in pairs(player.surface.find_entities_filtered{area=area, type="tree", limit = 50}) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             local tree_area = Area.expand(Area.offset(stupid_tree.prototype.collision_box, stupid_tree.position), .5)
             if player.surface.count_entities_filtered{area=tree_area, name="nano-cloud-small-termites"} == 0 then

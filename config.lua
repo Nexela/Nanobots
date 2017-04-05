@@ -4,9 +4,10 @@ NANO.DEBUG = true
 
 --Combat robot names, indexed by capsule name
 NANO.COMBAT_ROBOTS = {
-    ["destroyer-capsule"] = "destroyer",
-    ["defender-capsule"] = "defender",
-    ["distractor-capsule"] = "distractor"
+    {capsule = "bob-laser-robot-capsule", unit = "bob-laser-robot", qty = 5, rank = 75},
+    {capsule = "destroyer-capsule", unit = "destroyer", qty = 5, rank = 50},
+    {capsule = "defender-capsule", unit = "defender", qty = 1, rank = 25},
+    {capsule = "distractor-capsule", unit = "distractor", qty = 1, rank = 1},
 }
 
 NANO.FOOD = {
