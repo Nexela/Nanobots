@@ -167,7 +167,6 @@ local function on_sector_scanned(event)
         local entity = event.radar
         local roboport_interface = global.robointerfaces[entity.unit_number]
         if roboport_interface then
-            game.print("Running interface for "..entity.unit_number)
             run_interface(roboport_interface)
         else
             build_roboport_interface({created_entity = entity})

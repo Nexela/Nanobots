@@ -5,7 +5,7 @@ MOD.name = "Nanobots"
 MOD.fullname = "Nanobots"
 MOD.interface = "nanobots"
 MOD.config = require("config")
-MOD.version = "1.5.0"
+MOD.version = "1.7.0"
 MOD.logfile = Logger.new(MOD.fullname, "log", MOD.config.DEBUG or false, {log_ticks = true, file_extension="lua"})
 MOD.logfile.file_name = MOD.logfile.file_name:gsub("logs/", "", 1)
 MOD.log = require("stdlib.debug.debug")
@@ -26,6 +26,7 @@ end
 
 local robointerface = require("scripts/robointerface")
 local armormods = require("scripts/armormods")
+require("scripts/reprogram-gui")
 -------------------------------------------------------------------------------
 --[[Helper Functions]]--
 -------------------------------------------------------------------------------

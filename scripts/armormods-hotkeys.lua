@@ -64,17 +64,17 @@ local function get_eq_type_names(type)
     return t
 end
 
-Event.hotkeys = Event.hotkeys or {}
-Event.hotkeys["toggle-equipment-roboport"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("roboport-equipment")) end
-Event.hotkeys["toggle-equipment-movement-bonus"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("movement-bonus-equipment")) end
-Event.hotkeys["toggle-equipment-night-vision"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("night-vision-equipment")) end
-Event.hotkeys["toggle-equipment-bot-chip-all"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("active-defense-equipment")) end
-Event.hotkeys["toggle-equipment-bot-chip-trees"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-trees") end
-Event.hotkeys["toggle-equipment-bot-chip-items"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-items") end
-Event.hotkeys["toggle-equipment-bot-chip-launcher"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-launcher") end
-Event.hotkeys["toggle-equipment-bot-chip-feeder"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-feeder") end
-Event.hotkeys["toggle-equipment-bot-chip-nanointerface"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-nanointerface") end
+Event.armor_hotkeys = Event.armor_hotkeys or {}
+Event.armor_hotkeys["toggle-equipment-roboport"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("roboport-equipment")) end
+Event.armor_hotkeys["toggle-equipment-movement-bonus"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("movement-bonus-equipment")) end
+Event.armor_hotkeys["toggle-equipment-night-vision"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("night-vision-equipment")) end
+Event.armor_hotkeys["toggle-equipment-bot-chip-all"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("active-defense-equipment")) end
+Event.armor_hotkeys["toggle-equipment-bot-chip-trees"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-trees") end
+Event.armor_hotkeys["toggle-equipment-bot-chip-items"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-items") end
+Event.armor_hotkeys["toggle-equipment-bot-chip-launcher"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-launcher") end
+Event.armor_hotkeys["toggle-equipment-bot-chip-feeder"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-feeder") end
+Event.armor_hotkeys["toggle-equipment-bot-chip-nanointerface"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-nanointerface") end
 
-for event_name in pairs(Event.hotkeys) do
-    script.on_event(event_name, Event.hotkeys[event_name])
+for event_name in pairs(Event.armor_hotkeys) do
+    script.on_event(event_name, Event.armor_hotkeys[event_name])
 end

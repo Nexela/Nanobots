@@ -10,7 +10,7 @@ old_version :: string: Old version of the mod. May be nil if the mod wasn't prev
 new_version :: string: New version of the mod. May be nil if the mod is no longer present (i.e. it was just removed).
 --]]
 local mod_name = MOD.name or "not-set"
-local migrations = {"1.2.0", "1.2.3", "1.6.4"}
+local migrations = {"1.2.0", "1.2.3", "1.6.5"}
 local changes = {}
 
 --Mark all migrations as complete during Init.
@@ -94,7 +94,7 @@ local robointerface = require("scripts/robointerface")
 local Queue = require("scripts/queue")
 local Player = require("scripts/player")
 local Force = require("scripts/force")
-changes["1.6.4"] = function ()
+changes["1.6.5"] = function ()
     global.forces = Force.init()
     global.players = Player.init()
     global.robointerfaces = robointerface.init()
@@ -117,7 +117,9 @@ changes["1.6.4"] = function ()
     --global.networks = nil
     global._changes["1.6.0"] = nil
     global._changes["1.6.1"] = nil
+    global._changes["1.6.2"] = nil
     global._changes["1.6.3"] = nil
+    global._changes["1.6.4"] = nil
 end
 
 -------------------------------------------------------------------------------

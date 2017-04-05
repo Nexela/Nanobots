@@ -10,7 +10,7 @@ local combat_robots = MOD.config.COMBAT_ROBOTS
 local healer_capsules = MOD.config.FOOD
 
 local Position = require("stdlib/area/position")
-local min, max, abs, ceil = math.min, math.max, math.abs, math.ceil
+local min, max, abs, ceil = math.min, math.max, math.abs, math.ceil --luacheck: ignore
 
 -------------------------------------------------------------------------------
 --[[Helper functions]]--

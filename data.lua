@@ -3,6 +3,8 @@ local NANO = require("config")
 require("stdlib/colors/colors")
 require("stdlib/utils/protohelpers")
 
+require("prototypes/gui")
+
 --Custom hotkeys
 require("prototypes/hotkeys")
 
