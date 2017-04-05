@@ -672,29 +672,14 @@ local function switch_player_gun_while_driving(event)
         game.print("switching gun")
         local index = player.character.selected_gun_index
         local gun_inv = player.character.get_inventory(defines.inventory.player_guns)
-        local start, found = index, false
+        local start = index
         repeat
-            --player.character.selected_gun_index = (index < #gun_index and gun_inv[index.valid_for_readindex + 1)
             index = index < #gun_inv and index + 1 or 1
             if gun_inv[index].valid_for_read then
                 player.character.selected_gun_index = index
                 break
             end
-            --
-            --
-            -- if index <= #gun_inv and gun_inv[index+1].valid_for_read then
-            -- player.character.selected_gun_index = index + 1
-            -- found = true
-            -- elseif gun_inv[1].valid_for_read then
-            -- player.character.selected_gun_index = 1
-            -- end
         until index == start
-        --
-        -- if index <= #gun_inv and gun_inv[index+1].valid_for_read then
-        -- player.character.selected_gun_index = index + 1
-        -- elseif gun_inv[1].valid_for_read then
-        -- player.character.selected_gun_index = 1
-        -- end
     end
 end
 script.on_event("switch-player-gun-while-driving", switch_player_gun_while_driving)
