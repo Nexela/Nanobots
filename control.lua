@@ -539,36 +539,36 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
     for _, ghost in pairs(player.surface.find_entities(area)) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if (global.config.no_network_limits or nano_network_check(player, ghost)) then
-              if queue_count <= 30 then
-                if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(queue, _find_entity_match, ghost)) then
-                    ammo_drain(player, nano_ammo)
-                    data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost}
-                    Queue.insert(next_tick(), data)
-                    queue_count = queue_count + 1
-                elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
-                    --get first available item that places entity from inventory that is not in our hand.
-                    local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
-                    if item_name and not table_find(queue, _find_entity_match, ghost) then
-                        local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
-                        local data = {action = "build_entity_ghost", player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position}
-                        if ghost.name == "entity-ghost" and place_item then
-                            if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
-                                data.place_item = place_item
-                                Queue.insert(next_tick(), data)
-                                queue_count = queue_count + 1
-                                ammo_drain(player, nano_ammo)
-                            end
-                        elseif ghost.name == "tile-ghost" then
-                            if ghost.surface.count_entities_filtered{name="entity-ghost", position=ghost.position, limit=1} == 0 and place_item then
-                                data.place_item = place_item
-                                data.action="build_tile_ghost"
-                                Queue.insert(next_tick(), data)
-                                queue_count = queue_count + 1
-                                ammo_drain(player, nano_ammo)
+                if queue_count <= 30 then
+                    if (ghost.to_be_deconstructed(player.force) and ghost.minable and not table_find(queue, _find_entity_match, ghost)) then
+                        ammo_drain(player, nano_ammo)
+                        data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost}
+                        Queue.insert(next_tick(), data)
+                        queue_count = queue_count + 1
+                    elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
+                        --get first available item that places entity from inventory that is not in our hand.
+                        local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
+                        if item_name and not table_find(queue, _find_entity_match, ghost) then
+                            local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
+                            local data = {action = "build_entity_ghost", player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position}
+                            if ghost.name == "entity-ghost" and place_item then
+                                if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
+                                    data.place_item = place_item
+                                    Queue.insert(next_tick(), data)
+                                    queue_count = queue_count + 1
+                                    ammo_drain(player, nano_ammo)
+                                end
+                            elseif ghost.name == "tile-ghost" then
+                                if ghost.surface.count_entities_filtered{name="entity-ghost", position=ghost.position, limit=1} == 0 and place_item then
+                                    data.place_item = place_item
+                                    data.action="build_tile_ghost"
+                                    Queue.insert(next_tick(), data)
+                                    queue_count = queue_count + 1
+                                    ammo_drain(player, nano_ammo)
+                                end
                             end
                         end
                     end
-                  end
                     -- Check if entity needs repair
                 elseif nano_repairable_entity(ghost) and ghost.force == player.force then
                     local ghost_area = Area.offset(ghost.prototype.collision_box, ghost.position)
@@ -665,6 +665,39 @@ Event.register(defines.events.on_tick, on_tick)
 
 Event.register(defines.events.on_player_created, Player.on_player_created)
 Event.register(defines.events.on_force_created, function(event) Force.init(event.force.name) end)
+
+local function switch_player_gun_while_driving(event)
+    local player = game.players[event.player_index]
+    if player and player.valid and player.character and player.driving then
+        game.print("switching gun")
+        local index = player.character.selected_gun_index
+        local gun_inv = player.character.get_inventory(defines.inventory.player_guns)
+        local start, found = index, false
+        repeat
+            --player.character.selected_gun_index = (index < #gun_index and gun_inv[index.valid_for_readindex + 1)
+            index = index < #gun_inv and index + 1 or 1
+            if gun_inv[index].valid_for_read then
+                player.character.selected_gun_index = index
+                break
+            end
+            --
+            --
+            -- if index <= #gun_inv and gun_inv[index+1].valid_for_read then
+            -- player.character.selected_gun_index = index + 1
+            -- found = true
+            -- elseif gun_inv[1].valid_for_read then
+            -- player.character.selected_gun_index = 1
+            -- end
+        until index == start
+        --
+        -- if index <= #gun_inv and gun_inv[index+1].valid_for_read then
+        -- player.character.selected_gun_index = index + 1
+        -- elseif gun_inv[1].valid_for_read then
+        -- player.character.selected_gun_index = 1
+        -- end
+    end
+end
+script.on_event("switch-player-gun-while-driving", switch_player_gun_while_driving)
 
 -------------------------------------------------------------------------------
 --[[INIT]]--

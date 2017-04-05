@@ -9,6 +9,12 @@ data:extend
 {
     {
         type = "custom-input",
+        name = "switch-player-gun-while-driving",
+        key_sequence = "Q",
+        consuming = "none",
+    },
+    {
+        type = "custom-input",
         name = "toggle-equipment-roboport",
         key_sequence = "CONTROL + F1",
         consuming = "game-only"
