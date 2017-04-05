@@ -89,9 +89,9 @@ local params_to_check = {
 }
 
 local function run_interface(interface)
-    local behaviour = interface.entity.get_control_behavior()
+    local behaviour = interface.cc.get_control_behavior()
     if behaviour and behaviour.enabled then
-        local logistic_network, logistic_cell = find_network_and_cell(interface.entity, behaviour)
+        local logistic_network, logistic_cell = find_network_and_cell(interface.cc, behaviour)
         if logistic_network and logistic_network.available_construction_robots > 0 then
             local queue = global.cell_queue
             local parameters = get_parameters(behaviour.parameters)
@@ -159,14 +159,16 @@ local function build_roboport_interface(event)
 end
 Event.register(Event.build_events, build_roboport_interface)
 
+--Todo: rebuild scanners on config_changed
+
 local function on_sector_scanned(event)
+    --if not cc build cc.
     if event.radar.name == "roboport-interface" then
-        game.print("Sector_scanned")
         local entity = event.radar
         local roboport_interface = global.robointerfaces[entity.unit_number]
-        if roboport_interface[entity.unit_number] then
+        if roboport_interface then
             game.print("Running interface for "..entity.unit_number)
-            --run_interface(interface)
+            run_interface(roboport_interface)
         else
             build_roboport_interface({created_entity = entity})
         end
