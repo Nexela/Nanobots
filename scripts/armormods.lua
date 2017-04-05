@@ -140,9 +140,8 @@ end
 local function process_ready_chips(player, equipment)
     local rad = player.character.logistic_cell.construction_radius
     local area = Position.expand_to_area(player.position, rad)
-    local enemies = player.surface.find_nearest_enemy{position=player.position, max_distance=rad+10, force=player.force}[1]
-
-    if not enemies and equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
+    local enemy = player.surface.find_nearest_enemy{position=player.position, max_distance=rad+10, force=player.force}
+    if not enemy and (equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"]) then
         local bots_available = get_bot_counts(player.character)
         if bots_available > 0 then
             local bot_counter = function()
@@ -157,7 +156,7 @@ local function process_ready_chips(player, equipment)
             mark_items_using_eq(player, get_chip_result_counts(equipment["equipment-bot-chip-trees"], player.surface, area, "tree", bot_counter))
         end
     end
-    if enemies and equipment["equipment-bot-chip-launcher"] then
+    if enemy and equipment["equipment-bot-chip-launcher"] then
         local launchers = equipment["equipment-bot-chip-launcher"]
         local num_launchers = #launchers
         local capsule_data = get_best_follower_capsule(player)
