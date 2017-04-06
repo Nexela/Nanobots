@@ -101,10 +101,6 @@ local function get_best_follower_capsule(player)
         end
     end
     return robot_list[1] and robot_list
-    -- for capsule, robot in pairs(combat_robots) do
-    -- local count = player.get_item_count(capsule)
-    -- if count > 0 then return capsule, count, robot end
-    -- end
 end
 
 -------------------------------------------------------------------------------
@@ -114,7 +110,7 @@ end
 
 local function get_chip_result_counts(equipment,surface, area, search_type, bot_counter)
     local item_equip = equipment
-    local items = equipment and bot_counter(0) > 0 and surface.find_entities_filtered{area=area, type=search_type, limit=50}
+    local items = equipment and bot_counter(0) > 0 and surface.find_entities_filtered{area=area, type=search_type, limit=100}
     local num_items = items and #items or 0
     local num_chips = items and #equipment or 0
     return item_equip, items, num_items, num_chips, bot_counter
@@ -206,13 +202,9 @@ end
 function armormods.prepare_chips(player)
     if is_personal_roboport_ready(player.character) then
         local equipment = get_valid_equipment(player)
-
         if equipment["equipment-bot-chip-launcher"] or equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
             process_ready_chips(player, equipment)
         end
-        -- if equipment["equipment-bot-chip-launcher"] then
-        -- launch_units(player, equipment["equipment-bot-chip-launcher"])
-        -- end
         if equipment["equipment-bot-chip-feeder"] then
             emergency_heal(player, equipment["equipment-bot-chip-feeder"])
         end
