@@ -4,8 +4,9 @@
 
 local function toggle_armor_modules(event, name, types)
     local player = game.players[event.player_index]
-    local grid = player.character and player.characther.grid
-    if grid then
+    local armor = player.get_inventory(defines.inventory.player_armor)[1]
+    if armor and armor.valid_for_read and armor.grid then
+        local grid = armor.grid
         local status = "notfound"
         local equip_locale
 

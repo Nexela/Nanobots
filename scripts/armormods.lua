@@ -16,15 +16,19 @@ local min, max, abs, ceil = math.min, math.max, math.abs, math.ceil --luacheck: 
 --[[Helper functions]]--
 -------------------------------------------------------------------------------
 
+local function get_armor_grid(player)
+    local armor = player.get_inventory(defines.inventory.player_armor)[1]
+    return armor and armor.valid_for_read and armor.grid
+end
+
 -- Loop through equipment grid and return a table of valid equipment tables indexed by equipment name
 -- @param entity: the entity object
 -- @return table: all equipment - name as key, arrary of named equipment as value
 -- @return table: a table of valid equipment with energy in buffer - name as key, array of named equipment as value
 -- @return table: shield_level = number, max_shield = number, equipment = array of shields
-local function get_valid_equipment(entity)
-    local grid = entity.grid
-    local all, charged, shields = {}, {}, {equipment = {}}
-    if grid and grid.equipment then
+local function get_valid_equipment(grid)
+    if grid and grid.valid then
+        local all, charged, shields = {}, {}, {equipment = {}}
         for _, equip in pairs(grid.equipment) do
             all[equip.name] = all[equip.name] or {}
             all[equip.name][#all[equip.name] + 1] = equip
@@ -38,8 +42,8 @@ local function get_valid_equipment(entity)
                 charged[equip.name][#charged[equip.name] + 1] = equip
             end
         end
+        return all, charged, shields
     end
-    return all, charged, shields
 end
 
 -- Increment the y position for flying text to keep text from overlapping
@@ -83,7 +87,7 @@ local function get_bot_counts(entity, mobile_only, stationed_only)
             bots = bots + (entity.logistic_cell and entity.logistic_cell.logistic_network.available_construction_robots) or 0
 
             --.15 will have find by construction zone for this!
-            local port = entity.surface.find_logistic_network_by_position(entity.position)
+            local port = entity.surface.find_logistic_network_by_position(entity.position, entity.force)
 
             bots = bots + ((port and port ~= entity.logistic_network and port.available_construction_robots) or 0)
 
@@ -155,7 +159,7 @@ local function process_ready_chips(player, equipment)
             local bot_counter = function()
                 local count = bots_available
                 return function(add_count)
-                    count = count + add_count or 0
+                    count = count + add_count
                     return count
                 end
             end
@@ -212,8 +216,8 @@ end
 --[[BOT CHIPS]]--
 -------------------------------------------------------------------------------
 function armormods.prepare_chips(player)
-    if player.character.grid and is_personal_roboport_ready(player.character) then
-        local _, charged, shields = get_valid_equipment(player.character)
+    if is_personal_roboport_ready(player.character) then
+        local _, charged, shields = get_valid_equipment(get_armor_grid(player))
         if charged["equipment-bot-chip-launcher"] or charged["equipment-bot-chip-items"] or charged["equipment-bot-chip-trees"] then
             process_ready_chips(player, charged)
         end
