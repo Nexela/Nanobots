@@ -453,7 +453,6 @@ function Queue.build_entity_ghost(data)
             if Area.inside(Position.expand_to_area(ghost.position, 40), player.position) then
                 local item_stacks = get_all_items_on_ground(ghost)
                 if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
-                    game.print("can_place")
                     local module_stacks
                     local old_item_requests = table.deepcopy(ghost.item_requests)
 
@@ -626,7 +625,7 @@ end
 local function everyone_hates_trees(player, pos, nano_ammo)
     local radius = get_ammo_radius(player, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
-    for _, stupid_tree in pairs(player.surface.find_entities_filtered{area=area, type="tree", limit = 50}) do
+    for _, stupid_tree in pairs(player.surface.find_entities_filtered{area=area, type="tree", limit = 200}) do
         if nano_ammo.valid and nano_ammo.valid_for_read and not stupid_tree.to_be_deconstructed(player.force) then
             local tree_area = Area.expand(Area.offset(stupid_tree.prototype.collision_box, stupid_tree.position), .5)
             if player.surface.count_entities_filtered{area=tree_area, name="nano-cloud-small-termites"} == 0 then
@@ -668,7 +667,7 @@ local function on_tick(event)
     end
 
     --Run logic for nanobots and power armor modules
-    if event.tick % config.tick_mod == 0 then
+    if event.tick % config.poll_rate == 0 then
         for _, player in pairs(game.connected_players) do
             --Establish connected, non afk, player character
             if is_connected_player_ready(player) then
@@ -697,7 +696,6 @@ Event.register(defines.events.on_force_created, function(event) Force.init(event
 local function switch_player_gun_while_driving(event)
     local player = game.players[event.player_index]
     if player and player.valid and player.character and player.driving then
-        game.print("switching gun")
         local index = player.character.selected_gun_index
         local gun_inv = player.character.get_inventory(defines.inventory.player_guns)
         local start = index
@@ -727,7 +725,7 @@ function MOD.on_init()
     global.forces = Force.init()
     global.players = Player.init()
     global.config = table.deepcopy(MOD.config.control)
-    changes.on_init(game.active_mods[MOD.name])
+    --changes.on_init(game.active_mods[MOD.name])
     game.print(MOD.name..": Init Complete")
 end
 Event.register(Event.core_events.init, MOD.on_init)

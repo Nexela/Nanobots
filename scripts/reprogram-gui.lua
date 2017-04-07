@@ -33,7 +33,8 @@ local function get_max_radius(player)
     if player.cursor_stack.type == "ammo" then
         return bot_radius[player.force.get_ammo_damage_modifier(player.cursor_stack.prototype.ammo_type.category)]
     else
-        return player.logistic_cell and player.logistic_cell.mobile and player.logistic_cell.construction_radius or 10
+        local c = player.character
+        return c and c.logistic_cell and c.logistic_cell.mobile and c.logistic_cell.construction_radius or 10
     end
 end
 
@@ -65,11 +66,6 @@ local function increase_decrease_reprogrammer(event, change)
     else
         remove_gui(player, "nano_frame_main")
     end
-end
-
-local function reprogrammer_text_changed(event)
-    local player = game.players[event.player_index]
-    game.print(event.element.text)
 end
 
 Event.gui_hotkeys = Event.gui_hotkeys or {}

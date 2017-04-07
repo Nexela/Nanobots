@@ -87,14 +87,14 @@ end
 
 function interface.nano_fast_test_mode()
     local config = Config.new(global.config)
-    config.set("tick_mod", 10)
+    config.set("poll_rate", 10)
     config.set("ticks_per_queue", 1)
     MOD.log("Fast test mode enabled", 2)
 end
 
 function interface.nano_slow_test_mode()
     local config = Config.new(global.config)
-    config.set("tick_mod", 60)
+    config.set("poll_rate", 60)
     config.set("ticks_per_queue", 60)
     MOD.log("Slow test mode enabled", 2)
 end

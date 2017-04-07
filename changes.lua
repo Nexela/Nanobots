@@ -10,7 +10,7 @@ old_version :: string: Old version of the mod. May be nil if the mod wasn't prev
 new_version :: string: New version of the mod. May be nil if the mod is no longer present (i.e. it was just removed).
 --]]
 local mod_name = MOD.name or "not-set"
-local migrations = {"1.2.0", "1.2.3", "1.6.5"}
+local migrations = {"1.2.0", "1.2.3", "1.6.6"}
 local changes = {}
 
 --Mark all migrations as complete during Init.
@@ -100,8 +100,11 @@ changes["1.6.5"] = function ()
     global.robointerfaces = robointerface.init()
     global.config.ticks_per_queue = 12
     global.config.loglevel = MOD.config.control.loglevel or 0
-    global.config.inside_area_radius = MOD.config.control.inside_area_radius or 40
-    global.config.nano_emmiter_queues_per_cycle = MOD.config.control.nano_emitter_queues_per_cycle or 40
+    global.config.inside_area_radius = MOD.config.control.inside_area_radius or 60
+    global.config.nano_emmiter_queues_per_cycle = MOD.config.control.nano_emitter_queues_per_cycle or 80
+    global.config.poll_rate = global.config.tick_mod or MOD.config.control.tick_mod or 60
+    global.config.tick_mod = nil
+    global.config.run_ticks = nil
     global.nano_queue = Queue.new()
     global.cell_queue = {}
     local old_queue = table.deepcopy(global.queued)
@@ -121,6 +124,7 @@ changes["1.6.5"] = function ()
     global._changes["1.6.2"] = nil
     global._changes["1.6.3"] = nil
     global._changes["1.6.4"] = nil
+    global._changes["1.6.5"] = nil
 end
 
 -------------------------------------------------------------------------------

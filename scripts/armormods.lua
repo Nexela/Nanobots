@@ -21,16 +21,19 @@ local min, max, abs, ceil = math.min, math.max, math.abs, math.ceil --luacheck: 
 -- @return table: a table of valid equipment with energy in buffer, name as key, array of named equipment as value .
 local function get_valid_equipment(player)
     local armor = player.get_inventory(defines.inventory.player_armor)
-    local list = {}
+    local charged = {}
+    local all = {}
     if armor and armor[1] and armor[1].valid_for_read and armor[1].grid and armor[1].grid.equipment then
         for _, equip in pairs(armor[1].grid.equipment) do
+            all[equip.name] = all[equip.name] or {}
+            all[equip.name][#all[equip.name] + 1] = equip
             if equip.energy > 0 then
-                list[equip.name] = list[equip.name] or {}
-                list[equip.name][#list[equip.name] + 1] = equip
+                charged[equip.name] = charged[equip.name] or {}
+                charged[equip.name][#charged[equip.name] + 1] = equip
             end
         end
     end
-    return list
+    return charged, all
 end
 
 -- Increment the y position for flying text to keep text from overlapping
@@ -110,7 +113,7 @@ end
 
 local function get_chip_result_counts(equipment,surface, area, search_type, bot_counter)
     local item_equip = equipment
-    local items = equipment and bot_counter(0) > 0 and surface.find_entities_filtered{area=area, type=search_type, limit=100}
+    local items = equipment and bot_counter(0) > 0 and surface.find_entities_filtered{area=area, type=search_type, limit=200}
     local num_items = items and #items or 0
     local num_chips = items and #equipment or 0
     return item_equip, items, num_items, num_chips, bot_counter
@@ -201,12 +204,12 @@ end
 -------------------------------------------------------------------------------
 function armormods.prepare_chips(player)
     if is_personal_roboport_ready(player.character) then
-        local equipment = get_valid_equipment(player)
-        if equipment["equipment-bot-chip-launcher"] or equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"] then
-            process_ready_chips(player, equipment)
+        local charged, all_equip = get_valid_equipment(player)
+        if charged["equipment-bot-chip-launcher"] or charged["equipment-bot-chip-items"] or charged["equipment-bot-chip-trees"] then
+            process_ready_chips(player, charged)
         end
-        if equipment["equipment-bot-chip-feeder"] then
-            emergency_heal(player, equipment["equipment-bot-chip-feeder"])
+        if charged["equipment-bot-chip-feeder"] then
+            emergency_heal(player, charged["equipment-bot-chip-feeder"], all_equip)
         end
     end
 end
