@@ -68,24 +68,26 @@ end
 -- @param stationed_only: bool if mobile only return all construction robots
 -- @return number: count of available bots
 local function get_bot_counts(entity, mobile_only, stationed_only)
-    if entity.logistic_cell then
+    if entity.logistic_network then
         if mobile_only then
-            if stationed_only then
-                return entity.logistic_cell and entity.logistic_cell.stationed_construction_robot_count or 0
-            else
-                return entity.logistic_network and entity.logistic_network.available_construction_robots or 0
+            if entity.logistic_cell and entity.logistic_cell.mobile then
+                if stationed_only then
+                    return entity.logistic_cell.stationed_construction_robot_count
+                else
+                    return entity.logistic_cell.logistic_network.available_construction_robots
+                end
             end
         else
-            local count = 0
-            count = count + entity.logistic_network.available_construction_robots or 0
-            local port = entity.surface.find_entities_filtered{
-                type = "roboport",
-                area=Position.expand_to_area(entity.position, entity.logistic_cell.construction_radius),
-                limit = 1,
-                force = entity.force
-            }[1]
-            count = count + ((port and port.logistic_network and port.logistic_network.available_construction_robots) or 0)
-            return count
+            local bots = 0
+            --get bots availble in cells network
+            bots = bots + (entity.logistic_cell and entity.logistic_cell.logistic_network.available_construction_robots) or 0
+
+            --.15 will have find by construction zone for this!
+            local port = entity.surface.find_logistic_network_by_position(entity.position)
+
+            bots = bots + ((port and port ~= entity.logistic_network and port.available_construction_robots) or 0)
+
+            return bots
         end
     else
         return 0
