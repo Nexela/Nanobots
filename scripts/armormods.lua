@@ -93,6 +93,7 @@ local function get_bot_counts(entity, mobile_only, stationed_only)
         return 0
     end
 end
+MOD.get_bot_counts = get_bot_counts
 
 local function get_health_capsules(player)
     for name, health in pairs(healer_capsules) do
