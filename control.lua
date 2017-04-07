@@ -626,21 +626,23 @@ local function everyone_hates_trees(player, pos, nano_ammo)
     local radius = get_ammo_radius(player, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
     for _, stupid_tree in pairs(player.surface.find_entities_filtered{area=area, type="tree", limit = 200}) do
-        if nano_ammo.valid and nano_ammo.valid_for_read and not stupid_tree.to_be_deconstructed(player.force) then
-            local tree_area = Area.expand(Area.offset(stupid_tree.prototype.collision_box, stupid_tree.position), .5)
-            if player.surface.count_entities_filtered{area=tree_area, name="nano-cloud-small-termites"} == 0 then
-                player.surface.create_entity{
-                    name="nano-projectile-termites",
-                    position=player.position,
-                    force=player.force,
-                    target=stupid_tree,
-                    speed= .5,
-                }
-                player.surface.create_entity{
-                    name="nano-sound-termite",
-                    position=stupid_tree.position,
-                }
-                ammo_drain(player, nano_ammo, 1)
+        if nano_ammo.valid and nano_ammo.valid_for_read then
+            if not stupid_tree.to_be_deconstructed(player.force) then
+                local tree_area = Area.expand(Area.offset(stupid_tree.prototype.collision_box, stupid_tree.position), .5)
+                if player.surface.count_entities_filtered{area=tree_area, name="nano-cloud-small-termites"} == 0 then
+                    player.surface.create_entity{
+                        name="nano-projectile-termites",
+                        position=player.position,
+                        force=player.force,
+                        target=stupid_tree,
+                        speed= .5,
+                    }
+                    player.surface.create_entity{
+                        name="nano-sound-termite",
+                        position=stupid_tree.position,
+                    }
+                    ammo_drain(player, nano_ammo, 1)
+                end
             end
         else
             break

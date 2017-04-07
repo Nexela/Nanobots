@@ -4,9 +4,8 @@
 
 local function toggle_armor_modules(event, name, types)
     local player = game.players[event.player_index]
-    local armor = player.get_inventory(defines.inventory.player_armor)[1]
-    if armor and armor.valid_for_read and armor.grid then
-        local grid = armor.grid
+    local grid = player.character and player.characther.grid
+    if grid then
         local status = "notfound"
         local equip_locale
 
@@ -16,7 +15,7 @@ local function toggle_armor_modules(event, name, types)
                     if status == "notfound" then
                         status = equipment.name:find("^nano%-disabled%-") and "enable" or "disable"
                     end
-                    if status ~= "notfound" --[[and equipment.valid --]] then
+                    if status ~= "notfound" then
                         local position, energy = equipment.position, equipment.energy
                         local new_name = status == "enable" and eq_name or status == "disable" and "nano-disabled-"..eq_name
                         grid.take(equipment)

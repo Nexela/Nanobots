@@ -16,24 +16,30 @@ local min, max, abs, ceil = math.min, math.max, math.abs, math.ceil --luacheck: 
 --[[Helper functions]]--
 -------------------------------------------------------------------------------
 
--- Loop through armor and return a table of valid equipment tables indexed by equipment name
--- @param player: the player object
--- @return table: a table of valid equipment with energy in buffer, name as key, array of named equipment as value .
-local function get_valid_equipment(player)
-    local armor = player.get_inventory(defines.inventory.player_armor)
-    local charged = {}
-    local all = {}
-    if armor and armor[1] and armor[1].valid_for_read and armor[1].grid and armor[1].grid.equipment then
-        for _, equip in pairs(armor[1].grid.equipment) do
+-- Loop through equipment grid and return a table of valid equipment tables indexed by equipment name
+-- @param entity: the entity object
+-- @return table: all equipment - name as key, arrary of named equipment as value
+-- @return table: a table of valid equipment with energy in buffer - name as key, array of named equipment as value
+-- @return table: shield_level = number, max_shield = number, equipment = array of shields
+local function get_valid_equipment(entity)
+    local grid = entity.grid
+    local all, charged, shields = {}, {}, {equipment = {}}
+    if grid and grid.equipment then
+        for _, equip in pairs(grid.equipment) do
             all[equip.name] = all[equip.name] or {}
             all[equip.name][#all[equip.name] + 1] = equip
+            if equip.type == "energy-shield-equipment" then
+                shields.equipment[#shields.equipment + 1] = equip
+                shields.shield_level = (shields.shield_level or 0) + (equip.shield or 0)
+                shields.max_shield = (shields.max_shield or 0) + (equip.max_shield or 0)
+            end
             if equip.energy > 0 then
                 charged[equip.name] = charged[equip.name] or {}
                 charged[equip.name][#charged[equip.name] + 1] = equip
             end
         end
     end
-    return charged, all
+    return all, charged, shields
 end
 
 -- Increment the y position for flying text to keep text from overlapping
@@ -49,34 +55,34 @@ local function increment_position(position)
 end
 
 -- Is the personal roboport ready and have a radius greater than 0
--- @param character: the character object
--- @return bool: personal roboport radius > 0
-local function is_personal_roboport_ready(character)
-    return character.logistic_cell and character.logistic_cell.mobile and character.logistic_cell.construction_radius > 0
+-- @param entity: the entity object
+-- @return bool: personal roboport construction radius > 0
+local function is_personal_roboport_ready(entity)
+    return entity.logistic_cell and entity.logistic_cell.mobile and entity.logistic_cell.construction_radius > 0
 end
 
 --TODO .15 will have a better/more reliable way to get the construction network
--- Does the character have a personal robort and construction robots. Or is in range of a roboport with construction bots.
--- @param c: the player character
+-- Does the entity have a personal robort and construction robots. Or is in range of a roboport with construction bots.
+-- @param entity: the entity object
 -- @param mobile_only: bool just return available construction bots in mobile cell
 -- @param stationed_only: bool if mobile only return all construction robots
 -- @return number: count of available bots
-local function get_bot_counts(c, mobile_only, stationed_only)
-    if c.logistic_cell then
+local function get_bot_counts(entity, mobile_only, stationed_only)
+    if entity.logistic_cell then
         if mobile_only then
             if stationed_only then
-                return c.logistic_cell.stationed_construction_robot_count
+                return entity.logistic_cell and entity.logistic_cell.stationed_construction_robot_count or 0
             else
-                return c.logistic_network.available_construction_robots
+                return entity.logistic_network and entity.logistic_network.available_construction_robots or 0
             end
         else
             local count = 0
-            count = count + c.logistic_network.available_construction_robots or 0
-            local port = c.surface.find_entities_filtered{
+            count = count + entity.logistic_network.available_construction_robots or 0
+            local port = entity.surface.find_entities_filtered{
                 type = "roboport",
-                area=Position.expand_to_area(c.position, c.logistic_cell.construction_radius),
+                area=Position.expand_to_area(entity.position, entity.logistic_cell.construction_radius),
                 limit = 1,
-                force = c.force
+                force = entity.force
             }[1]
             count = count + ((port and port.logistic_network and port.logistic_network.available_construction_robots) or 0)
             return count
@@ -203,13 +209,13 @@ end
 --[[BOT CHIPS]]--
 -------------------------------------------------------------------------------
 function armormods.prepare_chips(player)
-    if is_personal_roboport_ready(player.character) then
-        local charged, all_equip = get_valid_equipment(player)
+    if player.character.grid and is_personal_roboport_ready(player.character) then
+        local _, charged, shields = get_valid_equipment(player.character)
         if charged["equipment-bot-chip-launcher"] or charged["equipment-bot-chip-items"] or charged["equipment-bot-chip-trees"] then
             process_ready_chips(player, charged)
         end
         if charged["equipment-bot-chip-feeder"] then
-            emergency_heal(player, charged["equipment-bot-chip-feeder"], all_equip)
+            emergency_heal(player, charged["equipment-bot-chip-feeder"], shields)
         end
     end
 end

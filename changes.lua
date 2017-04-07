@@ -105,6 +105,7 @@ changes["1.6.6"] = function ()
     global.config.poll_rate = global.config.tick_mod or MOD.config.control.tick_mod or 60
     global.config.tick_mod = nil
     global.config.run_ticks = nil
+    global.networks = nil
     global.nano_queue = Queue.new()
     global.cell_queue = {}
     local old_queue = table.deepcopy(global.queued)
@@ -116,15 +117,17 @@ changes["1.6.6"] = function ()
             end
         end
     end
-    --Cleanup un-needed changes
     global.queued = nil
-    --global.networks = nil
+
+    --remove all development change history
+    --[[
     global._changes["1.6.0"] = nil
     global._changes["1.6.1"] = nil
     global._changes["1.6.2"] = nil
     global._changes["1.6.3"] = nil
     global._changes["1.6.4"] = nil
     global._changes["1.6.5"] = nil
+    --]]
 end
 
 -------------------------------------------------------------------------------
