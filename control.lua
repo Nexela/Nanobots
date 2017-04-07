@@ -10,6 +10,7 @@ MOD.logfile = Logger.new(MOD.fullname, "log", MOD.config.DEBUG or false, {log_ti
 MOD.logfile.file_name = MOD.logfile.file_name:gsub("logs/", "", 1)
 MOD.log = require("stdlib.debug.debug")
 
+--local Event = Event or require("stdlib/event/event")
 local Position = require("stdlib/area/position")
 local Area = require("stdlib/area/area")
 local Entity = require("stdlib/entity/entity")
