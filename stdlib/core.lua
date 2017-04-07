@@ -14,3 +14,5 @@ function fail_if_missing(var, msg)
     end
     return false
 end
+
+return fail_if_missing

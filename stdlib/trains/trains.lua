@@ -9,7 +9,8 @@
 -- once all other functions have been defined
 
 require 'stdlib/event/event'
-require 'stdlib/surface'
+local Surface = require 'stdlib/surface'
+local Entity = require 'stdlib/entity/entity'
 require 'stdlib/table'
 
 Trains = {
@@ -25,12 +26,12 @@ Trains = {
 -- from the front locomotive. If that is disconnected, the back locomotive will become
 -- the main one and the train's id will change</p>
 -- <p>
---  <strong>Event parameters</strong> <br />
---  A table with the following properties:
---  <ul>
---    <li>old_id (int) The id of the train before the change</li>
---    <li>new_id (int) The id of the train after the change</li>
---  </ul>
+-- <strong>Event parameters</strong> <br />
+-- A table with the following properties:
+-- <ul>
+-- <li>old_id (int) The id of the train before the change</li>
+-- <li>new_id (int) The id of the train after the change</li>
+-- </ul>
 -- </p>
 -- @usage
 ----Event.register(Trains.on_train_id_changed, my_handler)
@@ -53,9 +54,9 @@ local function find_distinct_trains(locomotives)
 
         if #existing == 0 then
             table.insert(train_data, {
-                train = t,
-                id = id
-            })
+                    train = t,
+                    id = id
+                })
         end
     end
 
@@ -67,8 +68,8 @@ end
 -- @usage
 ----Trains.find_filtered({ surface_name = "nauvis", state = defines.train_state.wait_station })
 -- @tparam Table criteria Table with any keys supported by the <a href="Surface.html#find_all_entities">Surface</a> module.</p>
---  <p>If the name key isn't supplied, this will default to 'diesel-locomotive'</p>
---  <p>If the surface key isn't supplied, this will default to 1</p>
+-- <p>If the name key isn't supplied, this will default to 'diesel-locomotive'</p>
+-- <p>If the surface key isn't supplied, this will default to 1</p>
 -- @return A list of train details tables, if any are found matching the criteria. Otherwise the empty list. <table><tr><td>train (LuaTrain)</td><td>The LuaTrain instance</td></tr><tr><td>id (int)</td><td>The id of the train</td></tr></table>
 function Trains.find_filtered(criteria)
     criteria = criteria or {}
@@ -88,8 +89,8 @@ function Trains.find_filtered(criteria)
     --- Apply state filters
     if criteria.state then
         train_data = table.filter(train_data, function(data)
-            return data.train.state == criteria.state
-        end)
+                return data.train.state == criteria.state
+            end)
     end
 
     return train_data
@@ -99,8 +100,8 @@ end
 -- @tparam LuaTrain train
 -- @treturn int
 function Trains.get_train_id(train)
-  local loco = Trains.get_main_locomotive(train)
-  return loco and loco.unit_number
+    local loco = Trains.get_main_locomotive(train)
+    return loco and loco.unit_number
 end
 
 --- Event fired when some change has happened to a locomotive
@@ -148,8 +149,8 @@ end
 -- @treturn LuaEntity the main locomotive
 function Trains.get_main_locomotive(train)
     if train.valid and
-        train.locomotives and
-        (#train.locomotives.front_movers > 0 or #train.locomotives.back_movers > 0)
+    train.locomotives and
+    (#train.locomotives.front_movers > 0 or #train.locomotives.back_movers > 0)
     then
         return train.locomotives.front_movers and train.locomotives.front_movers[1] or train.locomotives.back_movers[1]
     end
@@ -159,14 +160,14 @@ end
 -- @tparam LuaTrain train
 -- @treturn table
 function Trains.to_entity(train)
-  local name = "train-" .. Trains.get_train_id(train)
-  return {
-    name = name,
-    valid = train.valid,
-    equals = function(entity)
-      return name == entity.name
-    end
-  }
+    local name = "train-" .. Trains.get_train_id(train)
+    return {
+        name = name,
+        valid = train.valid,
+        equals = function(entity)
+            return name == entity.name
+        end
+    }
 end
 
 --- Set user data on a train
@@ -175,7 +176,7 @@ end
 -- @tparam mixed data
 -- @return mixed
 function Trains.set_data(train, data)
-  return Entity.set_data(Trains.to_entity(train), data)
+    return Entity.set_data(Trains.to_entity(train), data)
 end
 
 --- Get user data on a train
@@ -183,7 +184,7 @@ end
 -- @tparam LuaTrain train
 -- @return mixed
 function Trains.get_data(train)
-  return Entity.get_data(Trains.to_entity(train))
+    return Entity.get_data(Trains.to_entity(train))
 end
 
 -- Creates a registry of known trains
@@ -198,7 +199,6 @@ local function create_train_registry()
 
     return registry
 end
-
 
 -- When developers load this module, we need to
 -- attach some new events

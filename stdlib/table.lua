@@ -1,5 +1,7 @@
 --- Table module
 -- @module table
+-- luacheck: ignore table
+-- luacheck: no redefined
 
 --- Given a mapping function, creates a transformed copy of the table
 --- by calling the function for each element in the table, and using
@@ -104,20 +106,20 @@ end
 function table.flatten(tbl, level)
     local flattened = {}
     table.each(tbl, function(value)
-        if type(value) == "table" and #value > 0 then
-            if level then
-                if level > 0 then
-                    table.merge(flattened, table.flatten(value, level - 1), true)
+            if type(value) == "table" and #value > 0 then
+                if level then
+                    if level > 0 then
+                        table.merge(flattened, table.flatten(value, level - 1), true)
+                    else
+                        table.insert(flattened, value)
+                    end
                 else
-                    table.insert(flattened, value)
+                    table.merge(flattened, table.flatten(value), true)
                 end
             else
-                table.merge(flattened, table.flatten(value), true)
+                table.insert(flattened, value)
             end
-        else
-            table.insert(flattened, value)
-        end
-    end)
+        end)
     return flattened
 end
 
@@ -184,8 +186,8 @@ end
 
 --- Merges 2 tables, values from first get overwritten by second
 --- @usage function some_func(x, y, args)
---  args = table.merge({option1=false}, args)
---  if opts.option1 == true then return x else return y end
+-- args = table.merge({option1=false}, args)
+-- if opts.option1 == true then return x else return y end
 -- end
 -- some_func(1,2) --returns 2
 -- some_func(1,2,{option1=true}) --returns 1
@@ -247,20 +249,20 @@ function table.values(tbl,sorted,as_string)
     if as_string == true then --checking as_string /before/ looping is faster
         for _,v in pairs(tbl) do n = n+1 ; valueset[n] = tostring(v) end
     else
-        for _,v in pairs(tbl) do n = n+1 ; valueset[n] = v           end
+        for _,v in pairs(tbl) do n = n+1 ; valueset[n] = v end
     end
     if sorted == true then
         table.sort(valueset, function(x,y) --sorts tables with mixed index types.
-            local tx = type(x) == 'number'
-            local ty = type(y) == 'number'
-            if tx == ty then
-                return x < y and true or false --similar type can be compared
-            elseif tx == true then
-                return true --only x is a number and goes first
-            else
-                return false --only y is a number and goes first
-            end
-        end)
+                local tx = type(x) == 'number'
+                local ty = type(y) == 'number'
+                if tx == ty then
+                    return x < y and true or false --similar type can be compared
+                elseif tx == true then
+                    return true --only x is a number and goes first
+                else
+                    return false --only y is a number and goes first
+                end
+            end)
     end
     return valueset
 end
@@ -277,20 +279,20 @@ function table.keys(tbl,sorted,as_string)
     if as_string == true then --checking as_string /before/ looping is faster
         for k,_ in pairs(tbl) do n = n+1 ; keyset[n] = tostring(k) end
     else
-        for k,_ in pairs(tbl) do n = n+1 ; keyset[n] = k           end
+        for k,_ in pairs(tbl) do n = n+1 ; keyset[n] = k end
     end
     if sorted == true then
         table.sort(keyset, function(x,y) --sorts tables with mixed index types.
-            local tx = type(x) == 'number'
-            local ty = type(y) == 'number'
-            if tx == ty then
-                return x < y and true or false --similar type can be compared
-            elseif tx == true then
-                return true --only x is a number and goes first
-            else
-                return false --only y is a number and goes first
-            end
-        end)
+                local tx = type(x) == 'number'
+                local ty = type(y) == 'number'
+                if tx == ty then
+                    return x < y and true or false --similar type can be compared
+                elseif tx == true then
+                    return true --only x is a number and goes first
+                else
+                    return false --only y is a number and goes first
+                end
+            end)
     end
     return keyset
 end

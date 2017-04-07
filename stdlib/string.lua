@@ -1,5 +1,8 @@
 --- String module
 -- @module string
+-- luacheck: ignore string
+-- luacheck: no unused
+-- luacheck: no redefined
 
 --- Returns a copy of the string with any leading or trailing whitespace from the string removed.
 -- @param s the string to remove leading or trailing whitespace from
@@ -68,4 +71,14 @@ function string.split(s, sep, pattern)
         table.insert(fields, string.sub(s, last_find))
     end
     return fields
+end
+
+function string.PrettyNumber( number )
+    if number < 1000 then
+        return string.format("%i", number)
+    elseif number < 1000000 then
+        return string.format("%.1fk", (number/1000))
+    else
+        return string.format("%.1fm", (number/1000000))
+    end
 end

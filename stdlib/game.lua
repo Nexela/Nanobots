@@ -1,7 +1,7 @@
 --- Game module
 -- @module Game
 
-Game = {}
+local Game = {}
 Game.VALID_FILTER = function(v)
     return v.valid
 end
@@ -38,8 +38,8 @@ function Game.print_force(force, msg)
         force_name = force.name
     end
     return Game.print_all(msg, function(player)
-        return player.force.name == force_name
-    end)
+            return player.force.name == force_name
+        end)
 end
 
 --- Messages all players with the given surface connected to the game
@@ -55,8 +55,8 @@ function Game.print_surface(surface, msg)
         surface_name = surface.name
     end
     return Game.print_all(msg, function(player)
-        return player.surface.name == surface_name
-    end)
+            return player.surface.name == surface_name
+        end)
 end
 
 return Game

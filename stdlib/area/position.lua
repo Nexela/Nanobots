@@ -1,10 +1,9 @@
 --- Position module
 -- @module Position
 
-Position = {}
+local Position = {}
 
-require 'stdlib/core'
-
+local fail_if_missing = require 'stdlib/core'
 
 --- Creates a table representing the position from x and y
 -- @param x x-position

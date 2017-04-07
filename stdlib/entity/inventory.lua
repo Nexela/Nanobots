@@ -1,10 +1,9 @@
 --- Inventory module
 -- @module Inventory
 
-Inventory = {}
+local Inventory = {}
 
-require 'stdlib/core'
-require 'stdlib/entity/entity'
+local fail_if_missing = require 'stdlib/core'
 
 --- Copies an inventory contents to a destination inventory
 -- @param src source inventory to copy from
@@ -30,7 +29,7 @@ function Inventory.copy_inventory(src, dest)
             local inserted = dest.insert(copy_of_item_stack)
             local amt_not_inserted = stack.count - inserted
             if amt_not_inserted > 0 then
-              table.insert(left_over, cur_stack)
+                table.insert(left_over, cur_stack)
             end
         end
     end

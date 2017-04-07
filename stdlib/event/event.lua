@@ -1,8 +1,8 @@
 --- Event module
 -- @module Event
 
-require 'stdlib/core'
-require 'stdlib/game'
+local fail_if_missing = require 'stdlib/core'
+local Game = require 'stdlib/game'
 
 Event = {
     _registry = {},
@@ -13,16 +13,16 @@ Event = {
         _register = function(id)
             if id == Event.core_events.init then
                 script.on_init(function()
-                    Event.dispatch({name = Event.core_events.init, tick = game.tick})
-                end)
+                        Event.dispatch({name = Event.core_events.init, tick = game.tick})
+                    end)
             elseif id == Event.core_events.load then
                 script.on_load(function()
-                    Event.dispatch({name = Event.core_events.load, tick = -1})
-                end)
+                        Event.dispatch({name = Event.core_events.load, tick = -1})
+                    end)
             elseif id == Event.core_events.configuration_changed then
                 script.on_configuration_changed(function(data)
-                    Event.dispatch({name = Event.core_events.configuration_changed, tick = game.tick, data = data})
-                end)
+                        Event.dispatch({name = Event.core_events.configuration_changed, tick = game.tick, data = data})
+                    end)
             end
         end
     }

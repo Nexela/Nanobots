@@ -1,4 +1,5 @@
 local constants = require("constants")
+local Color = require("stdlib/color/color")
 
 local recipe = {
     type = "recipe",
