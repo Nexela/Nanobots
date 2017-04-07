@@ -17,12 +17,16 @@ local function draw_gui(player) -- return gui
 
     if not player.gui.left["nano_frame_main"] then
 
-        local gui = player.gui.left.add{type = "frame", name = "nano_frame_main", direction = "horizontal", style="nano_frame_style"}
-        gui.add{type="label", name="nano_label", caption={"frame.label-caption"}, tooltip={"tooltip.label"}, style="nano_label_style"}
-        gui.add{type="textfield", name = "nano_text_box", text=0, tooltip={"tooltip.text-field"}, style="nano_text_style"}
+        local gui = player.gui.left.add{type="frame", name="nano_frame_main", direction="horizontal", style="nano_frame_style"}
+        gui.add{type="label", name="nano_label", caption={"gui.label-caption"}, tooltip={"tooltip.label-caption"}, style="nano_label_style"}
+        gui.add{type="textfield", name = "nano_text_box", text=0, style="nano_text_style"}
+        --Up/Down buttons
         local table = gui.add{type="table", name = "nano_table", colspan=1, style="nano_table_style"}
         table.add{type="button", name="nano_btn_up", style="nano_btn_up"}
         table.add{type="button", name="nano_btn_dn", style="nano_btn_dn"}
+        --Reset button
+        gui.add{type="button", name="nano_btn_reset", style="nano_btn_reset", tooltip={"gui.label-reset"}}
+
         return gui
     else
         return player.gui.left["nano_frame_main"]
@@ -34,7 +38,7 @@ local function get_max_radius(player)
         return bot_radius[player.force.get_ammo_damage_modifier(player.cursor_stack.prototype.ammo_type.category)]
     else
         local c = player.character
-        return c and c.logistic_cell and c.logistic_cell.mobile and c.logistic_cell.construction_radius or 10
+        return c and c.logistic_cell and c.logistic_cell.mobile and math.floor(c.logistic_cell.construction_radius) or 15
     end
 end
 
@@ -52,13 +56,8 @@ local function increase_decrease_reprogrammer(event, change)
             elseif event.element and event.element.name == "nano_text_box" then
                 radius = tonumber(text_field.text)
             else
-
                 radius = math.max(1, (pdata.ranges[stack.name] or max_radius) + change)
-
-                --pdata.ranges[stack.name] = radius
-
                 text_field.text = radius
-
             end
             pdata.ranges[stack.name] = ((radius > 0 and radius < max_radius) and radius) or nil
             game.print(stack.name .." max = "..max_radius.." stored = ".. (pdata.ranges[stack.name] or "not saved"))
@@ -78,3 +77,4 @@ Event.register(defines.events.on_player_cursor_stack_changed, function (event) i
 Gui.on_text_changed("nano_text_box", function (event) increase_decrease_reprogrammer(event, 0) end)
 Gui.on_click("nano_btn_up", function (event) increase_decrease_reprogrammer(event, 1) end)
 Gui.on_click("nano_btn_dn", function (event) increase_decrease_reprogrammer(event, -1) end)
+Gui.on_click("nano_btn_reset", function(event) end)
