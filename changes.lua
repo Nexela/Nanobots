@@ -107,7 +107,7 @@ changes["1.6.6"] = function ()
     global.config.run_ticks = nil
     global.networks = nil
     global.nano_queue = Queue.new()
-    global.cell_queue = {}
+    global.cell_queue = Queue.new()
     local old_queue = table.deepcopy(global.queued)
     local next_tick = Queue.next(game.tick, "player")
     if old_queue and type(old_queue) == "table" and old_queue.next then

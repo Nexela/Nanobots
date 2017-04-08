@@ -1,11 +1,28 @@
 -------------------------------------------------------------------------------
 --[[robointerface]]
 -------------------------------------------------------------------------------
-local Area = require("stdlib/area/area") --luacheck: ignore Area
+local Area = require("stdlib/area/area")
 local Position = require("stdlib/area/position")
 local Entity = require("stdlib/entity/entity")
+local Queue = require("scripts/queue")
 
 local robointerface = {}
+
+local tick_spacing = 5
+
+local params_to_check = {
+    ["nano-signal-chop-trees"] = {
+        action = "mark_items_or_trees",
+        find_filter ="tree"
+    },
+    ["nano-signal-item-on-ground"] = {
+        action = "mark_items_or_trees",
+        find_filter = "item-entity"
+    },
+    ["nano-tile"] = {
+        action = "tile_ground"
+    }
+}
 
 --[[
 raw-wood-cutting, scan for trees, if value is negative only scan for trees if wood in network is less then that amount
@@ -49,18 +66,18 @@ local function get_entity_info(entity)
     return entity.surface, entity.force, entity.position
 end
 
-local pop_queue = {}
-function pop_queue.pickup_items(data, action)
-    local surface, force, position = get_entity_info(data.logistic_cell.owner)
-    if not surface.find_nearest_enemy{position=position, max_distance=data.logistic_cell.construction_radius, force=force} then
-        local filter = {area=Position.expand_to_area(position, data.logistic_cell.construction_radius), type = action.find_type or "nil"}
-        local bots = data.logistic_network.available_construction_robots
-        local count = 1
-        for _, item in pairs(surface.find_entities_filtered(filter)) do
-            if not item.to_be_deconstructed(force) then
-                if count < bots then
-                    item.order_deconstruction(force)
-                    count = count + 1
+function Queue.mark_items_or_trees(data)
+    if data.logistic_cell.valid then
+        local surface, force, position = get_entity_info(data.logistic_cell.owner)
+        if not surface.find_nearest_enemy{position=position, max_distance=data.logistic_cell.construction_radius, force=force} then
+            local filter = {area=Position.expand_to_area(position, data.logistic_cell.construction_radius), type = data.find_type or "error", limit = 300}
+            local available_bots = data.logistic_cell.logistic_network.available_construction_robots
+            for _, item in pairs(surface.find_entities_filtered(filter)) do
+                if available_bots > 0 then
+                    if not item.to_be_deconstructed(force) then
+                        item.order_deconstruction(force)
+                        available_bots = available_bots - 1
+                    end
                 else
                     break
                 end
@@ -75,20 +92,6 @@ local function find_network_and_cell(entity)
     return network, cell
 end
 
-local params_to_check = {
-    ["nano-signal-chop-trees"] = {
-        action = "pickup_items",
-        find_filter ="tree"
-    },
-    ["nano-signal-item-on-ground"] = {
-        action = "pickup_items",
-        find_filter = "item-entity"
-    },
-    ["nano-tile"] = {
-        action = "tile_ground"
-    }
-}
-
 local function run_interface(interface)
     local behaviour = interface.cc.get_control_behavior()
     if behaviour and behaviour.enabled then
@@ -101,18 +104,32 @@ local function run_interface(interface)
 
                 if parameters[param_name] then
                     for _, cell in pairs(just_cell or logistic_network.cells) do
-                        if cell.construction_radius > 0 then
-                            queue[cell.owner.unit_number] = queue[cell.owner.unit_number] or {
+                        if cell.construction_radius > 0 and Queue.get_hash(queue, cell.owner.position) ~= param_table.action then
+                            local next_tick = Queue.next(queue, game.tick, tick_spacing, true)
+                            local data = {
+                                position = cell.owner.position,
                                 logistic_cell = cell,
                                 logistic_network = logistic_network,
-                                actions = {}
-                            }
-                            queue[cell.owner.unit_number].actions[param_name] = {
+                                name = param_name,
                                 action = param_table.action,
                                 find_type = param_table.find_filter,
-                                param = param_name,
                                 value = parameters[param_name]
                             }
+                            MOD.log(data.position)
+                            Queue.insert(queue, data, next_tick())
+                            --
+                            --
+                            -- queue[cell.owner.unit_number] = queue[cell.owner.unit_number] or {
+                            -- logistic_cell = cell,
+                            -- logistic_network = logistic_network,
+                            -- actions = {}
+                            -- }
+                            -- queue[cell.owner.unit_number].actions[param_name] = {
+                            -- action = param_table.action,
+                            -- find_type = param_table.find_filter,
+                            -- param = param_name,
+                            -- value = parameters[param_name]
+                            -- }
                         end
                     end
                 end
@@ -121,23 +138,27 @@ local function run_interface(interface)
     end
 end
 
---Process 1 queued interface every 15 ticks
-local function roboport_interface_tick(event)
-    if event.tick % 15 == 0 then
-        local qindex, data = next(global.cell_queue)
-        if qindex then
-            if data.logistic_cell.valid and data.logistic_network.valid and data.logistic_network.available_construction_robots > 0 then
-                for signal_name, signal_data in pairs(data.actions) do
-                    pop_queue[params_to_check[signal_name].action](data, signal_data)
-                end
-            end
-            global.cell_queue[qindex] = nil
-        end
-        global._next_cell = qindex
-    end
-
+local function execute_nano_queue(event)
+    Queue.execute(event, global.cell_queue)
 end
-Event.register(defines.events.on_tick, roboport_interface_tick)
+Event.register(defines.events.on_tick, execute_nano_queue)
+
+-- --Process 1 queued interface every 15 ticks
+-- local function roboport_interface_tick(event)
+-- if event.tick % 15 == 0 then
+-- local qindex, data = next(global.cell_queue)
+-- if qindex then
+-- if data.logistic_cell.valid and data.logistic_network.valid and data.logistic_network.available_construction_robots > 0 then
+-- for signal_name, signal_data in pairs(data.actions) do
+-- Queue[params_to_check[signal_name].action](data, signal_data)
+-- end
+-- end
+-- global.cell_queue[qindex] = nil
+-- end
+-- global._next_cell = qindex
+-- end
+-- end
+-- Event.register(defines.events.on_tick, roboport_interface_tick)
 
 local function destroy_roboport_interface(event)
     if event.entity.name == "roboport-interface" then

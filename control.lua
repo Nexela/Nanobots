@@ -34,6 +34,7 @@ require("scripts/reprogram-gui")
 -------------------------------------------------------------------------------
 -- Local constants from config
 local bot_radius = MOD.config.BOT_RADIUS
+local queue_speed = MOD.config.QUEUE_SPEED_BONUS
 
 local transport_types = MOD.config.TRANSPORT_TYPES
 local train_types = MOD.config.TRAIN_TYPES
@@ -559,18 +560,19 @@ end
 local function queue_ghosts_in_range(player, pos, nano_ammo)
     --local queued = global.forces[player.force.name].queued
     local queue, config = global.nano_queue, global.config
-    local next_tick, queue_count = Queue.next(game.tick, player.force.name), 0
+    local tick_spacing = max(1, config.ticks_per_queue - queue_speed[player.force.get_gun_speed_modifier("nano-ammo")])
+    local next_tick, queue_count = Queue.next(queue, game.tick, tick_spacing), 0
     local radius = get_ammo_radius(player, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
     for _, ghost in pairs(player.surface.find_entities_filtered{area=area, force=player.force}) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if config.no_network_limits or nano_network_check(player, ghost) then
                 if queue_count <= config.nano_emmiter_queues_per_cycle then
-                    if ghost.to_be_deconstructed(player.force) and ghost.minable and not Queue.has_hash(queue, ghost.position) then
+                    if ghost.to_be_deconstructed(player.force) and ghost.minable and not Queue.get_hash(queue, ghost.position) then
                         ammo_drain(player, nano_ammo, 1)
                         data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost, position = ghost.position, surface = ghost.surface}
                         _, queue_count = Queue.insert(queue, data, next_tick())
-                    elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force and not Queue.has_hash(queue, ghost.position)then
+                    elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force and not Queue.get_hash(queue, ghost.position)then
                         --get first available item that places entity from inventory that is not in our hand.
                         local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
                         if item_name then
@@ -723,7 +725,7 @@ function MOD.on_init()
     global = {}
     global._changes = changes.on_init(game.active_mods[MOD.name] or MOD.version)
     global.nano_queue = Queue.new()
-    global.cell_queue = {}
+    global.cell_queue = Queue.new()
     global.robointerfaces = robointerface.init()
     global.forces = Force.init()
     global.players = Player.init()
