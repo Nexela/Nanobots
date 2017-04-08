@@ -24,6 +24,12 @@ Player.init = function(player_index, overwrite)
         if not game.players[player_index] then error("Invalid Player") end
         if not pdata[player_index] or (pdata[player_index] and overwrite) then
             pdata[player_index] = Player.new(player_index)
+            if global._mess_queue then
+                for _, msg in pairs(global._mess_queue) do
+                    game.print(msg)
+                end
+            end
+            global._mess_queue = nil
         end
     else
         for index in pairs(game.players) do

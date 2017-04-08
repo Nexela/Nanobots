@@ -36,7 +36,7 @@ style.nano_label_style = {
     type="label_style",
     parent="label_style",
     font = "default-listbox",
-    maximal_width= 80,
+    maximal_width=80,
     minimal_width=80,
 
 }
@@ -122,6 +122,49 @@ style.nano_btn_up = {
 }
 
 style.nano_btn_dn = {
+    type="button_style",
+    parent="nano_btn_small_style",
+    default_graphical_set =
+    {
+        type = "monolith",
+        monolith_image =
+        {
+            filename = "__Nanobots__/graphics/small-btns.png",
+            priority = "extra-high-no-scale",
+            width = 20,
+            height = 14,
+            x = 0,
+            y = 14,
+        }
+    },
+    hovered_graphical_set =
+    {
+        type = "monolith",
+        monolith_image =
+        {
+            filename = "__Nanobots__/graphics/small-btns.png",
+            priority = "extra-high-no-scale",
+            width = 20,
+            height = 14,
+            x = 20,
+            y = 14,
+        }
+    },
+    clicked_graphical_set =
+    {
+        type = "monolith",
+        monolith_image =
+        {
+            filename = "__Nanobots__/graphics/small-btns.png",
+            priority = "extra-high-no-scale",
+            width = 20,
+            height = 14,
+            x = 20,
+            y = 14,
+        }
+    }
+}
+style.nano_btn_reset = {
     type="button_style",
     parent="nano_btn_small_style",
     default_graphical_set =

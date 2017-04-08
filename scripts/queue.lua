@@ -43,9 +43,16 @@ Queue.next = function (tick, force_name)
     end
 end
 
-Queue.run = function (t, data)
-    --global.nano_queue._hash[cantorPair_v7(data.position)] = nil
-    t._hash[cantorPair_v7(data.position)] = nil
-    Queue[data.action](data)
+--Tick handler, handles executing from the queue
+Queue.execute = function(event, queue)
+    if queue[event.tick] then
+        for _, data in ipairs(queue[event.tick]) do
+            queue._hash[cantorPair_v7(data.position)] = nil
+            Queue[data.action](data)
+            Queue.execute(queue, data)
+        end
+        queue[event.tick] = nil
+    end
 end
+
 return Queue

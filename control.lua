@@ -86,11 +86,11 @@ local function is_connected_player_ready(player)
 end
 
 local function has_powered_equipment(player, eq_name)
-    local armor = player.get_inventory(defines.inventory.player_armor)
-    if armor and armor[1] and armor[1].valid_for_read and armor[1].grid and armor[1].grid.equipment then
+    local armor = player.get_inventory(defines.inventory.player_armor)[1]
+    if armor and armor.valid_for_read and armor.grid and armor.grid.equipment then
         return table_find
         (
-            armor[1].grid.equipment,
+            armor.grid.equipment,
             function(v, _, name)
                 return v.name == name and v.energy > 0
             end,
@@ -656,19 +656,8 @@ end
 -------------------------------------------------------------------------------
 --The Tick Handler!
 --Future improvments: 1 player per tick, move gun/ammo/equip checks to event handlers.
-
-local function on_tick(event)
+local function poll_players(event)
     local config = global.config
-    local queue = global.nano_queue
-    --Handle building from the queue
-    if queue[event.tick] then
-        for _, data in ipairs(queue[event.tick]) do
-            --Queue[queue.action](queue)
-            Queue.run(queue, data)
-        end
-        global.nano_queue[event.tick] = nil
-    end
-
     --Run logic for nanobots and power armor modules
     if event.tick % config.poll_rate == 0 then
         for _, player in pairs(game.connected_players) do
@@ -691,9 +680,14 @@ local function on_tick(event)
         end --For Players
     end --NANO Automatic scripts
 end
-Event.register(defines.events.on_tick, on_tick)
+Event.register(defines.events.on_tick, poll_players)
 
-Event.register(defines.events.on_player_created, Player.on_player_created)
+local function execute_nano_queue(event)
+    Queue.execute(event, global.nano_queue)
+end
+Event.register(defines.events.on_tick, execute_nano_queue)
+
+Event.register(defines.events.on_player_created, function(event) Player.init(event.player_index) end)
 Event.register(defines.events.on_force_created, function(event) Force.init(event.force.name) end)
 
 local function switch_player_gun_while_driving(event)
@@ -728,7 +722,6 @@ function MOD.on_init()
     global.forces = Force.init()
     global.players = Player.init()
     global.config = table.deepcopy(MOD.config.control)
-    --changes.on_init(game.active_mods[MOD.name])
     game.print(MOD.name..": Init Complete")
 end
 Event.register(Event.core_events.init, MOD.on_init)
