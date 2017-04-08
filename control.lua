@@ -568,15 +568,23 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if config.no_network_limits or nano_network_check(player, ghost) then
                 if queue_count <= config.nano_emmiter_queues_per_cycle then
-                    if ghost.to_be_deconstructed(player.force) and ghost.minable and not Queue.get_hash(queue, ghost.position) then
+                    if ghost.to_be_deconstructed(player.force) and ghost.minable and not Queue.get_hash(queue, ghost.unit_number) then
                         ammo_drain(player, nano_ammo, 1)
-                        data = {player_index=player.index, action="deconstruction", deconstructors=true, entity=ghost, position = ghost.position, surface = ghost.surface}
+                        data = {
+                            player_index = player.index,
+                            action = "deconstruction",
+                            deconstructors = true,
+                            entity = ghost,
+                            position = ghost.position,
+                            surface = ghost.surface,
+                            unit_number = ghost.unit_number
+                        }
                         _, queue_count = Queue.insert(queue, data, next_tick())
                     elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force and not Queue.get_hash(queue, ghost.position)then
                         --get first available item that places entity from inventory that is not in our hand.
                         local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
                         if item_name then
-                            local data = {player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position}
+                            local data = {player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position, unit_number = ghost.unit_number}
                             if ghost.name == "entity-ghost" then
                                 if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
                                     local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))

@@ -111,7 +111,8 @@ local function run_interface(interface)
             for param_name, param_table in pairs(params_to_check) do
                 if (parameters[param_name] or 0) ~= 0 then
                     for _, cell in pairs(just_cell or logistic_network.cells) do
-                        if cell.construction_radius > 0 and Queue.get_hash(queue, cell.owner.position) ~= param_table.action then
+                        local hash = Queue.get_hash(queue, cell.owner.unit_number)
+                        if cell.construction_radius > 0 and not (hash and hash[param_table.action]) then
                             local next_tick = Queue.next(queue, game.tick, tick_spacing, true)
                             local data = {
                                 position = cell.owner.position,
@@ -120,7 +121,8 @@ local function run_interface(interface)
                                 name = param_name,
                                 action = param_table.action,
                                 find_type = param_table.find_filter,
-                                value = parameters[param_name]
+                                value = parameters[param_name],
+                                unit_number = cell.owner.unit_number
                             }
                             Queue.insert(queue, data, next_tick())
                         end
@@ -135,23 +137,6 @@ local function execute_nano_queue(event)
     Queue.execute(event, global.cell_queue)
 end
 Event.register(defines.events.on_tick, execute_nano_queue)
-
--- --Process 1 queued interface every 15 ticks
--- local function roboport_interface_tick(event)
--- if event.tick % 15 == 0 then
--- local qindex, data = next(global.cell_queue)
--- if qindex then
--- if data.logistic_cell.valid and data.logistic_network.valid and data.logistic_network.available_construction_robots > 0 then
--- for signal_name, signal_data in pairs(data.actions) do
--- Queue[params_to_check[signal_name].action](data, signal_data)
--- end
--- end
--- global.cell_queue[qindex] = nil
--- end
--- global._next_cell = qindex
--- end
--- end
--- Event.register(defines.events.on_tick, roboport_interface_tick)
 
 local function destroy_roboport_interface(event)
     if event.entity.name == "roboport-interface" then
