@@ -103,14 +103,17 @@ end
 -- @param player: the player object
 -- @return bool: true if has chip or not in network
 local function nano_network_check(p, e)
-    local c = p.character
-    local eq = "equipment-bot-chip-nanointerface"
-    local network = e and e.surface.find_logistic_network_by_position(e.position, e.force) or p.surface.find_logistic_network_by_position(p.position, p.force)
-    local bots = network and network.all_construction_robots or 0
-    local pbots = (c.logistic_cell and c.logistic_cell.logistic_network and c.logistic_cell.logistic_network.all_construction_robots) or 0
-    --local interface = has_powered_equipment(p, eq)
-
-    return not (has_powered_equipment(p, eq) or (bots > 0 or (pbots > 0 and (c.logistic_cell and c.logistic_cell.construction_radius > 0))))
+    if has_powered_equipment(p, "equipment-bot-chip-nanointerface") then
+        return true
+    else
+        local c = p.character
+        local network = e and e.surface.find_logistic_network_by_position(e.position, e.force) or p.surface.find_logistic_network_by_position(p.position, p.force)
+        -- Con bots in network
+        local bots = network and network.all_construction_robots or 0
+        --bots in personal cell
+        local pbots = (c.logistic_cell and c.logistic_cell.logistic_network and c.logistic_cell.logistic_network.all_construction_robots) or 0
+        return not (bots > 0 or (pbots > 0 and (c.logistic_cell and c.logistic_cell.construction_radius > 0)))
+    end
 end
 
 -- Can nanobots repair this entity.
