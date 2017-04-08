@@ -10,7 +10,7 @@ local combat_robots = MOD.config.COMBAT_ROBOTS
 local healer_capsules = MOD.config.FOOD
 
 local Position = require("stdlib/area/position")
-local min, max, abs, ceil = math.min, math.max, math.abs, math.ceil --luacheck: ignore
+local min, max, abs, ceil, floor = math.min, math.max, math.abs, math.ceil, math.floor --luacheck: ignore
 
 -------------------------------------------------------------------------------
 --[[Helper functions]]--
@@ -97,7 +97,6 @@ local function get_bot_counts(entity, mobile_only, stationed_only)
         return 0
     end
 end
-MOD.get_bot_counts = get_bot_counts
 
 local function get_health_capsules(player)
     for name, health in pairs(healer_capsules) do
@@ -119,20 +118,29 @@ local function get_best_follower_capsule(player)
     return robot_list[1] and robot_list
 end
 
+local function get_chip_radius(player, chip_name)
+    local pdata = global.players[player.index]
+    local c = player.character
+    local max_radius = c and c.logistic_cell and c.logistic_cell.mobile and floor(c.logistic_cell.construction_radius) or 15
+    local custom_radius = pdata.ranges[chip_name] or max_radius
+    return custom_radius <= max_radius and custom_radius or max_radius
+end
+
 -------------------------------------------------------------------------------
 --[[Meat and Potatoes]]--
 -------------------------------------------------------------------------------
 --At this point player is valid, not afk and has a character
 
-local function get_chip_result_counts(equipment,surface, area, search_type, bot_counter)
-    local item_equip = equipment
-    local items = equipment and bot_counter(0) > 0 and surface.find_entities_filtered{area=area, type=search_type, limit=200}
-    local num_items = items and #items or 0
-    local num_chips = items and #equipment or 0
-    return item_equip, items, num_items, num_chips, bot_counter
+local function get_chip_results(player, equipment, eq_name, search_type, bot_counter)
+    local radius = get_chip_radius(player, eq_name)
+    local area = Position.expand_to_area(player.position, radius)
+    local item_entities = equipment and bot_counter(0) > 0 and player.surface.find_entities_filtered{area=area, type=search_type, limit=200}
+    local num_items = item_entities and #item_entities or 0
+    local num_chips = item_entities and #equipment or 0
+    return equipment, item_entities, num_items, num_chips, bot_counter
 end
 
-local function mark_items_using_eq(player, item_equip, items, num_items, num_item_chips, bot_counter)
+local function mark_items(player, item_equip, items, num_items, num_item_chips, bot_counter)
     while num_items > 0 and num_item_chips > 0 and bot_counter(0) > 0 do
         local item_chip = items and item_equip[num_item_chips]
         while num_items > 0 and item_chip and item_chip.energy >= 50 do
@@ -164,8 +172,8 @@ local function process_ready_chips(player, equipment)
                 end
             end
             bot_counter = bot_counter()
-            mark_items_using_eq(player, get_chip_result_counts(equipment["equipment-bot-chip-items"], player.surface, area, "item-entity", bot_counter))
-            mark_items_using_eq(player, get_chip_result_counts(equipment["equipment-bot-chip-trees"], player.surface, area, "tree", bot_counter))
+            mark_items(player, get_chip_results(player, equipment["equipment-bot-chip-items"], "equipment-bot-chip-items", "item-entity", bot_counter))
+            mark_items(player, get_chip_results(player, equipment["equipment-bot-chip-trees"], "equipment-bot-chip-trees", "tree", bot_counter))
         end
     end
     if enemy and equipment["equipment-bot-chip-launcher"] then

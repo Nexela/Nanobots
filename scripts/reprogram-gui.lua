@@ -1,20 +1,17 @@
 local match_to_item = {
     ["equipment-bot-chip-trees"] = true,
     ["equipment-bot-chip-items"] = true,
-    ["equipment-bot-chip-launcher"] = true,
     ["ammo-nano-constructors"] = true,
     ["ammo-nano-termites"] = true,
 }
+
+local bot_radius = MOD.config.BOT_RADIUS
 
 local function remove_gui(player, frame_name)
     return player.gui.left[frame_name] and player.gui.left[frame_name].destroy()
 end
 
-local bot_radius = MOD.config.BOT_RADIUS
-
 local function draw_gui(player) -- return gui
-    --remove_gui(player, "nano_frame_main")
-
     if not player.gui.left["nano_frame_main"] then
 
         local gui = player.gui.left.add{type="frame", name="nano_frame_main", direction="horizontal", style="nano_frame_style"}
@@ -56,11 +53,11 @@ local function increase_decrease_reprogrammer(event, change)
             elseif event.element and event.element.name == "nano_text_box" then
                 radius = tonumber(text_field.text)
             else
-                radius = math.max(1, (pdata.ranges[stack.name] or max_radius) + change)
-                text_field.text = radius
+                radius = math.max(0, (pdata.ranges[stack.name] or max_radius) + (change or 0))
             end
-            pdata.ranges[stack.name] = ((radius > 0 and radius < max_radius) and radius) or nil
-            game.print(stack.name .." max = "..max_radius.." stored = ".. (pdata.ranges[stack.name] or "not saved"))
+            pdata.ranges[stack.name] = ((radius > 0 and radius < 1000) and radius) or nil
+            text_field.text = pdata.ranges[stack.name] or max_radius
+            --game.print(stack.name .." max = "..max_radius.." stored = ".. (pdata.ranges[stack.name] or "not saved"))
         end
     else
         remove_gui(player, "nano_frame_main")
@@ -73,8 +70,8 @@ Event.gui_hotkeys["nano-decrease-radius"] = function (event) increase_decrease_r
 for event_name in pairs(Event.gui_hotkeys) do
     script.on_event(event_name, Event.gui_hotkeys[event_name])
 end
-Event.register(defines.events.on_player_cursor_stack_changed, function (event) increase_decrease_reprogrammer(event, 0) end)
+Event.register(defines.events.on_player_cursor_stack_changed, increase_decrease_reprogrammer)
 Gui.on_text_changed("nano_text_box", function (event) increase_decrease_reprogrammer(event, 0) end)
 Gui.on_click("nano_btn_up", function (event) increase_decrease_reprogrammer(event, 1) end)
 Gui.on_click("nano_btn_dn", function (event) increase_decrease_reprogrammer(event, -1) end)
-Gui.on_click("nano_btn_reset", function(event) end)
+Gui.on_click("nano_btn_reset", function(event) increase_decrease_reprogrammer(event, -99999999999) end)
