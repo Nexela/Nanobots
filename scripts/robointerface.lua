@@ -111,7 +111,7 @@ local function run_interface(interface)
             for param_name, param_table in pairs(params_to_check) do
                 if (parameters[param_name] or 0) ~= 0 then
                     for _, cell in pairs(just_cell or logistic_network.cells) do
-                        local hash = Queue.get_hash(queue, cell.owner.unit_number)
+                        local hash = Queue.get_hash(queue, cell.owner.unit_number, cell.owner.position)
                         if cell.construction_radius > 0 and not (hash and hash[param_table.action]) then
                             local next_tick = Queue.next(queue, game.tick, tick_spacing, true)
                             local data = {
