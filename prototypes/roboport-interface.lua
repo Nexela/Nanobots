@@ -1,21 +1,7 @@
 -------------------------------------------------------------------------------
 --[[Roboport Interface]]-- Logistic Network roboport interface module
 -------------------------------------------------------------------------------
---create recipe
--- local recipe_ri = Proto.dupli_proto("recipe", "constant-combinator", "roboport-interface-cc")
--- recipe_ri.energy_required = 30
--- recipe_ri.enabled = false
--- recipe_ri.ingredients = {
--- {"constant-combinator", 1},
--- {"roboport", 1},
--- {"radar", 1},
--- }
---
--- --Create item
--- local item_ri = Proto.dupli_proto("item", "constant-combinator", "roboport-interface-cc")
--- local sort_order = data.raw["item"]["roboport"] and data.raw["item"]["roboport"].sort_order or ""
--- item_ri.subgroup = "logistic-network"
--- item_ri.sort_order = sort_order .. "-interface"
+--Roboport with custom GFX no zones, no recharge, radar with nil gfx, cc with nil gfx - selectable
 
 local recipe_ri = Proto.dupli_proto("recipe", "radar", "roboport-interface")
 recipe_ri.energy_required = 30

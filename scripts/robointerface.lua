@@ -1,10 +1,11 @@
 -------------------------------------------------------------------------------
 --[[robointerface]]
 -------------------------------------------------------------------------------
-local robointerface = {}
 local Area = require("stdlib/area/area") --luacheck: ignore Area
 local Position = require("stdlib/area/position")
 local Entity = require("stdlib/entity/entity")
+
+local robointerface = {}
 
 --[[
 raw-wood-cutting, scan for trees, if value is negative only scan for trees if wood in network is less then that amount
@@ -175,12 +176,13 @@ local function on_sector_scanned(event)
 end
 Event.register(defines.events.on_sector_scanned, on_sector_scanned)
 
-function robointerface.new(entity, cc)
+function robointerface.new(entity, cc, radar)
     return {
         name = entity.name,
         unit_number = entity.unit_number,
         entity = entity,
-        cc = cc
+        cc = cc,
+        radar = radar
     }
 end
 
