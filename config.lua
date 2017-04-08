@@ -41,8 +41,9 @@ NANO.control = {}
 NANO.control.loglevel = 2
 NANO.control.no_network_limits = false --disable checking for existing logistic networks
 NANO.control.poll_rate = 60 --default: 60, (1 seconds), ticks between checks, set to 0 to disable all automatic events
-NANO.control.ticks_per_queue = 12 --default: 4, builds from queue 1 item every 4 ticks.
-
+NANO.control.nanobots_tick_spacing = 12 --default: 4, builds from queue 1 item every 4 ticks.
+NANO.control.robo_interface_tick_spacing = 5 -- default: 5, queues logistic cell actions every 5 ticks
+NANO.control.robo_interface_free_bots_per = 50 -- default: 50 Percentage of free construction bots needed for automatic tasks
 NANO.control.auto_equipment = true --default: true, set to false to disable automatic power armor equipment (item will need to be used) (soon)
 NANO.control.auto_nanobots = true --default: true, set to false to disable automatic nanobots when emitter is selected gun.
 

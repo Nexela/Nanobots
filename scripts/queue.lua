@@ -6,7 +6,7 @@ local function NtoZ_c(x, y)
 end
 
 local function cantorPair_v7(pos)
-    local x, y = NtoZ_c(pos.x, pos.y)
+    local x, y = NtoZ_c(math.floor(pos.x), math.floor(pos.y))
     local s = x + y
     local h = s * (s + 0.5) + x
     return h + h

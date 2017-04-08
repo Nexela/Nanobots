@@ -98,22 +98,17 @@ changes["1.6.6"] = function ()
     global.forces = Force.init()
     global.players = Player.init()
     global.robointerfaces = robointerface.init()
-    global.config.ticks_per_queue = 12
-    global.config.loglevel = MOD.config.control.loglevel or 0
-    global.config.inside_area_radius = MOD.config.control.inside_area_radius or 60
-    global.config.nano_emmiter_queues_per_cycle = MOD.config.control.nano_emitter_queues_per_cycle or 80
-    global.config.poll_rate = global.config.tick_mod or MOD.config.control.tick_mod or 60
-    global.config.tick_mod = nil
-    global.config.run_ticks = nil
-    global.networks = nil
+    global.config = MOD.config.control
     global.nano_queue = Queue.new()
     global.cell_queue = Queue.new()
+
+    --Migrate old queued to new nano_queue
     local old_queue = table.deepcopy(global.queued)
-    local next_tick = Queue.next(game.tick, "player")
+    local next_tick = Queue.next(global.cell_queue, game.tick, global.config.nanobots_tick_spacing)
     if old_queue and type(old_queue) == "table" and old_queue.next then
         for _, qdata in pairs(old_queue) do
             if type("qdata") == "table" and qdata.action then
-                Queue.insert(next_tick(), qdata)
+                Queue.insert(global.cell_queue, qdata, next_tick())
             end
         end
     end
@@ -121,6 +116,7 @@ changes["1.6.6"] = function ()
 
     --remove all development change history
     --[[
+    global.networks = nil
     global._changes["1.6.0"] = nil
     global._changes["1.6.1"] = nil
     global._changes["1.6.2"] = nil

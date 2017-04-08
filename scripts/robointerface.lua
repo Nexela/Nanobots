@@ -1,14 +1,14 @@
 -------------------------------------------------------------------------------
 --[[robointerface]]
 -------------------------------------------------------------------------------
-local Area = require("stdlib/area/area")
+--local Area = require("stdlib/area/area")
 local Position = require("stdlib/area/position")
 local Entity = require("stdlib/entity/entity")
 local Queue = require("scripts/queue")
 
-local robointerface = {}
+local floor = math.floor
 
-local tick_spacing = 5
+local robointerface = {}
 
 local params_to_check = {
     ["nano-signal-chop-trees"] = {
@@ -70,13 +70,20 @@ function Queue.mark_items_or_trees(data)
     if data.logistic_cell.valid then
         local surface, force, position = get_entity_info(data.logistic_cell.owner)
         if not surface.find_nearest_enemy{position=position, max_distance=data.logistic_cell.construction_radius, force=force} then
+            local config = global.config
             local filter = {area=Position.expand_to_area(position, data.logistic_cell.construction_radius), type = data.find_type or "error", limit = 300}
-            local available_bots = data.logistic_cell.logistic_network.available_construction_robots
+            local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots * (config.robo_interface_free_bots_per/100))
+            local limit = -99999999999
+            if data.value < 0 and data.find_type == " tree" then
+                limit = (data.logistic_cell.logistic_network.get_contents()["raw-wood"] or 0) - data.value
+            end
+
             for _, item in pairs(surface.find_entities_filtered(filter)) do
-                if available_bots > 0 then
+                if available_bots > 0 and (limit < 0) then
                     if not item.to_be_deconstructed(force) then
                         item.order_deconstruction(force)
                         available_bots = available_bots - 1
+                        limit = limit + 1
                     end
                 else
                     break
@@ -97,12 +104,12 @@ local function run_interface(interface)
     if behaviour and behaviour.enabled then
         local logistic_network, logistic_cell = find_network_and_cell(interface.cc, behaviour)
         if logistic_network and logistic_network.available_construction_robots > 0 then
-            local queue = global.cell_queue
+            local queue, tick_spacing = global.cell_queue, global.config.robo_interface_tick_spacing
             local parameters = get_parameters(behaviour.parameters)
+            -- If the closest roboport signal is present and > 0 then just run on the attached cell
             local just_cell = (parameters["nano-signal-closest-roboport"] or 0) > 0 and logistic_cell and {logistic_cell} or nil
             for param_name, param_table in pairs(params_to_check) do
-
-                if parameters[param_name] then
+                if (parameters[param_name] or 0) ~= 0 then
                     for _, cell in pairs(just_cell or logistic_network.cells) do
                         if cell.construction_radius > 0 and Queue.get_hash(queue, cell.owner.position) ~= param_table.action then
                             local next_tick = Queue.next(queue, game.tick, tick_spacing, true)
@@ -115,21 +122,7 @@ local function run_interface(interface)
                                 find_type = param_table.find_filter,
                                 value = parameters[param_name]
                             }
-                            MOD.log(data.position)
                             Queue.insert(queue, data, next_tick())
-                            --
-                            --
-                            -- queue[cell.owner.unit_number] = queue[cell.owner.unit_number] or {
-                            -- logistic_cell = cell,
-                            -- logistic_network = logistic_network,
-                            -- actions = {}
-                            -- }
-                            -- queue[cell.owner.unit_number].actions[param_name] = {
-                            -- action = param_table.action,
-                            -- find_type = param_table.find_filter,
-                            -- param = param_name,
-                            -- value = parameters[param_name]
-                            -- }
                         end
                     end
                 end
