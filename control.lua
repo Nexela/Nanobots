@@ -110,9 +110,9 @@ local function nano_network_check(p, e)
         local network = e and e.surface.find_logistic_network_by_position(e.position, e.force) or p.surface.find_logistic_network_by_position(p.position, p.force)
         -- Con bots in network
         local bots = network and network.all_construction_robots or 0
-        --bots in personal cell
-        local pbots = (c.logistic_cell and c.logistic_cell.logistic_network and c.logistic_cell.logistic_network.all_construction_robots) or 0
-        return not (bots > 0 or (pbots > 0 and (c.logistic_cell and c.logistic_cell.construction_radius > 0)))
+        -- con bots in personal cell
+        local pbots = (c.logistic_cell and c.logistic_cell.construction_radius > 0 and c.logistic_cell.logistic_network and c.logistic_cell.logistic_network.all_construction_robots) or 0
+        return not (bots > 0 or pbots > 0)
     end
 end
 
