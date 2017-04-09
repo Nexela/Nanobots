@@ -1,4 +1,4 @@
-# NANOBOTS
+# NANOBOTS 1.7.0
 #### Robot enhancements from the start of the game.
 Learn how to create powerfull but consumable robots after learning automation. Get up and running fast by using these robots to help you build your way up to Roboports and even smarter robots. Add modules to your power armor to reprogram your personal roboport to complete mundane tasks automatically. Place roboport interfaces to have your logistic networks perform tasks while you are away.
 
@@ -26,14 +26,12 @@ Reprogram your personal roboport to do a lot of the mundane tasks for you. Most 
 -   The feeder will automaticly heal you when you are low on health. For a bigger healing bonus keep a stack of healing capsules in your inventory.
 -   The Nano interface will allow your nanobots to work even while you are inside logistic networks.
 
-Hotkeys are available to toggle equipment on or off. Personal Roboports, Exoskeletons, Nightvision, All or individual Nanobot equipment modules.
-If a piece of equipment in your armor is not enabled, adding more pieces of that equipment will install the disabled version.
-Equipment states will stay with the power armor making it easy to swap out power armors without having to remember to also toggle the equipment.
-
 --------------------------------------------------------------------------------
 
 #### Hotkeys and More:
-Many hotkeys and shortcuts have been added. It is now possible to limit the range that that nanobots will work.
+Hotkeys are available to toggle equipment on or off. Personal Roboports, Exoskeletons, Nightvision, All or individual Nanobot equipment modules.
+If a piece of equipment in your armor is not enabled, adding more pieces of that equipment will install the disabled version.
+Equipment states will stay with the power armor making it easy to swap out power armors without having to remember to also toggle the equipment. It is also possible to limit the range that that nanobots will work in.
 
 -   Switching weapons in a vehicle will now also switch your characters weapons. as long as it is assigned to the same as the switch weapon key, Or you can assign it to a seperate key.
 -   Ctrl F1 - F6 Will toggle certail modular armor equipment on or off. A visial GUI is planned for this in the future.
@@ -42,7 +40,7 @@ Many hotkeys and shortcuts have been added. It is now possible to limit the rang
 --------------------------------------------------------------------------------
 
 #### Roboport Interface:
-The roboport interface allows you to program your logistic networks to do mumdane tasks for you. Place a Roboport interface and set virtual signals on the built in combinator. If there are enemies in the construction zone your robots will not execute these tasks. Only up to half of your available construction bots will be uses for these tasks.
+The roboport interface allows you to program your logistic networks to do mundane tasks for you. Place a Roboport interface and set virtual signals on the built in combinator. If there are enemies in the construction zone your robots will not execute these tasks. Only up to half of your available construction bots will be uses for these tasks.
 
 -   Find items: Will scan for any items on the ground in your network and order your construction robots to pick them up.
 -   Chop trees: Scan for any trees in range and chop them up. Setting this to a negative symbol will only chop trees if you have less than that amount of raw wood in the network.
@@ -58,7 +56,16 @@ The roboport interface allows you to program your logistic networks to do mumdan
 -   More power armor equipment modules
 -   More roboport interface logic
 -   Even more script optimizations
+-   Found a bug? Report it here: https://github.com/Nexela/Nanobots/issues
 
 #### Latest changes
 1.7.0 - Major logic re-write, New enhancements and features added including hotkeys.
 Full changelog available in CHANGELOG.md
+
+#### Many thanks to
+-   Articulating for his help and Ideas
+-   TokMor for a lot of extensive bug testing
+-   Wube and The Factorio development team
+-   KatherineOfSky, Arumba, Momentary Flux (and All other youtubers Showing off the Nanobots.)
+-   Xterminator and his Nanobots spotlight. https://www.youtube.com/watch?v=sh_oIgUMfV4
+-   And you as an everyday user of Nanobots.
