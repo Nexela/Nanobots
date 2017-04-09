@@ -7,7 +7,7 @@ Learn how to create powerfull but consumable robots after learning automation. G
 -   Equip the Nano Emitter and some Nano ammo, make it your selected gun and any ghosts/blueprints within 7.5 tiles of you will be automatically built if you have the items in your inventory.
 -   Technologies exist to slightly increase the range and speed of your nanobots.
 -   These earlier version bots are capable of building, deconstructing and healing. They do not replenish (each Ammo magazine will build 10 items)
--   Nanobots do not work inside logistic networks, or personal roboport zones without an interface module installed in your power armor.
+-   Nanobots do not work inside logistic networks that contain construction robots, or personal roboport zones without an interface module installed in your power armor.
 -   Manually shooting nanobots releases a pretty cloud of nanobots and nothing else. This is a good way to waste nanobots.
 
 #### Ammo Details:
@@ -32,7 +32,24 @@ Equipment states will stay with the power armor making it easy to swap out power
 
 --------------------------------------------------------------------------------
 
+#### Hotkeys and More:
+Many hotkeys and shortcuts have been added. It is now possible to limit the range that that nanobots will work.
+
+-   Switching weapons in a vehicle will now also switch your characters weapons. as long as it is assigned to the same as the switch weapon key, Or you can assign it to a seperate key.
+-   Ctrl F1 - F6 Will toggle certail modular armor equipment on or off. A visial GUI is planned for this in the future.
+-   Set the maximum radius that a module or nanobot ammo will work by holding the ammo or module in your hand and using the GUI or hotkeys to increase or decrease the range. It is possible to set this value higher than the maximum allowed but it will have no effect.
+
+--------------------------------------------------------------------------------
+
 #### Roboport Interface:
+The roboport interface allows you to program your logistic networks to do mumdane tasks for you. Place a Roboport interface and set virtual signals on the built in combinator. If there are enemies in the construction zone your robots will not execute these tasks. Only up to half of your available construction bots will be uses for these tasks.
+
+-   Find items: Will scan for any items on the ground in your network and order your construction robots to pick them up.
+-   Chop trees: Scan for any trees in range and chop them up. Setting this to a negative symbol will only chop trees if you have less than that amount of raw wood in the network.
+-   Robort only: Set this signal to only run this scanner in the nearest roboports zone and not the whole network.
+-   (Not implemented yet): Tile builder: Set a tile item signal to pave the network with this tile.
+-   (Not implemented yet): Tile remover: Set this virtual signal to dig up all tiles and return them to the network
+-   (Not implemented yet): Unit launcher: Launch units to defend against biter attacks. Attach a chest to the scanner combinator and any robots inside this chest will be used for defense.
 
 --------------------------------------------------------------------------------
 
