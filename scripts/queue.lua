@@ -24,21 +24,22 @@ Queue.set_hash = function(t, index, position, action)
     end
     local hash = t._hash
     hash[index] = hash[index] or {}
+    hash[index].count = (hash[index].count or 0) + 1
     hash[index][action] = action
+    return index
 end
 
 Queue.get_hash = function(t, index, position)
-    if not index then
-        index = cantorPair_v7(position)
-    end
+    index = index or cantorPair_v7(position)
     local hash = t._hash
-    return hash[index], hash
+    return hash[index]
 end
 
 Queue.insert = function (t, data, tick, count)
+    data.hash = Queue.set_hash(t, data.unit_number, data.position, data.action)
     t[tick] = t[tick] or {}
     t[tick][#t + 1] = data
-    Queue.set_hash(t, data.unit_number, data.position, data.action)
+
     return t, count
 end
 
@@ -55,20 +56,20 @@ Queue.next = function (t, tick, tick_spacing, dont_combine)
     end
 end
 
---Tick handler, handles executing from the queue
+--Tick handler, handles executing multiple data tables in a queue
 Queue.execute = function(event, queue)
     if queue[event.tick] then
-        local index
         for _, data in ipairs(queue[event.tick]) do
-            if queue._hash[data.unit_number] then
-                index = data.unit_number or cantorPair_v7(data.position)
-                queue._hash[index][data.action] = nil
+            local index = data.hash
+            queue._hash[index][data.action] = nil
+            queue._hash[index].count = queue._hash[index].count - 1
+            if queue._hash[index].count <= 0 then
+                queue._hash[index] = nil
             end
             if Queue[data.action] then
                 Queue[data.action](data)
             end
         end
-        if index then queue._hash[index] = nil end
         queue[event.tick] = nil
     end
 end

@@ -303,6 +303,14 @@ local function ammo_drain(player, ammo, amount)
     end
 end
 
+-- Get the radius for the ammo
+local function get_ammo_radius(player, nano_ammo)
+    local data = global.players[player.index]
+    local max_radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7
+    local custom_radius = data.ranges[nano_ammo.name] or max_radius
+    return custom_radius <= max_radius and custom_radius or max_radius
+end
+
 -- Get the stacks of modules not inserted and modules to insert
 -- @param player: the entity to get modules from
 -- @param entity: the ghost entity to get requests from (.15 can switch to item-proxy)
@@ -542,13 +550,6 @@ function Queue.build_tile_ghost(data)
     end --valid player
 end
 
-local function get_ammo_radius(player, nano_ammo)
-    local data = global.players[player.index]
-    local max_radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7
-    local custom_radius = data.ranges[nano_ammo.name] or max_radius
-    return custom_radius <= max_radius and custom_radius or max_radius
-end
-
 -------------------------------------------------------------------------------
 --[[Nano Emmitter]]--
 -------------------------------------------------------------------------------
@@ -558,7 +559,6 @@ end
 --Nano Constructors
 --queue the ghosts in range for building, heal stuff needing healed
 local function queue_ghosts_in_range(player, pos, nano_ammo)
-    --local queued = global.forces[player.force.name].queued
     local queue, config = global.nano_queue, global.config
     local tick_spacing = max(1, config.nanobots_tick_spacing - queue_speed[player.force.get_gun_speed_modifier("nano-ammo")])
     local next_tick, queue_count = Queue.next(queue, game.tick, tick_spacing), 0
@@ -580,7 +580,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             unit_number = ghost.unit_number
                         }
                         _, queue_count = Queue.insert(queue, data, next_tick())
-                    elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force and not Queue.get_hash(queue, ghost.unit_number, ghost.position)then
+                    elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force and not Queue.get_hash(queue, ghost.unit_number, ghost.position) then
                         --get first available item that places entity from inventory that is not in our hand.
                         local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
                         if item_name then
