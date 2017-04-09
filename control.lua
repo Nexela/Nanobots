@@ -529,7 +529,7 @@ function Queue.build_tile_ghost(data)
                         end
                     end
                     if insert_or_spill_items(player, item_stacks) then
-                        create_projectile("nano-projectile-return", data.surface, player.force, data.position, player.position)
+                        create_projectile("nano-projectile-return", ghost.surface, player.force, ghost.position, player.position)
                         game.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=item_stacks[1]})
                         surface.set_tiles({{name = hidden_tile, position = tile.position}})
                     end
@@ -561,81 +561,98 @@ end
 local function queue_ghosts_in_range(player, pos, nano_ammo)
     local queue, config = global.nano_queue, global.config
     local tick_spacing = max(1, config.nanobots_tick_spacing - queue_speed[player.force.get_gun_speed_modifier("nano-ammo")])
-    local next_tick, queue_count = Queue.next(queue, game.tick, tick_spacing), 0
+    local next_tick, queue_count = Queue.next(queue, game.tick, tick_spacing)
     local radius = get_ammo_radius(player, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
-    for _, ghost in pairs(player.surface.find_entities_filtered{area=area, force=player.force}) do
+
+    for _, ghost in pairs(player.surface.find_entities_filtered{area=area}) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if config.no_network_limits or nano_network_check(player, ghost) then
-                if queue_count <= config.nano_emmiter_queues_per_cycle then
-                    if ghost.to_be_deconstructed(player.force) and ghost.minable and not Queue.get_hash(queue, ghost.unit_number, ghost.position) then
-                        ammo_drain(player, nano_ammo, 1)
-                        data = {
-                            player_index = player.index,
-                            action = "deconstruction",
-                            deconstructors = true,
-                            entity = ghost,
-                            position = ghost.position,
-                            surface = ghost.surface,
-                            unit_number = ghost.unit_number
-                        }
-                        _, queue_count = Queue.insert(queue, data, next_tick())
-                    elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force and not Queue.get_hash(queue, ghost.unit_number, ghost.position) then
-                        --get first available item that places entity from inventory that is not in our hand.
-                        local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
-                        if item_name then
-                            local data = {player_index=player.index, entity=ghost, surface=ghost.surface, position=ghost.position, unit_number = ghost.unit_number}
-                            if ghost.name == "entity-ghost" then
-                                if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
-                                    local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
-                                    if place_item then
-                                        data.action = "build_entity_ghost"
-                                        data.place_item = place_item
-                                        _, queue_count = Queue.insert(queue, data, next_tick())
-                                        ammo_drain(player, nano_ammo, 1)
-                                    end
-                                end
-                            elseif ghost.name == "tile-ghost" then
-                                --Don't queue tile ghosts if entity ghost is on top of it.
-                                if ghost.surface.count_entities_filtered{name="entity-ghost", area = Entity.to_collision_area(ghost), limit=1} == 0 then
-                                    local tile = ghost.surface.get_tile(ghost.position)
-                                    if tile then
+                if queue_count() < config.nano_emmiter_queues_per_cycle then
+                    if ghost.to_be_deconstructed(player.force) and ghost.minable then
+                        if not Queue.get_hash(queue, ghost) then
+                            ammo_drain(player, nano_ammo, 1)
+                            local data = {
+                                player_index = player.index,
+                                action = "deconstruction",
+                                deconstructors = true,
+                                entity = ghost,
+                                position = ghost.position,
+                                surface = ghost.surface,
+                                unit_number = ghost.unit_number
+                            }
+                            Queue.insert(queue, data, next_tick())
+                        end
+                    elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
+                        if not Queue.get_hash(queue, ghost) then
+                            --get first available item that places entity from inventory that is not in our hand.
+                            local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
+                            if item_name then
+                                local data = {
+                                    player_index = player.index,
+                                    entity=ghost,
+                                    surface=ghost.surface,
+                                    position=ghost.position,
+                                    unit_number = ghost.unit_number
+                                }
+                                if ghost.name == "entity-ghost" then
+                                    if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
                                         local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
                                         if place_item then
+                                            data.action = "build_entity_ghost"
                                             data.place_item = place_item
-                                            data.action="build_tile_ghost"
-                                            _, queue_count = Queue.insert(queue, data, next_tick())
+                                            Queue.insert(queue, data, next_tick())
                                             ammo_drain(player, nano_ammo, 1)
+                                        end
+                                    end
+                                elseif ghost.name == "tile-ghost" then
+                                    --Don't queue tile ghosts if entity ghost is on top of it.
+                                    if ghost.surface.count_entities_filtered{name="entity-ghost", area = Entity.to_collision_area(ghost), limit=1} == 0 then
+                                        local tile = ghost.surface.get_tile(ghost.position)
+                                        if tile then
+                                            local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
+                                            if place_item then
+                                                data.place_item = place_item
+                                                data.action="build_tile_ghost"
+                                                Queue.insert(queue, data, next_tick())
+                                                ammo_drain(player, nano_ammo, 1)
+                                            end
                                         end
                                     end
                                 end
                             end
-                        end
-                    end
-                    -- Check if entity needs repair
-                elseif nano_repairable_entity(ghost) and ghost.force == player.force then
-                    local ghost_area = Area.offset(ghost.prototype.collision_box, ghost.position)
-                    if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=ghost_area} == 0 then
-                        ghost.surface.create_entity{
-                            name="nano-projectile-repair",
-                            position=player.position,
-                            force=player.force,
-                            target=ghost.position,
-                            speed=0.5,
-                        }
-                        ghost.surface.create_entity{
-                            name="nano-sound-repair",
-                            position=ghost.position,
-                        }
-                        ammo_drain(player, nano_ammo, 1)
-                    end --repair
-                end --deconstruct, ghost or heal
+                            --MOD.log(game.tick.." - "..ghost.unit_number.." - "..queue_count().." - "..serpent.line(ghost.position, {comment=false}))
+                        end --hash check
+                        -- Check if entity needs repair
+                    elseif nano_repairable_entity(ghost) and ghost.force == player.force then
+                        local ghost_area = Area.offset(ghost.prototype.collision_box, ghost.position)
+                        if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=ghost_area} == 0 then
+                            ghost.surface.create_entity{
+                                name="nano-projectile-repair",
+                                position=player.position,
+                                force=player.force,
+                                target=ghost.position,
+                                speed=0.5,
+                            }
+                            ghost.surface.create_entity{
+                                name="nano-sound-repair",
+                                position=ghost.position,
+                            }
+                            queue_count(1)
+                            ammo_drain(player, nano_ammo, 1)
+                        end --repair
+                    end --deconstruct, build or repair
+                else
+                    break
+                end --queue count
             end --network check
-        else --not valid ammo
-            break --we ran out of ammo break out! -- Possible to check on ammo changed before this and re-insert the ammo?
+        else
+            --ran out of ammo, break out here
+            break
         end --valid ammo
     end --looping through entities
-end
+    queue._next_tick = next_tick()
+end --function
 
 --Nano Termites
 --Kill the trees! Kill them dead

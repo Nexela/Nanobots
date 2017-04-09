@@ -108,15 +108,16 @@ local function run_interface(interface)
             local parameters = get_parameters(behaviour.parameters)
             -- If the closest roboport signal is present and > 0 then just run on the attached cell
             local just_cell = (parameters["nano-signal-closest-roboport"] or 0) > 0 and logistic_cell and {logistic_cell} or nil
+            local next_tick = Queue.next(queue, game.tick, tick_spacing, true)
             for param_name, param_table in pairs(params_to_check) do
                 if (parameters[param_name] or 0) ~= 0 then
                     for _, cell in pairs(just_cell or logistic_network.cells) do
-                        local hash = Queue.get_hash(queue, cell.owner.unit_number, cell.owner.position)
+                        local hash = Queue.get_hash(queue, cell.owner)
                         if cell.construction_radius > 0 and not (hash and hash[param_table.action]) then
-                            local next_tick = Queue.next(queue, game.tick, tick_spacing, true)
                             local data = {
                                 position = cell.owner.position,
                                 logistic_cell = cell,
+                                entity = cell.owner,
                                 logistic_network = logistic_network,
                                 name = param_name,
                                 action = param_table.action,
@@ -127,6 +128,7 @@ local function run_interface(interface)
                             Queue.insert(queue, data, next_tick())
                         end
                     end
+                    queue._next_tick = next_tick()
                 end
             end
         end
