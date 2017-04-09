@@ -31,8 +31,8 @@ end
 
 Queue.get_hash = function(t, index, position)
     index = index or cantorPair_v7(position)
-    local hash = t._hash
-    return hash[index]
+    local hash = t._hash[index]
+    return hash
 end
 
 Queue.insert = function (t, data, tick, count)
@@ -60,11 +60,13 @@ end
 Queue.execute = function(event, queue)
     if queue[event.tick] then
         for _, data in ipairs(queue[event.tick]) do
-            local index = data.hash
-            queue._hash[index][data.action] = nil
-            queue._hash[index].count = queue._hash[index].count - 1
-            if queue._hash[index].count <= 0 then
-                queue._hash[index] = nil
+            MOD.log(data)
+            MOD.log(queue)
+            local hash, index = queue._hash, data.hash
+            hash[index][data.action] = nil
+            hash[index].count = hash[index].count - 1
+            if hash[index].count <= 0 then
+                hash[index] = nil
             end
             if Queue[data.action] then
                 Queue[data.action](data)
