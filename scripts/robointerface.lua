@@ -67,7 +67,7 @@ local function get_entity_info(entity)
 end
 
 function Queue.mark_items_or_trees(data)
-    if data.logistic_cell.valid then
+    if data.logistic_cell.valid and data.logistic_cell.logistic_network then
         local surface, force, position = get_entity_info(data.logistic_cell.owner)
         if not surface.find_nearest_enemy{position=position, max_distance=data.logistic_cell.construction_radius, force=force} then
             local config = global.config
