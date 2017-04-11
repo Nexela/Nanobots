@@ -1,8 +1,5 @@
 --- String module
 -- @module string
--- luacheck: ignore string
--- luacheck: no unused
--- luacheck: no redefined
 
 --- Returns a copy of the string with any leading or trailing whitespace from the string removed.
 -- @param s the string to remove leading or trailing whitespace from

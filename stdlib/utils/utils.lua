@@ -1,7 +1,5 @@
---luacheck: ignore table string
+--luacheck: ignore
 -- utils.lua by binbinhfr, v1.0.10
-
--- luacheck: ignore table string
 
 local author_name1 = "Nexela"
 local author_name2 = "Nexela"

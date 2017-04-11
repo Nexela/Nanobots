@@ -119,7 +119,7 @@ function Area.round_to_integer(area)
     local left_top = Position.to_table(area.left_top)
     local right_bottom = Position.to_table(area.right_bottom)
     return {left_top = {x = math.floor(left_top.x), y = math.floor(left_top.y)},
-        right_bottom = {x = math.ceil(right_bottom.x), y = math.ceil(right_bottom.y)}}
+    right_bottom = {x = math.ceil(right_bottom.x), y = math.ceil(right_bottom.y)}}
 end
 
 --- Iterates an area.
@@ -133,7 +133,7 @@ function Area.iterate(area)
     fail_if_missing(area, "missing area value")
 
     local iterator = {idx = 0}
-    function iterator.iterate(area)
+    function iterator.iterate(area2) --luacheck: ignore
         local rx = area.right_bottom.x - area.left_top.x + 1
         local dx = iterator.idx % rx
         local dy = math.floor(iterator.idx / rx)
@@ -175,7 +175,7 @@ function Area.spiral_iterate(area)
     local dy = -1
     local iterator = {list = {}, idx = 1}
     for _ = 1, math.max(rx, ry) * math.max(rx, ry) do
-        if -(half_x) <= x and x <= half_x and -(half_y) <= y and y <= half_y then
+        if - (half_x) <= x and x <= half_x and - (half_y) <= y and y <= half_y then
             table.insert(iterator.list, {x, y})
         end
         if x == y or (x < 0 and x == -y) or (x > 0 and x == 1 - y) then
@@ -187,12 +187,12 @@ function Area.spiral_iterate(area)
         y = y + dy
     end
 
-    function iterator.iterate(area)
+    function iterator.iterate()
         if #iterator.list < iterator.idx then return end
-        local x, y = unpack(iterator.list[iterator.idx])
+        local x2, y2 = unpack(iterator.list[iterator.idx])
         iterator.idx = iterator.idx + 1
 
-        return (center_x + x), (center_y + y)
+        return (center_x + x2), (center_y + y2)
     end
     return iterator.iterate, Area.to_table(area), 0
 end

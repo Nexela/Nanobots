@@ -1,13 +1,10 @@
---require("stdlib.game")
---require("stdlib.surface")
---require("stdlib.time")
-
---Global Table mutates
+--stdlib table mutates
 require("stdlib.table")
 require("stdlib.string")
 require("stdlib.color.defines")
 
-require("stdlib.utils.utils")
+--stdlib Globals
+require("stdlib.utils.utils") --Am I even using any of this?
 require("stdlib.log.logger")
 require("stdlib.config.config")
 require("stdlib.event.event")

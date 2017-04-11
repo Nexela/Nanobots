@@ -54,9 +54,9 @@ local function find_distinct_trains(locomotives)
 
         if #existing == 0 then
             table.insert(train_data, {
-                    train = t,
-                    id = id
-                })
+                train = t,
+                id = id
+            })
         end
     end
 
@@ -70,7 +70,8 @@ end
 -- @tparam Table criteria Table with any keys supported by the <a href="Surface.html#find_all_entities">Surface</a> module.</p>
 -- <p>If the name key isn't supplied, this will default to 'diesel-locomotive'</p>
 -- <p>If the surface key isn't supplied, this will default to 1</p>
--- @return A list of train details tables, if any are found matching the criteria. Otherwise the empty list. <table><tr><td>train (LuaTrain)</td><td>The LuaTrain instance</td></tr><tr><td>id (int)</td><td>The id of the train</td></tr></table>
+-- @return A list of train details tables, if any are found matching the criteria. Otherwise the empty list.
+-- <table><tr><td>train (LuaTrain)</td><td>The LuaTrain instance</td></tr><tr><td>id (int)</td><td>The id of the train</td></tr></table>
 function Trains.find_filtered(criteria)
     criteria = criteria or {}
 
@@ -89,8 +90,8 @@ function Trains.find_filtered(criteria)
     --- Apply state filters
     if criteria.state then
         train_data = table.filter(train_data, function(data)
-                return data.train.state == criteria.state
-            end)
+            return data.train.state == criteria.state
+        end)
     end
 
     return train_data
@@ -115,7 +116,7 @@ function Trains._on_locomotive_changed()
         -- If it's not
         if (id ~= derived_id) then
             -- Capture the rename
-            table.insert(renames, {old_id = id , new_id = derived_id, train = train })
+            table.insert(renames, {old_id = id, new_id = derived_id, train = train })
         end
     end
 

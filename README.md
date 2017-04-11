@@ -31,7 +31,7 @@ Reprogram your personal roboport to do a lot of the mundane tasks for you. Most 
 #### Hotkeys and More:
 Hotkeys are available to toggle equipment on or off. Personal Roboports, Exoskeletons, Night-vision, All or individual Nanobot equipment modules.
 If a piece of equipment in your armor is not enabled, adding more pieces of that equipment will install the disabled version.
-Equipment states will stay with the power armor making it easy to swap out power armors without having to remember to also toggle the equipment. It is also possible to limit the range that that nanobots will work in.
+Equipment states will stay with the power armor making it easy to swap out power armors without having to remember to also toggle the equipment. It is also possible to limit the range that nanobots will work in.
 
 -   Switching weapons in a vehicle will now also switch your characters weapons. as long as it is assigned to the same as the switch weapon key, Or you can assign it to a separate key.
 -   Ctrl F1 - F6 Will toggle specific modular armor equipment on or off. A visual GUI is planned for this in the future.

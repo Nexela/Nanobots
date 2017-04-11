@@ -66,8 +66,6 @@ Queue.execute = function(event, queue)
             local hash, index = queue._hash, data.hash
             if Queue[data.action] then
                 Queue[data.action](data)
-            else
-                game.print("ERROR")
             end
             hash[index][data.action] = nil
             hash[index].count = hash[index].count - 1

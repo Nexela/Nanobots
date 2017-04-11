@@ -1,4 +1,4 @@
-require("stdlib/loader")
+require("stdlib")
 
 MOD = {}
 MOD.name = "Nanobots"
@@ -6,7 +6,7 @@ MOD.fullname = "Nanobots"
 MOD.interface = "nanobots"
 MOD.config = require("config")
 MOD.version = "1.7.0"
-MOD.logfile = Logger.new(MOD.fullname, "log", MOD.config.DEBUG or false, {log_ticks = true, file_extension="lua"})
+MOD.logfile = Logger.new(MOD.fullname, "log", MOD.config.DEBUG or false, {log_ticks = true, file_extension = "lua"})
 MOD.logfile.file_name = MOD.logfile.file_name:gsub("logs/", "", 1)
 MOD.log = require("stdlib.debug.debug")
 
@@ -14,8 +14,8 @@ MOD.log = require("stdlib.debug.debug")
 local Position = require("stdlib/area/position")
 local Area = require("stdlib/area/area")
 local Entity = require("stdlib/entity/entity")
-local Force = require("scripts/force")
-local Player = require("scripts/player")
+local Force = require("stdlib/force")
+local Player = require("stdlib/player")
 
 Event.build_events = {defines.events.on_built_entity, defines.events.on_robot_built_entity}
 Event.death_events = {defines.events.on_preplayer_mined_item, defines.events.on_robot_pre_mined, defines.events.on_entity_died}
@@ -26,8 +26,8 @@ if MOD.config.DEBUG then --luacheck: ignore DEBUG
     require("stdlib/debug/quickstart")
 end
 
-local robointerface = require("scripts/robointerface")
-local armormods = require("scripts/armormods")
+local robointerface = require("scripts/robointerface/robointerface")
+local armormods = require("scripts/armormods/armormods")
 require("scripts/reprogram-gui")
 -------------------------------------------------------------------------------
 --[[Helper Functions]]--
@@ -384,7 +384,7 @@ end
 --check validity of all stored objects at this point, They could have become
 --invalidated between the time the where entered into the queue and now.
 
-local Queue = require("scripts/queue")
+local Queue = require("stdlib/utils/queue")
 
 --Handles all of the deconstruction and scrapper related tasks.
 function Queue.deconstruction(data)
@@ -725,7 +725,7 @@ Event.register(defines.events.on_force_created, function(event) Force.init(event
 
 local function switch_player_gun_while_driving(event)
     local player = game.players[event.player_index]
-    if player and player.valid and player.character and player.driving then
+    if player.character and player.driving then
         local index = player.character.selected_gun_index
         local gun_inv = player.character.get_inventory(defines.inventory.player_guns)
         local start = index

@@ -1,4 +1,4 @@
-local Queue = require("scripts/queue")
+local Queue = require("stdlib/utils/queue")
 local interface = {}
 
 function interface.reset_mod(are_you_sure)

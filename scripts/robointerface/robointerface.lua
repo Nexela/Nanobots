@@ -4,7 +4,7 @@
 --local Area = require("stdlib/area/area")
 local Position = require("stdlib/area/position")
 local Entity = require("stdlib/entity/entity")
-local Queue = require("scripts/queue")
+local Queue = require("stdlib/utils/queue")
 
 local floor = math.floor
 
@@ -21,6 +21,16 @@ local params_to_check = {
     },
     ["nano-tile"] = {
         action = "tile_ground"
+    },
+    ["nano-signal-deconstruct-finished-miners"] = {
+        action = "deconstruct_finished_miners",
+        find_filter = "mining-drill"
+    },
+    ["nano-signal-landfill-the-world"] = {
+        action = "landfill_the_world",
+    },
+    ["nano-signal-remove-tiles"] = {
+        action = "remove_tiles",
     }
 }
 
@@ -66,13 +76,13 @@ local function get_entity_info(entity)
     return entity.surface, entity.force, entity.position
 end
 
-function Queue.mark_items_or_trees(data)
-    if data.logistic_cell.valid and data.logistic_cell.logistic_network then
+Queue.mark_items_or_trees = function(data)
+    if data.logistic_cell.valid and data.logistic_cell.construction_radius > 0 and data.logistic_cell.logistic_network then
         local surface, force, position = get_entity_info(data.logistic_cell.owner)
-        if not surface.find_nearest_enemy{position=position, max_distance=data.logistic_cell.construction_radius, force=force} then
+        if not surface.find_nearest_enemy{position = position, max_distance = data.logistic_cell.construction_radius, force = force} then
             local config = global.config
-            local filter = {area=Position.expand_to_area(position, data.logistic_cell.construction_radius), type = data.find_type or "error", limit = 300}
-            local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots * (config.robo_interface_free_bots_per/100))
+            local filter = {area = Position.expand_to_area(position, data.logistic_cell.construction_radius), type = data.find_type or "error", limit = 300}
+            local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots * (config.robo_interface_free_bots_per / 100))
             local limit = -99999999999
             if data.value < 0 and data.find_type == " tree" then
                 limit = (data.logistic_cell.logistic_network.get_contents()["raw-wood"] or 0) - data.value
@@ -87,6 +97,31 @@ function Queue.mark_items_or_trees(data)
                     end
                 else
                     break
+                end
+            end
+        end
+    end
+end
+
+local function has_resources(miner)
+    local _find = function(v, _) return v.prototype.resource_category == "basic_solid" and (v.amount > 0 or v.prototype.infinite_resource) end
+    local filter = {area = Position.expand_to_area(miner.position, miner.prototype.mining_drill_radius), type = "resource"}
+    if miner.mining_target then
+        return (miner.mining_target.amount or 0) > 0
+    else
+        return table.find(miner.surface.find_entities_filtered(filter), _find)
+    end
+end
+
+Queue.deconstruct_finished_miners = function(data)
+    if not game.active_mods["AutoDeconstruct"] then
+        if data.logistic_cell.valid and data.logistic_cell.construction_radius > 0 and data.logistic_cell.logistic_network then
+            local surface, force, position = get_entity_info(data.logistic_cell.owner)
+            --local config = global.config
+            local filter = {area = Position.expand_to_area(position, data.logistic_cell.construction_radius), type = data.find_type or "error", force = force}
+            for _, miner in pairs(surface.find_entities_filtered(filter)) do
+                if not miner.to_be_deconstructed(force) and miner.minable and not miner.has_flag("not-deconstructable") and not has_resources(miner) then
+                    miner.order_deconstruction(force)
                 end
             end
         end
@@ -113,7 +148,7 @@ local function run_interface(interface)
                 if (parameters[param_name] or 0) ~= 0 then
                     for _, cell in pairs(just_cell or logistic_network.cells) do
                         local hash = Queue.get_hash(queue, cell.owner)
-                        if cell.construction_radius > 0 and not (hash and hash[param_table.action]) then
+                        if not cell.mobile and cell.construction_radius > 0 and not (hash and hash[param_table.action]) then
                             local data = {
                                 position = cell.owner.position,
                                 logistic_cell = cell,
@@ -140,6 +175,10 @@ local function execute_nano_queue(event)
 end
 Event.register(defines.events.on_tick, execute_nano_queue)
 
+
+-------------------------------------------------------------------------------
+--[[Roboport Interface Scanner]]--
+-------------------------------------------------------------------------------
 local function destroy_roboport_interface(event)
     if event.entity.name == "roboport-interface" then
         local roboport_interface = global.robointerfaces[event.entity.unit_number]

@@ -13,24 +13,27 @@ OUT_FILES := $(SED_FILES:%=$(OUTPUT_DIR)/%)
 SED_EXPRS := -e 's/{{MOD_NAME}}/$(PACKAGE_NAME)/g'
 SED_EXPRS += -e 's/{{VERSION}}/$(VERSION_STRING)/g'
 
+##@luac -p $@
+##@luacheck $@
+
 all: clean
 
-release: clean package
+release: clean check package
 
 package-copy: $(PKG_DIRS) $(PKG_FILES)
-	mkdir -p $(OUTPUT_DIR)
+	@mkdir -p $(OUTPUT_DIR)
 ifneq ($(PKG_COPY),)
-	cp -r $(PKG_COPY) $(OUTPUT_DIR)
+	@cp -r $(PKG_COPY) $(OUTPUT_DIR)
 endif
 
 $(OUTPUT_DIR)/%.lua: %.lua
 	@mkdir -p $(@D)
 	@sed $(SED_EXPRS) $< > $@
-	luac -p $@
+
 
 $(OUTPUT_DIR)/%: %
-	mkdir -p $(@D)
-	sed $(SED_EXPRS) $< > $@
+	@mkdir -p $(@D)
+	@sed $(SED_EXPRS) $< > $@
 
 tag:
 	git tag -f v$(VERSION_STRING)
@@ -41,15 +44,17 @@ optimize:
 	done
 
 nodebug:
-	sed -i 's/^\(.*DEBUG.*=\).*/\1 false/' ./$(OUTPUT_DIR)/config.lua
-	sed -i 's/^\(.*LOGLEVEL.*=\).*/\1 0/' ./$(OUTPUT_DIR)/config.lua
-	sed -i 's/^\(.*loglevel.*=\).*/\1 0/' ./$(OUTPUT_DIR)/config.lua
+	@sed -i 's/^\(.*DEBUG.*=\).*/\1 false/' ./$(OUTPUT_DIR)/config.lua
+	@sed -i 's/^\(.*LOGLEVEL.*=\).*/\1 0/' ./$(OUTPUT_DIR)/config.lua
+	@sed -i 's/^\(.*loglevel.*=\).*/\1 0/' ./$(OUTPUT_DIR)/config.lua
 
 check:
-	luacheck2.bat config.lua
+	luacheck .
 
 package: package-copy $(OUT_FILES) nodebug
-	cd $(BUILD_DIR) && zip -rq $(OUTPUT_NAME).zip $(OUTPUT_NAME)
+	@cd $(BUILD_DIR) && zip -rq $(OUTPUT_NAME).zip $(OUTPUT_NAME)
+	@echo $(OUTPUT_NAME).zip ready
 
 clean:
-	rm -rf $(BUILD_DIR)
+	@rm -rf $(BUILD_DIR)
+	@echo Removing Build Directory

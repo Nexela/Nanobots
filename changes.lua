@@ -90,10 +90,10 @@ changes["1.2.3"] = function ()
 end
 
 --Major changes, add in player and force global tables
-local robointerface = require("scripts/robointerface")
-local Queue = require("scripts/queue")
-local Player = require("scripts/player")
-local Force = require("scripts/force")
+local robointerface = require("scripts/robointerface/robointerface")
+local Queue = require("stdlib/utils/queue")
+local Player = require("stdlib/player")
+local Force = require("stdlib/force")
 changes["1.7.0"] = function ()
     global.forces = Force.init(nil, true)
     global.players = Player.init(nil, true)

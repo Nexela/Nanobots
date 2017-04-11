@@ -196,10 +196,10 @@ end
 function Position.tostring(pos)
     fail_if_missing(pos, "missing position argument")
     if #pos == 2 then
-        return "Position {x = " .. pos[1] .. ", y = " .. pos[2] .. "}"
-    else
-        return "Position {x = " .. pos.x .. ", y = " .. pos.y .. "}"
-    end
+    return "Position {x = " .. pos[1] .. ", y = " .. pos[2] .. "}"
+else
+return "Position {x = " .. pos.x .. ", y = " .. pos.y .. "}"
+end
 end
 
 return Position
