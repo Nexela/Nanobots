@@ -4,7 +4,6 @@ require("stdlib.string")
 require("stdlib.color.defines")
 
 --stdlib Globals
-require("stdlib.utils.utils") --Am I even using any of this?
 require("stdlib.log.logger")
 require("stdlib.config.config")
 require("stdlib.event.event")

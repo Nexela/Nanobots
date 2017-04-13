@@ -49,7 +49,7 @@ nodebug:
 	@sed -i 's/^\(.*loglevel.*=\).*/\1 0/' ./$(OUTPUT_DIR)/config.lua
 
 check:
-	luacheck .
+	@luacheck .
 
 package: package-copy $(OUT_FILES) nodebug
 	@cd $(BUILD_DIR) && zip -rq $(OUTPUT_NAME).zip $(OUTPUT_NAME)

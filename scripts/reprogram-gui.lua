@@ -15,14 +15,14 @@ local function draw_gui(player) -- return gui
     if not player.gui.left["nano_frame_main"] then
 
         local gui = player.gui.left.add{type="frame", name="nano_frame_main", direction="horizontal", style="nano_frame_style"}
-        gui.add{type="label", name="nano_label", caption={"gui.label-caption"}, tooltip={"tooltip.label-caption"}, style="nano_label_style"}
+        gui.add{type="label", name="nano_label", caption={"gui-nano-range.label-caption"}, tooltip={"tooltip-nano-range.label-caption"}, style="nano_label_style"}
         gui.add{type="textfield", name = "nano_text_box", text=0, style="nano_text_style"}
         --Up/Down buttons
         local table = gui.add{type="table", name = "nano_table", colspan=1, style="nano_table_style"}
         table.add{type="button", name="nano_btn_up", style="nano_btn_up"}
         table.add{type="button", name="nano_btn_dn", style="nano_btn_dn"}
         --Reset button
-        gui.add{type="button", name="nano_btn_reset", style="nano_btn_reset", tooltip={"gui.label-reset"}}
+        gui.add{type="button", name="nano_btn_reset", style="nano_btn_reset", tooltip={"gui-nano-range.label-reset"}}
 
         return gui
     else

@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --[[robointerface]]
 -------------------------------------------------------------------------------
---local Area = require("stdlib/area/area")
+local Area = require("stdlib/area/area")
 local Position = require("stdlib/area/position")
 local Entity = require("stdlib/entity/entity")
 local Queue = require("stdlib/utils/queue")
@@ -128,16 +128,19 @@ Queue.deconstruct_finished_miners = function(data)
     end
 end
 
-local function find_network_and_cell(entity)
-    local network = entity.surface.find_logistic_network_by_position(entity.position, entity.force)
-    local cell = network and network.find_cell_closest_to(entity.position)
-    return network, cell
+local function find_network_and_cell(interface)
+    local port = interface.surface.find_entities_filtered{name = "roboport-interface", area=Entity.to_collision_area(interface)}[1]
+    if port.valid then
+        local network = port.logistic_network
+        local cell = table.find(port.logistic_cell.neighbours, function(v) return v.construction_radius > 0 end) or port.logistic_cell
+        return network, cell
+    end
 end
 
 local function run_interface(interface)
-    local behaviour = interface.cc.get_control_behavior()
+    local behaviour = interface.get_control_behavior()
     if behaviour and behaviour.enabled then
-        local logistic_network, logistic_cell = find_network_and_cell(interface.cc, behaviour)
+        local logistic_network, logistic_cell = find_network_and_cell(interface)
         if logistic_network and logistic_network.available_construction_robots > 0 then
             local queue, tick_spacing = global.cell_queue, global.config.robo_interface_tick_spacing
             local parameters = get_parameters(behaviour.parameters)
@@ -175,73 +178,101 @@ local function execute_nano_queue(event)
 end
 Event.register(defines.events.on_tick, execute_nano_queue)
 
-
 -------------------------------------------------------------------------------
 --[[Roboport Interface Scanner]]--
 -------------------------------------------------------------------------------
-local function destroy_roboport_interface(event)
+local function kill_or_remove_interface_parts(event, destroy)
+    destroy = destroy or event.mod == "creative-mode"
     if event.entity.name == "roboport-interface" then
-        local roboport_interface = global.robointerfaces[event.entity.unit_number]
-        if roboport_interface and roboport_interface.cc and roboport_interface.cc.valid then
-            roboport_interface.cc.destroy()
+        local interface = event.entity
+        for _, entity in pairs(interface.surface.find_entities_filtered{area=Entity.to_collision_area(interface), force=interface.force}) do
+            if entity ~= interface and entity.name:find("^roboport%-interface") then
+                _ = (destroy and entity.destroy()) or entity.die()
+            end
         end
-        global.robointerfaces[event.entity.unit_number] = nil
     end
 end
-Event.register(Event.death_events, destroy_roboport_interface)
 
+Event.register(defines.events.on_entity_died, function(event) kill_or_remove_interface_parts(event) end)
+Event.register(Event.mined_events, function(event) kill_or_remove_interface_parts(event, true) end)
+
+--Build the interface, after built check the area around it for interface components to revive or create.
 local function build_roboport_interface(event)
     if event.created_entity.name == "roboport-interface" then
-        local entity = event.created_entity
-        local pos = {x = entity.position.x, y = entity.position.y + 0.5}
-        local cc = entity.surface.create_entity{name="roboport-interface-cc", position=pos, direction=defines.direction.south, force=entity.force}
-        global.robointerfaces[entity.unit_number] = robointerface.new(entity, cc)
+        local interface = event.created_entity
+        interface.energy = 0
+        local cc, ra = {}, {}
+        for _, entity in pairs(interface.surface.find_entities_filtered{area=Entity.to_collision_area(interface), force=interface.force}) do
+            if entity ~= interface then
+                if entity.name == "entity-ghost" then
+                    if entity.ghost_name == "roboport-interface-cc" then
+                        _, cc = entity.revive()
+                    elseif entity.ghost_name == "roboport-interface-scanner" then
+                        _, ra = entity.revive()
+                    end
+                elseif entity.name == "roboport-interface-cc" then
+                    cc = entity
+                elseif entity.name == "roboport-interface-scanner" then
+                    ra = entity
+                end
+            end
+        end
+        if not cc.valid then
+            local pos = {x = interface.position.x + 0.5, y = interface.position.y + 0.5}
+            cc = interface.surface.create_entity{name="roboport-interface-cc", position=pos, direction=defines.direction.south, force=interface.force}
+        end
+        if not ra.valid then
+            local pos = {x = interface.position.x - 0.5, y = interface.position.y + 0.5}
+            ra = interface.surface.create_entity{name="roboport-interface-scanner", position=pos, force=interface.force}
+        end
+        ra.backer_name = interface.backer_name
+        ra.health = 1
+        cc.health = 1
+        cc.rotatable = false
     end
 end
 Event.register(Event.build_events, build_roboport_interface)
 
---Todo: rebuild scanners on config_changed
-
 local function on_sector_scanned(event)
     --if not cc build cc.
-    if event.radar.name == "roboport-interface" then
+    if event.radar.name == "roboport-interface-scanner" then
         local entity = event.radar
-        local roboport_interface = global.robointerfaces[entity.unit_number]
-        if roboport_interface then
-            run_interface(roboport_interface)
-        else
-            build_roboport_interface({created_entity = entity})
+        local area = Area.offset(Entity.to_collision_area(entity), {x=1, y=0})
+        local interface = entity.surface.find_entities_filtered{name="roboport-interface-cc", area = area, limit=1}
+        if interface[1] and interface[1].valid then
+            run_interface(interface[1])
         end
     end
 end
 Event.register(defines.events.on_sector_scanned, on_sector_scanned)
 
 function robointerface.new(entity, cc, radar)
-    return {
-        name = entity.name,
-        unit_number = entity.unit_number,
-        entity = entity,
-        cc = cc,
-        radar = radar
-    }
+    -- return {
+    -- name = entity.name,
+    -- unit_number = entity.unit_number,
+    -- entity = entity,
+    -- cc = cc,
+    -- radar = radar
+    -- }
 end
 
+--Todo: rebuild scanners on config_changed
 function robointerface.init()
     local robointerfaces = {}
-    for _, surface in pairs(game.surfaces) do
-        for _, scanner in pairs(surface.find_entities_filtered{name = "roboport-interface"}) do
-            local cc = surface.find_entities_filtered{
-                name = "roboport-interface-cc",
-                area = Entity.to_collision_area(scanner),
-                limit = 1
-            }[1]
-            if cc then
-                robointerfaces[scanner.unit_number] = robointerface.new(scanner, cc)
-            else
-                build_roboport_interface({created_entity = scanner})
-            end
-        end
-    end
+    -- for _, surface in pairs(game.surfaces) do
+    -- for _, scanner in pairs(surface.find_entities_filtered{name = "roboport-interface"}) do
+    -- local cc = surface.find_entities_filtered{
+    -- name = "roboport-interface-cc",
+    -- area = Entity.to_collision_area(scanner),
+    -- limit = 1
+    -- }[1]
+    -- if cc then
+    -- robointerfaces[scanner.unit_number] = robointerface.new(scanner, cc)
+    -- else
+    -- build_roboport_interface({created_entity = scanner})
+    -- end
+    -- end
+    -- end
     return robointerfaces
 end
 

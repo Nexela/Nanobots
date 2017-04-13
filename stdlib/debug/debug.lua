@@ -10,7 +10,7 @@ local function print_log(msg, level)
             end
         end
         if (level >= 2) then
-            local message = fullname .. ": " .. table.tostring(msg)
+            local message = fullname .. ": " .. serpent.line(msg, {comment = false})
             if game and game.players[1] then
                 game.print(message)
             elseif global then

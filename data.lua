@@ -1,4 +1,3 @@
-defines = defines or {}
 local NANO = require("config")
 require("stdlib/color/defines")
 require("stdlib/data/protohelpers")

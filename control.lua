@@ -18,7 +18,7 @@ local Force = require("stdlib/force")
 local Player = require("stdlib/player")
 
 Event.build_events = {defines.events.on_built_entity, defines.events.on_robot_built_entity}
-Event.death_events = {defines.events.on_preplayer_mined_item, defines.events.on_robot_pre_mined, defines.events.on_entity_died}
+Event.mined_events = {defines.events.on_preplayer_mined_item, defines.events.on_robot_pre_mined}
 
 if MOD.config.DEBUG then --luacheck: ignore DEBUG
     log(MOD.name .. " Debug mode enabled")
