@@ -67,56 +67,43 @@ ri_cc.collision_mask = {}
 ri_cc.minable = nil
 ri_cc.selection_box = {{-0.5, -0.5}, {0.5, 0.5}}
 ri_cc.collision_box = {{-0.4, -0.4}, {0.4, 0.4}}
-ri_cc.sprites.north = Proto.empty_sprite
-ri_cc.sprites.east = Proto.empty_sprite
-ri_cc.sprites.west = Proto.empty_sprite
-ri_cc.sprites.south = {--face direction south when built.
-    filename = "__Nanobots__/graphics/entity/roboport-interface/roboport-interface-cc.png",
-    width = 100,
-    height = 100,
-    frame_count = 1,
-    scale = .50,
-    shift = {0.1, -0.15},
-}
-ri_cc.activity_led_sprites =
-{
-    north = Proto.empty_sprite,
-    east = Proto.empty_sprite,
-    west = Proto.empty_sprite,
-    south = {
+for index, direction in pairs({"north", "east", "south", "west"}) do
+    ri_cc.sprites[direction] = {
+        filename = "__Nanobots__/graphics/entity/roboport-interface/roboport-interface-cc.png",
+        width = 100,
+        height = 100,
+        frame_count = 1,
+        scale = .50,
+        shift = {0.1, -0.15},
+    }
+    ri_cc.activity_led_sprites[direction] = {
         filename = "__base__/graphics/entity/combinator/activity-leds/combinator-led-constant-south.png",
         width = 11,
         height = 11,
         frame_count = 1,
         shift = {0, -.75},
     }
-}
 
+    ri_cc.activity_led_light_offsets[index] = {-0, -0.75}
+
+    ri_cc.circuit_wire_connection_points[index] = {
+        shadow =
+        {
+            red = {0.75, 0.5625},
+            green = {0.21875, 0.5625}
+        },
+        wire =
+        {
+            red = {0.5, -0.05},
+            green = {0.2, 0.15}
+        }
+    }
+end
+ri_cc.circuit_wire_max_distance = 7.5
 ri_cc.activity_led_light =
 {
     intensity = 0.8,
     size = 1,
-}
-
-ri_cc.activity_led_light_offsets =
-{
-    {0.296875, -0.40625},
-    {0.25, -0.03125},
-    {-0, -0.75},
-    {-0.21875, -0.46875}
-}
-ri_cc.circuit_wire_max_distance = 7.5
-ri_cc.circuit_wire_connection_points[3] = {
-    shadow =
-    {
-        red = {0.75, 0.5625},
-        green = {0.21875, 0.5625}
-    },
-    wire =
-    {
-        red = {0.5, -0.05},
-        green = {0.2, 0.15}
-    }
 }
 
 -------------------------------------------------------------------------------

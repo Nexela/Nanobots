@@ -200,13 +200,17 @@ Event.register(Event.mined_events, function(event) kill_or_remove_interface_part
 local function build_roboport_interface(event)
     if event.created_entity.name == "roboport-interface" then
         local interface = event.created_entity
-        interface.energy = 0
         local cc, ra = {}, {}
         for _, entity in pairs(interface.surface.find_entities_filtered{area=Entity.to_collision_area(interface), force=interface.force}) do
             if entity ~= interface then
+                --If we have ghosts either via blueprint or something killed them
                 if entity.name == "entity-ghost" then
                     if entity.ghost_name == "roboport-interface-cc" then
                         _, cc = entity.revive()
+                        --Make sure the revived interface-cc is in the correct position. Blueprints can be rotated causing wonkiness
+                        if cc.valid and not Position.equals(interface.position, Position.offset(cc.position, -.5, -.5)) then
+                            cc.teleport(Position.offset(interface.position, .5, .5))
+                        end
                     elseif entity.ghost_name == "roboport-interface-scanner" then
                         _, ra = entity.revive()
                     end
@@ -217,18 +221,23 @@ local function build_roboport_interface(event)
                 end
             end
         end
+        --If neither CC or RA are valid at this point then let us create them.
         if not cc.valid then
             local pos = {x = interface.position.x + 0.5, y = interface.position.y + 0.5}
-            cc = interface.surface.create_entity{name="roboport-interface-cc", position=pos, direction=defines.direction.south, force=interface.force}
+            cc = interface.surface.create_entity{name="roboport-interface-cc", position=pos, force=interface.force}
         end
         if not ra.valid then
             local pos = {x = interface.position.x - 0.5, y = interface.position.y + 0.5}
             ra = interface.surface.create_entity{name="roboport-interface-scanner", position=pos, force=interface.force}
         end
+        --roboports start with a buffer of energy. Lets take that away!
+        interface.energy = 0
+        --Use the same backer name for the interface and radar
         ra.backer_name = interface.backer_name
+        --max_health = 0 / revive() bug, try and set health to 1 to not trigger repair alerts.
         ra.health = 1
         cc.health = 1
-        cc.rotatable = false
+        --cc.rotatable = false
     end
 end
 Event.register(Event.build_events, build_roboport_interface)
@@ -246,33 +255,15 @@ local function on_sector_scanned(event)
 end
 Event.register(defines.events.on_sector_scanned, on_sector_scanned)
 
-function robointerface.new(entity, cc, radar)
-    -- return {
-    -- name = entity.name,
-    -- unit_number = entity.unit_number,
-    -- entity = entity,
-    -- cc = cc,
-    -- radar = radar
-    -- }
+function robointerface.migrate()
+end
+
+function robointerface.new()
 end
 
 --Todo: rebuild scanners on config_changed
 function robointerface.init()
     local robointerfaces = {}
-    -- for _, surface in pairs(game.surfaces) do
-    -- for _, scanner in pairs(surface.find_entities_filtered{name = "roboport-interface"}) do
-    -- local cc = surface.find_entities_filtered{
-    -- name = "roboport-interface-cc",
-    -- area = Entity.to_collision_area(scanner),
-    -- limit = 1
-    -- }[1]
-    -- if cc then
-    -- robointerfaces[scanner.unit_number] = robointerface.new(scanner, cc)
-    -- else
-    -- build_roboport_interface({created_entity = scanner})
-    -- end
-    -- end
-    -- end
     return robointerfaces
 end
 
