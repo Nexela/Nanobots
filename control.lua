@@ -83,7 +83,7 @@ end
 -- @return bool: player is connected and ready
 local function is_connected_player_ready(player)
     --and player.force.technologies["automated-construction"].researched
-    return (player.afk_time < 180 and player.character) or false
+    return (player.afk_time < 180*60*60 and player.character) or false
 end
 
 local function has_powered_equipment(player, eq_name)
@@ -560,8 +560,9 @@ end
 --queue the ghosts in range for building, heal stuff needing healed
 local function queue_ghosts_in_range(player, pos, nano_ammo)
     local queue, config = global.nano_queue, global.config
+    local pdata = global.players[player.index]
     local tick_spacing = max(1, config.nanobots_tick_spacing - queue_speed[player.force.get_gun_speed_modifier("nano-ammo")])
-    local next_tick, queue_count = Queue.next(queue, game.tick, tick_spacing)
+    local next_tick, queue_count = Queue.next(queue, pdata._next_nano_tick or game.tick, tick_spacing)
     local radius = get_ammo_radius(player, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
 
@@ -650,7 +651,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
             break
         end --valid ammo
     end --looping through entities
-    queue._next_tick = next_tick()
+    pdata._next_nano_tick = next_tick()
 end --function
 
 --Nano Termites

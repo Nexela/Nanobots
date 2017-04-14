@@ -35,15 +35,15 @@ end
 Queue.insert = function (t, data, tick, count)
     data.hash = Queue.set_hash(t, data)
     t[tick] = t[tick] or {}
-    t[tick][#t + 1] = data
+    t[tick][#t[tick] + 1] = data
 
     return t, count
 end
 
-Queue.next = function (t, cur_tick, tick_spacing, dont_combine)
+Queue.next = function (t, _next_tick, tick_spacing, dont_combine)
     tick_spacing = tick_spacing or 1
     local count = 0
-    local tick = (t._next_tick and t._next_tick >= cur_tick - tick_spacing and t._next_tick) or cur_tick
+    local tick = (_next_tick and _next_tick >= game.tick and _next_tick) or game.tick
     local next_tick = function(really_dont_combine)
         tick = tick + tick_spacing
         while (dont_combine or really_dont_combine) and t[tick] do
