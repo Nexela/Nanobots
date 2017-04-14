@@ -621,10 +621,9 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                     end
                                 end
                             end
-                            --MOD.log(game.tick.." - "..ghost.unit_number.." - "..queue_count().." - "..serpent.line(ghost.position, {comment=false}))
                         end --hash check
-                        -- Check if entity needs repair
-                    elseif nano_repairable_entity(ghost) and ghost.force == player.force then
+                    elseif nano_repairable_entity(ghost) and ghost.force == player.force and Area.size(ghost.prototype.collision_box) > 0 then
+                        --Check if entity needs repair, TODO: Better logic for this?
                         local ghost_area = Area.offset(ghost.prototype.collision_box, ghost.position)
                         if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=ghost_area} == 0 then
                             ghost.surface.create_entity{
