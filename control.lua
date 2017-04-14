@@ -390,7 +390,7 @@ local Queue = require("stdlib/utils/queue")
 function Queue.deconstruction(data)
     local entity, player = data.entity, game.players[data.player_index]
     if player and player.valid then
-        if entity and entity.valid then
+        if entity and entity.valid and entity.to_be_deconstructed(player.force) then
             if Area.inside(Position.expand_to_area(entity.position, 40), player.position) then
                 local item_stacks, this_product = {}, {}
 
