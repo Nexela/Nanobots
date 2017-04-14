@@ -5,6 +5,8 @@ local group = {
     order = "zzzzzz"
 }
 
+--luacheck: ignore signal3 signal4
+
 local signal1 = {
     type = "virtual-signal",
     name = "nano-signal-chop-trees",
@@ -25,7 +27,7 @@ local signal3 = {
     type = "virtual-signal",
     name = "nano-signal-remove-tiles",
     special_signal = false,
-    icon = "__Nanobots__/graphics/icons/signals/item-on-ground.png",
+    icon = "__Nanobots__/graphics/icons/signals/remove-tiles.png",
     subgroup = "nanobot-signals",
     order = "[nano-signal]-c"
 }
@@ -41,7 +43,7 @@ local signal5 = {
     type = "virtual-signal",
     name = "nano-signal-deconstruct-finished-miners",
     special_signal = false,
-    icon = "__Nanobots__/graphics/icons/signals/item-on-ground.png",
+    icon = "__Nanobots__/graphics/icons/signals/deconstruct-miners.png",
     subgroup = "nanobot-signals",
     order = "[nano-signal]-e"
 }
@@ -54,5 +56,4 @@ local signal99 = {
     order = "[nano-signal]-z"
 }
 
-
-data:extend{group, signal1, signal2, signal3, signal4, signal5, signal99}
+data:extend{group, signal1, signal2, signal5, signal99}

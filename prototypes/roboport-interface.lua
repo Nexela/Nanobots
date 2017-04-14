@@ -120,7 +120,7 @@ ri_radar.collision_box = {{-0.4, -0.4}, {0.4, 0.4}}
 ri_radar.pictures = Proto.empty_animation
 ri_radar.max_distance_of_sector_revealed = 0
 ri_radar.max_distance_of_nearby_sector_revealed = 1
-ri_radar.energy_per_sector = "1MJ"
+ri_radar.energy_per_sector = "20MJ"
 ri_radar.energy_per_nearby_scan = "250kJ"
 ri_radar.energy_usage = "300kW"
 
