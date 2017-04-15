@@ -580,7 +580,8 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                 entity = ghost,
                                 position = ghost.position,
                                 surface = ghost.surface,
-                                unit_number = ghost.unit_number
+                                unit_number = ghost.unit_number,
+                                ammo = nano_ammo,
                             }
                             Queue.insert(queue, data, next_tick())
                         end
@@ -591,10 +592,11 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             if item_name then
                                 local data = {
                                     player_index = player.index,
-                                    entity=ghost,
-                                    surface=ghost.surface,
-                                    position=ghost.position,
-                                    unit_number = ghost.unit_number
+                                    entity = ghost,
+                                    surface = ghost.surface,
+                                    position = ghost.position,
+                                    unit_number = ghost.unit_number,
+                                    ammo = nano_ammo
                                 }
                                 if ghost.name == "entity-ghost" then
                                     if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then

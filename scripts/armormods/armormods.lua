@@ -32,7 +32,7 @@ local function get_valid_equipment(grid)
         for _, equip in pairs(grid.equipment) do
             all[equip.name] = all[equip.name] or {}
             all[equip.name][#all[equip.name] + 1] = equip
-            if equip.type == "energy-shield-equipment" then
+            if equip.type == "energy-shield-equipment" and equip.shield < equip.max_shield * .75 then
                 energy_shields.shields[#energy_shields.shields + 1] = equip
                 energy_shields.shield_level = energy_shields.shield_level + (equip.shield or 0)
                 energy_shields.max_shield = energy_shields.max_shield + (equip.max_shield or 0)
@@ -42,7 +42,7 @@ local function get_valid_equipment(grid)
                 charged[equip.name][#charged[equip.name] + 1] = equip
             end
         end
-        return all, charged, energy_shields
+        return grid, all, charged, energy_shields
     end
 end
 
@@ -205,23 +205,44 @@ local function process_ready_chips(player, equipment)
     end
 end
 
-local function emergency_heal(player, feeders, energy_shields)
-    local _filter_shields = function (v)
-        return v.shield < v.max_shield *.75
-    end
-    local max_health = player.character.prototype.max_health
-    local max_shield = energy_shields.max_shield
-    local shield_level = energy_shields.shield_level
+local function emergency_heal_shield(player, feeders, energy_shields)
+    local num_shields = #energy_shields.shields
+    local num_feeders = #feeders
+    -- local can_heal = function ()
+    -- return player.character.health < player.character.prototype.max_health * .75
+    -- end
 
-    --Only run if we have less than max health or shield
-    if player.character.health < max_health or shield_level < max_shield then
+    --Only run if we have less than max shield
+    --Feeder energy is 480
 
-        if shield_level < max_shield then
-            local shields = table.filter(energy_shields.shields, _filter_shields)
-            game.print(#shields)
+    while num_feeders > 0 and num_shields > 0 do
+        --local shield = energy_shields.shields[num_shields]
+        local feeder = feeders[num_feeders]
+
+        while feeder.energy > 120 do
+            local shield = energy_shields.shields[num_shields]
+            while shield.shield < shield.max_shield * .75 do
+                if feeder.energy > 120 then
+                    game.print("healing shield")
+                    feeder.energy = feeder.energy - 120
+                else
+                    break
+                end
+                num_shields = num_shields - 1
+            end
+
         end
+        num_feeders = num_feeders - 1
     end
+
 end
+
+-- if shield_level < max_shield then
+-- local shields = table.filter(energy_shields.shields, _filter_shields)
+-- game.print(#shields)
+-- end
+-- end
+-- end
 
 -- local num_feeders = #feeder
 -- local shields = shield_equip.equipment
@@ -267,12 +288,16 @@ end
 -------------------------------------------------------------------------------
 function armormods.prepare_chips(player)
     if is_personal_roboport_ready(player.character) then
-        local _, charged, energy_shields = get_valid_equipment(get_armor_grid(player))
+        local _, _, charged, energy_shields = get_valid_equipment(get_armor_grid(player))
         if charged["equipment-bot-chip-launcher"] or charged["equipment-bot-chip-items"] or charged["equipment-bot-chip-trees"] then
             process_ready_chips(player, charged)
         end
         if charged["equipment-bot-chip-feeder"] then
-            emergency_heal(player, charged["equipment-bot-chip-feeder"], energy_shields)
+            if #energy_shields.shields > 0 then
+                emergency_heal_shield(player, charged["equipment-bot-chip-feeder"], energy_shields)
+            elseif player.character.health < player.character.prototype.max_health * .75 then
+                energency_heal_player(player, charged["equipment-bot-chip-feeder"])
+            end
         end
     end
 end
