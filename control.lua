@@ -252,6 +252,21 @@ local function get_all_items_on_ground(entity, existing_stacks)
     return (item_stacks[1] and item_stacks) or {}
 end
 
+local function has_item_in_inv(entity, item, cheat) --luacheck: ignore
+    if not cheat then
+        local count = 0
+        if entity.vehicle and train_types[entity.vehicle.type] and entity.vehicle.train then
+            count = entity.vehicle.train.get_item_count(item)
+        elseif entity.vehicle then
+            count = entity.vehicle.get_item_count(item)
+        end
+        count = count + entity.get_item_count(item)
+        return count
+    else
+        return 1
+    end
+end
+
 -- Get one item with health data from the inventory
 -- @param entity: the entity object to search
 -- @param item: the item to look for
@@ -572,7 +587,6 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                 if queue_count() < config.nano_emmiter_queues_per_cycle then
                     if ghost.to_be_deconstructed(player.force) and ghost.minable then
                         if not Queue.get_hash(queue, ghost) then
-                            ammo_drain(player, nano_ammo, 1)
                             local data = {
                                 player_index = player.index,
                                 action = "deconstruction",
@@ -584,6 +598,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                 ammo = nano_ammo,
                             }
                             Queue.insert(queue, data, next_tick())
+                            ammo_drain(player, nano_ammo, 1)
                         end
                     elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
                         if not Queue.get_hash(queue, ghost) then

@@ -51,7 +51,11 @@ local function increase_decrease_reprogrammer(event, change)
             if event.element and event.element.name == "nano_text_box" and not type(event.element.text) == "number" then
                 return
             elseif event.element and event.element.name == "nano_text_box" then
-                radius = tonumber(text_field.text)
+                if type(tonumber(text_field.text)) == "number" then
+                    radius = tonumber(text_field.text) or 0
+                else
+                    return
+                end
             else
                 radius = math.max(0, (pdata.ranges[stack.name] or max_radius) + (change or 0))
             end

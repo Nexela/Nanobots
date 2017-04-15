@@ -257,15 +257,16 @@ end
 Event.register(defines.events.on_sector_scanned, on_sector_scanned)
 
 function robointerface.migrate()
-end
-
-function robointerface.new()
+    for _, surface in pairs(game.surfaces) do
+        for _, interface in pairs(surface.find_entities_filtered{name="roboport-interface"}) do
+            build_roboport_interface({created_entity=interface})
+        end
+    end
 end
 
 --Todo: rebuild scanners on config_changed
 function robointerface.init()
-    local robointerfaces = {}
-    return robointerfaces
+    return nil
 end
 
 return robointerface

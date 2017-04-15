@@ -206,83 +206,54 @@ local function process_ready_chips(player, equipment)
 end
 
 local function emergency_heal_shield(player, feeders, energy_shields)
-    local num_shields = #energy_shields.shields
     local num_feeders = #feeders
-    -- local can_heal = function ()
-    -- return player.character.health < player.character.prototype.max_health * .75
-    -- end
+    local pos = increment_position(player.position)
+    --Only run if we have less than max shield, Feeder max energy is 480
+    for _, shield in pairs(energy_shields.shields) do
 
-    --Only run if we have less than max shield
-    --Feeder energy is 480
-
-    while num_feeders > 0 and num_shields > 0 do
-        --local shield = energy_shields.shields[num_shields]
-        local feeder = feeders[num_feeders]
-
-        while feeder.energy > 120 do
-            local shield = energy_shields.shields[num_shields]
-            while shield.shield < shield.max_shield * .75 do
-                if feeder.energy > 120 then
-                    game.print("healing shield")
+        while num_feeders > 0 do
+            local feeder = feeders[num_feeders]
+            while feeder and feeder.energy > 120 do
+                if shield.shield < shield.max_shield * .75 then
+                    local last_health = shield.shield
+                    local heal, locale = get_health_capsules(player)
+                    shield.shield = shield.shield + (heal * 1.5)
+                    local health_line = {"nanobots.health_line", ceil(abs(shield.shield - last_health)), locale}
+                    player.surface.create_entity{name="flying-text", text = health_line, color = defines.colors.green, position = pos()}
                     feeder.energy = feeder.energy - 120
                 else
                     break
                 end
-                num_shields = num_shields - 1
             end
+            num_feeders = num_feeders - 1
+        end
+        if num_feeders == 0 then return end
+    end
+end
 
+local function emergency_heal_player(player, feeders)
+
+    local num_feeders = #feeders
+    local pos = increment_position(player.character.position)
+    local max_health = player.character.prototype.max_health * .75
+
+    while num_feeders > 0 do
+        local feeder = feeders[num_feeders]
+        while feeder and feeder.energy >= 120 do
+            if player.character.health < max_health then
+                local last_health = player.character.health
+                local heal, locale = get_health_capsules(player)
+                player.character.health = last_health + heal
+                local health_line = {"nanobots.health_line", ceil(abs(player.character.health - last_health)), locale}
+                feeder.energy = feeder.energy - 120
+                player.surface.create_entity{name="flying-text", text = health_line, color = defines.colors.green, position = pos()}
+            else
+                return
+            end
         end
         num_feeders = num_feeders - 1
     end
-
 end
-
--- if shield_level < max_shield then
--- local shields = table.filter(energy_shields.shields, _filter_shields)
--- game.print(#shields)
--- end
--- end
--- end
-
--- local num_feeders = #feeder
--- local shields = shield_equip.equipment
--- local num_shields = #shields
---
--- local pos = increment_position(player.character.position)
---
---
--- while num_feeders > 0 do
--- local feeder = feeders[num_feeders]
--- if shield_level < max_shield then
--- while num_shields > 0 and feeder.energy >= 120 do
--- local shield = shields[num_shield]
--- while shield.shield < shield.max_shield * .75 and feeder.energy >= 120 do
--- local heal, locale = get_health_capsules(player)
--- shield.shield = shield.shield + heal
--- feeder.energy = feeder.energy - 120
--- end
--- num_shield = num_shields - 1
--- end
--- elseif player.character.health < max_health then
--- end
--- end
--- num_feeders = num_feeders - 1
--- end
--- end
-
--- while player.character.health < max_health and feeder.energy >= 120 do
--- if feeder[num_feeders].energy >= 480 then
--- local last_health = player.character.health
--- local heal, locale = get_health_capsules(player)
--- player.character.health = last_health + heal
--- local health_line = {"nanobots.health_line", ceil(abs(player.character.health - last_health)), locale}
--- feeder[num_feeders].energy = feeder[num_feeders].energy - 120
--- player.surface.create_entity{name="flying-text", text = health_line, color = defines.colors.green, position = pos()}
--- end
--- num_feeders = num_feeders - 1
--- end
--- end
--- end
 -------------------------------------------------------------------------------
 --[[BOT CHIPS]]--
 -------------------------------------------------------------------------------
@@ -296,7 +267,7 @@ function armormods.prepare_chips(player)
             if #energy_shields.shields > 0 then
                 emergency_heal_shield(player, charged["equipment-bot-chip-feeder"], energy_shields)
             elseif player.character.health < player.character.prototype.max_health * .75 then
-                energency_heal_player(player, charged["equipment-bot-chip-feeder"])
+                emergency_heal_player(player, charged["equipment-bot-chip-feeder"])
             end
         end
     end

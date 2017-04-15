@@ -52,7 +52,7 @@ local equipment_chip = {
     energy_source =
     {
         type = "electric",
-        usage_priority = "secondary-input",
+        usage_priority = "primary-input",
         buffer_capacity = "480J",
         input_flow_limit = ".5J",
         drain = "1W"

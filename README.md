@@ -59,6 +59,7 @@ The roboport interface allows you to program your logistic networks to do mundan
 -   Found a bug? Report it here: <https://github.com/Nexela/Nanobots/issues>
 
 #### Latest changes
+1.7.1 - Beter roboport interface graphics thanks to Arch666Angel, Robointerface deconstruct miners, Many bug fixes, auto feeder also works on shields.
 1.7.0 - Major logic re-write, New enhancements and features added including hotkeys.
 Full changelog available in CHANGELOG.md
 

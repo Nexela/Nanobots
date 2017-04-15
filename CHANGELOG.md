@@ -27,3 +27,4 @@
 -   1.4.7 - Remove debug message.
 -   1.6.0 - Many logic improvements, Many new features added including roboport interface, speed technologies, Per force queues and logic. removed scrappers/deconstructors.
 -   1.7.0 - Hotkeys added, license added. Readme updated.
+-   1.7.1 - Beter roboport interface graphics thanks to Arch666Angel, Robointerface deconstruct miners, Many bug fixes, auto feeder also works on shields.
