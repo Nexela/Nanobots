@@ -234,6 +234,7 @@ end
 -- @param entity: the entity object to scan under
 -- @return table: a table of SimpleItemStacks or nil if empty
 local function get_all_items_on_ground(entity, existing_stacks)
+    game.print("scanning")
     local item_stacks = existing_stacks or {}
     local surface, position, bouding_box = entity.surface, entity.position, entity.ghost_prototype.selection_box
     local area = Area.offset(bouding_box, position)
@@ -614,15 +615,15 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                     ammo = nano_ammo
                                 }
                                 if ghost.name == "entity-ghost" then
-                                    if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
-                                        local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
-                                        if place_item then
-                                            data.action = "build_entity_ghost"
-                                            data.place_item = place_item
-                                            Queue.insert(queue, data, next_tick())
-                                            ammo_drain(player, nano_ammo, 1)
-                                        end
+                                    --if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
+                                    local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
+                                    if place_item then
+                                        data.action = "build_entity_ghost"
+                                        data.place_item = place_item
+                                        Queue.insert(queue, data, next_tick())
+                                        ammo_drain(player, nano_ammo, 1)
                                     end
+                                    --end
                                 elseif ghost.name == "tile-ghost" then
                                     --Don't queue tile ghosts if entity ghost is on top of it.
                                     if ghost.surface.count_entities_filtered{name="entity-ghost", area = Entity.to_collision_area(ghost), limit=1} == 0 then
