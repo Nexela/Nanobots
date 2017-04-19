@@ -234,7 +234,6 @@ end
 -- @param entity: the entity object to scan under
 -- @return table: a table of SimpleItemStacks or nil if empty
 local function get_all_items_on_ground(entity, existing_stacks)
-    game.print("scanning")
     local item_stacks = existing_stacks or {}
     local surface, position, bouding_box = entity.surface, entity.position, entity.ghost_prototype.selection_box
     local area = Area.offset(bouding_box, position)
