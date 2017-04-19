@@ -132,6 +132,10 @@ changes["1.7.1"] = function ()
     robointerface.migrate()
 end
 
+changes["1.7.4"] = function()
+    global.cell_queue = Queue.new()
+end
+
 -------------------------------------------------------------------------------
 --[[Always run these at the end ]]--
 

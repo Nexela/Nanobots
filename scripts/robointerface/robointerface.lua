@@ -266,6 +266,7 @@ end
 
 --Todo: rebuild scanners on config_changed
 function robointerface.init()
+    global.cell_queue = Queue.new()
     return nil
 end
 

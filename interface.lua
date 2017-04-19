@@ -51,7 +51,7 @@ function interface.config(key, value, silent)
     else
         if not silent then
             MOD.log("Config requires a key name", 2)
-            game.print(serpent.line(global.config))
+            game.print(serpent.block(global.config, {comment = false, compact = true, nocode = true}))
         end
         return nil
     end
