@@ -257,14 +257,9 @@ end
 Event.register(defines.events.on_sector_scanned, on_sector_scanned)
 
 function robointerface.migrate()
-    for _, surface in pairs(game.surfaces) do
-        for _, interface in pairs(surface.find_entities_filtered{name="roboport-interface"}) do
-            build_roboport_interface({created_entity=interface})
-        end
-    end
+    --Initial 1.7.0 scannars had to be deleted.
 end
 
---Todo: rebuild scanners on config_changed
 function robointerface.init()
     global.cell_queue = Queue.new()
     return nil

@@ -10,7 +10,7 @@ old_version :: string: Old version of the mod. May be nil if the mod wasn't prev
 new_version :: string: New version of the mod. May be nil if the mod is no longer present (i.e. it was just removed).
 --]]
 local mod_name = MOD.name or "not-set"
-local migrations = {"1.2.0", "1.2.3", "1.7.0", "1.7.1", "1.7.4"}
+local migrations = {"1.2.0", "1.2.3", "1.7.0", "1.7.4"}
 local changes = {}
 
 --Mark all migrations as complete during Init.
@@ -127,12 +127,10 @@ changes["1.7.0"] = function ()
     global._changes["1.6.7"] = nil
 end
 
---Migrate the robo-interfaces
-changes["1.7.1"] = function ()
-    robointerface.migrate()
-end
-
 changes["1.7.4"] = function()
+    global.config = MOD.config.control
+    global._changes["1.7.1"] = nil
+    global.robointerfaces = nil
     global.cell_queue = Queue.new()
 end
 
