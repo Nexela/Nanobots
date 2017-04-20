@@ -28,7 +28,7 @@ local item_ri = {
     flags = {"goes-to-quickbar"},
     subgroup = "logistic-network",
     order = "c[signal]-a[roboport]-interface",
-    place_result = "roboport-interface",
+    place_result = "roboport-interface-main",
     stack_size = 5
 }
 
@@ -129,7 +129,7 @@ ri_radar.energy_usage = "300kW"
 -------------------------------------------------------------------------------
 local ri_roboport = {
     type = "roboport",
-    name = "roboport-interface",
+    name = "roboport-interface-main",
     icon = "__Nanobots__/graphics/icons/roboport-interface.png",
     flags = {"placeable-player", "player-creation"},
     minable = {hardness = 0.2, mining_time = 0.5, result = "roboport-interface"},

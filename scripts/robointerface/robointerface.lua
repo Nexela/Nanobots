@@ -129,7 +129,7 @@ Queue.deconstruct_finished_miners = function(data)
 end
 
 local function find_network_and_cell(interface)
-    local port = interface.surface.find_entities_filtered{name = "roboport-interface", area=Entity.to_collision_area(interface)}[1]
+    local port = interface.surface.find_entities_filtered{name = "roboport-interface-main", area=Entity.to_collision_area(interface)}[1]
     if port.valid then
         local network = port.logistic_network
         local cell = table.find(port.logistic_cell.neighbours, function(v) return v.construction_radius > 0 end) or port.logistic_cell
@@ -184,7 +184,7 @@ Event.register(defines.events.on_tick, execute_nano_queue)
 -------------------------------------------------------------------------------
 local function kill_or_remove_interface_parts(event, destroy)
     destroy = destroy or event.mod == "creative-mode"
-    if event.entity.name == "roboport-interface" then
+    if event.entity.name == "roboport-interface-main" then
         local interface = event.entity
         for _, entity in pairs(interface.surface.find_entities_filtered{area=Entity.to_collision_area(interface), force=interface.force}) do
             if entity ~= interface and entity.name:find("^roboport%-interface") then
@@ -199,7 +199,7 @@ Event.register(Event.mined_events, function(event) kill_or_remove_interface_part
 
 --Build the interface, after built check the area around it for interface components to revive or create.
 local function build_roboport_interface(event)
-    if event.created_entity.name == "roboport-interface" then
+    if event.created_entity.name == "roboport-interface-main" then
         local interface = event.created_entity
         local cc, ra = {}, {}
         for _, entity in pairs(interface.surface.find_entities_filtered{area=Entity.to_collision_area(interface), force=interface.force}) do

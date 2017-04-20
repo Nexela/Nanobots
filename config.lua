@@ -80,7 +80,7 @@ NANO.quickstart = {
         "equipment-bot-chip-items",
         "chain-gun",
         "chain-ammo",
-        "roboport-interface"
+        "roboport-interface-main"
     }
 }
 
