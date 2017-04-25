@@ -71,7 +71,6 @@ end
 function Event.dispatch(event)
     Core.fail_if_missing(event, "missing event argument")
     if Event._registry[event.name] then
-        log(event.name .. "=" .. #Event._registry[event.name])
         for _, handler in pairs(Event._registry[event.name]) do
             local metatbl = { __index = function(tbl, key) if key == '_handler' then return handler else return rawget(tbl, key) end end }
             setmetatable(event, metatbl)
