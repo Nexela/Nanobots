@@ -28,3 +28,8 @@
 -   1.6.0 - Many logic improvements, Many new features added including roboport interface, speed technologies, Per force queues and logic. removed scrappers/deconstructors.
 -   1.7.0 - Hotkeys added, license added. Readme updated.
 -   1.7.1 - Beter roboport interface graphics thanks to Arch666Angel, Robointerface deconstruct miners, Many bug fixes, auto feeder also works on shields.
+-   1.7.2 - Revert can place check that I broke :)
+-   1.7.3 - Silly debug message, where did you come from!
+-   1.7.4 - Migration/frozen load issue with entity type change
+-   1.7.5 - Factorio .15 readyish
+-   1.7.6 - Fix termites borked, Log spam

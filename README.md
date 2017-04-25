@@ -59,6 +59,8 @@ The roboport interface allows you to program your logistic networks to do mundan
 -   Found a bug? Report it here: <https://github.com/Nexela/Nanobots/issues>
 
 #### Latest changes
+1.7.6 - Fix termites borked, Log spam
+1.7.5 - Factorio .15 readyish
 1.7.4 - Migration/frozen load issue with entity type change
 1.7.3 - Silly debug message, where did you come from!
 1.7.2 - Revert can place check that I broke :)
