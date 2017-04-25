@@ -1,6 +1,5 @@
 local NANO = require("config")
 require("stdlib/color/defines")
-require("stdlib/data/protohelpers")
 
 require("prototypes/gui")
 
@@ -13,6 +12,7 @@ require("prototypes/signals")
 --Custom Technologies
 require("prototypes/technology/nano-range")
 require("prototypes/technology/nano-speed")
+require("prototypes/technology/nanobots")
 
 --Modular Equipment, When inserted into an equipment grid will automaticly mark items on ground for deconstruction
 require("prototypes/equipment/equipment-bot-chip-items")

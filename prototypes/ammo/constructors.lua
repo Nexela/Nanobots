@@ -243,5 +243,5 @@ data:extend{
     projectile_repair, cloud_small_repair, projectile_deconstructors, cloud_small_deconstructors
 }
 
-local effects = data.raw.technology["automated-construction"].effects
+local effects = data.raw.technology["nanobots"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-constructors"}

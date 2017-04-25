@@ -2,7 +2,7 @@
 --- <p>A tile represents a 1x1 area on a surface in factorio
 -- @module Tile
 
-local fail_if_missing = require 'stdlib/core'
+local Core = require 'stdlib/core'
 local Position = require 'stdlib/area/position'
 local Chunk = require 'stdlib/area/chunk'
 
@@ -21,7 +21,7 @@ end
 -- @param tile_pos to convert to an area
 -- @return area that tile is valid for
 function Tile.to_area(tile_pos)
-    fail_if_missing(tile_pos, "missing tile_pos argument")
+    Core.fail_if_missing(tile_pos, "missing tile_pos argument")
     tile_pos = Tile.from_position(tile_pos)
 
     return { left_top = tile_pos, right_bottom = Position.offset(tile_pos, 1, 1) }
@@ -34,8 +34,8 @@ end
 -- @param tile_name (optional) whether to restrict adjacent tiles to one particular tile name (e.g 'water-tile')
 -- @return list of tile positions adjacent to the given position
 function Tile.adjacent(surface, position, diagonal, tile_name)
-    fail_if_missing(surface, "missing surface argument")
-    fail_if_missing(position, "missing position argument")
+    Core.fail_if_missing(surface, "missing surface argument")
+    Core.fail_if_missing(position, "missing position argument")
 
     local offsets = {{0, 1}, {1, 0}, {0, - 1}, { - 1, 0}}
     if diagonal then
@@ -63,8 +63,8 @@ end
 -- @param default_value (optional) to set and return if no data exists
 -- @return the data, or nil if no data exists for the chunk
 function Tile.get_data(surface, tile_pos, default_value)
-    fail_if_missing(surface, "missing surface argument")
-    fail_if_missing(tile_pos, "missing tile_pos argument")
+    Core.fail_if_missing(surface, "missing surface argument")
+    Core.fail_if_missing(tile_pos, "missing tile_pos argument")
     if not global._tile_data then
         if not default_value then return nil end
         global._tile_data = {}
@@ -95,8 +95,8 @@ end
 -- @param data the data to set (or nil to erase the data for the tile)
 -- @return the previous data associated with the tile, or nil if the tile had no previous data
 function Tile.set_data(surface, tile_pos, data)
-    fail_if_missing(surface, "missing surface argument")
-    fail_if_missing(tile_pos, "missing tile_pos argument")
+    Core.fail_if_missing(surface, "missing surface argument")
+    Core.fail_if_missing(tile_pos, "missing tile_pos argument")
     if not global._tile_data then global._tile_data = {} end
 
     local chunk_idx = Chunk.get_index(surface, Chunk.from_position(tile_pos))
@@ -116,6 +116,6 @@ end
 -- @param tile_pos
 -- @return the tile index
 function Tile.get_index(tile_pos)
-    fail_if_missing(tile_pos, "missing tile_pos argument")
+    Core.fail_if_missing(tile_pos, "missing tile_pos argument")
     return bit32.band(bit32.bor(bit32.lshift(bit32.band(tile_pos.x, 0x1F), 5), bit32.band(tile_pos.y, 0x1F)), 0x3FF)
 end

@@ -1,3 +1,4 @@
+local Proto = require("stdlib/data/protohelpers")
 local constants = require("constants")
 local TTL = 60 * 10
 

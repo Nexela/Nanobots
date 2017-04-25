@@ -11,7 +11,7 @@ local tech1 = {
             modifier = "1"
         }
     },
-    prerequisites = {"automated-construction", "logistics"},
+    prerequisites = {"nanobots"},
     unit =
     {
         count = 100,

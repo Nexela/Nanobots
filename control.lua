@@ -10,12 +10,11 @@ MOD.logfile = Logger.new(MOD.fullname, "log", MOD.config.DEBUG or false, {log_ti
 MOD.logfile.file_name = MOD.logfile.file_name:gsub("logs/", "", 1)
 MOD.log = require("stdlib.debug.debug")
 
---local Event = Event or require("stdlib/event/event")
+local Force = require("stdlib/force")
+local Player = require("stdlib/player")
 local Position = require("stdlib/area/position")
 local Area = require("stdlib/area/area")
 local Entity = require("stdlib/entity/entity")
-local Force = require("stdlib/force")
-local Player = require("stdlib/player")
 
 Event.build_events = {defines.events.on_built_entity, defines.events.on_robot_built_entity}
 Event.mined_events = {defines.events.on_preplayer_mined_item, defines.events.on_robot_pre_mined}
@@ -82,7 +81,6 @@ end
 -- @param player: the player object
 -- @return bool: player is connected and ready
 local function is_connected_player_ready(player)
-    --and player.force.technologies["automated-construction"].researched
     return (player.afk_time < 180*60*60 and player.character) or false
 end
 
@@ -321,7 +319,7 @@ end
 -- Get the radius for the ammo
 local function get_ammo_radius(player, nano_ammo)
     local data = global.players[player.index]
-    local max_radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.ammo_type.category)] or 7
+    local max_radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.get_ammo_type().category)] or 7
     local custom_radius = data.ranges[nano_ammo.name] or max_radius
     return custom_radius <= max_radius and custom_radius or max_radius
 end
@@ -461,16 +459,16 @@ function Queue.deconstruction(data)
                 end
 
                 if entity.name ~= "deconstructible-tile-proxy" then -- Destroy Entities
-                    game.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
-                    game.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
+                    script.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
+                    script.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
                     entity.destroy()
                 else -- Destroy tiles
                     local surface, position = entity.surface, entity.position
-                    game.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
+                    script.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
                     entity.destroy()
                     surface.set_tiles({{name=surface.get_hidden_tile(position), position=position}})
-                    game.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
-                    game.raise_event(defines.events.on_player_mined_tile, {player_index=player.index, positions={position}})
+                    script.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
+                    script.raise_event(defines.events.on_player_mined_tile, {player_index=player.index, positions={position}})
                 end
             end -- Inside working area
         end--Valid entity
@@ -506,7 +504,7 @@ function Queue.build_entity_ghost(data)
                                 module_inventory.insert(v)
                             end
                         end
-                        game.raise_event(defines.events.on_built_entity, {player_index=player.index, created_entity=entity, revived=true})
+                        script.raise_event(defines.events.on_built_entity, {player_index=player.index, created_entity=entity, revived=true})
                     else --not revived, return item
                         if module_stacks then
                             insert_or_spill_items(player, module_stacks)
@@ -545,14 +543,14 @@ function Queue.build_tile_ghost(data)
                     end
                     if insert_or_spill_items(player, item_stacks) then
                         create_projectile("nano-projectile-return", ghost.surface, player.force, ghost.position, player.position)
-                        game.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=item_stacks[1]})
+                        script.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=item_stacks[1]})
                         surface.set_tiles({{name = hidden_tile, position = tile.position}})
                     end
                 end
                 if ghost.revive() then
                     create_projectile("nano-projectile-constructors", surface, force, player.position, position)
                     surface.create_entity{name="nano-sound-build-tiles",position=position}
-                    game.raise_event(defines.events.on_player_built_tile, {player_index=player.index, positions={position}})
+                    script.raise_event(defines.events.on_player_built_tile, {player_index=player.index, positions={position}})
                 else --Can't revive tile
                     insert_or_spill_items(player, {data.place_item})
                 end --revive tile
@@ -737,8 +735,8 @@ local function execute_nano_queue(event)
 end
 Event.register(defines.events.on_tick, execute_nano_queue)
 
-Event.register(defines.events.on_player_created, function(event) Player.init(event.player_index) end)
-Event.register(defines.events.on_force_created, function(event) Force.init(event.force.name) end)
+-- Event.register(defines.events.on_player_created, function(event) Player.init(event.player_index) end)
+-- Event.register(defines.events.on_force_created, function(event) Force.init(event.force.name) end)
 
 local function switch_player_gun_while_driving(event)
     local player = game.players[event.player_index]
@@ -757,6 +755,8 @@ local function switch_player_gun_while_driving(event)
 end
 script.on_event("switch-player-gun-while-driving", switch_player_gun_while_driving)
 
+Event.register(defines.events.on_player_created, function(event) global.players[event.player_index].ranges = {} end)
+
 -------------------------------------------------------------------------------
 --[[INIT]]--
 -------------------------------------------------------------------------------
@@ -766,12 +766,16 @@ Event.register(Event.core_events.configuration_changed, changes.on_configuration
 function MOD.on_init()
     global = {}
     global._changes = changes.on_init(game.active_mods[MOD.name] or MOD.version)
+    Force.init()
+    Player.init()
+    Player.add_data_all{
+        ranges = {}
+    }
     global.nano_queue = Queue.new()
     robointerface.init()
-    global.forces = Force.init()
-    global.players = Player.init()
+
     global.config = table.deepcopy(MOD.config.control)
-    game.print(MOD.name..": Init Complete")
+    MOD.log("Nanobots are now ready to serve", 2)
 end
 Event.register(Event.core_events.init, MOD.on_init)
 

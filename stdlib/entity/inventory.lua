@@ -1,17 +1,19 @@
 --- Inventory module
 -- @module Inventory
+-- luacheck: ignore cur_stack
+
+local Core = require 'stdlib/core'
 
 local Inventory = {}
 
-local fail_if_missing = require 'stdlib/core'
-
 --- Copies an inventory contents to a destination inventory
+-- <b>Deprecated</b>, refer to https://github.com/Afforess/Factorio-Stdlib/issues/66 for details.
 -- @param src source inventory to copy from
 -- @param dest destination inventory, to copy to
 -- @return an array of SimpleItemStacks of left over items that could not be copied.
 function Inventory.copy_inventory(src, dest)
-    fail_if_missing(src, "missing source inventory")
-    fail_if_missing(dest, "missing destination inventory")
+    Core.fail_if_missing(src, "missing source inventory")
+    Core.fail_if_missing(dest, "missing destination inventory")
 
     local left_over = {}
     for i = 1, #src do

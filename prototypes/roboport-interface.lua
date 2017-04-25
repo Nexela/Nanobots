@@ -60,7 +60,7 @@ ri_cc.icon = nil
 ri_cc.icons = {
     {icon = "__Nanobots__/graphics/icons/roboport-interface-cc.png"}
 }
-ri_cc.max_health = 0
+--ri_cc.max_health = 0
 ri_cc.item_slot_count = 5
 ri_cc.flags = {"not-deconstructable", "player-creation"}
 ri_cc.collision_mask = {}
@@ -112,7 +112,7 @@ ri_cc.activity_led_light =
 local ri_radar = Proto.dupli_proto("radar", "radar", "roboport-interface-scanner", true)
 ri_radar.flags = {"not-blueprintable", "not-deconstructable"}
 ri_radar.icon = "__Nanobots__/graphics/icons/roboport-interface.png"
-ri_radar.max_health = 0
+--ri_radar.max_health = 0
 ri_radar.minable = nil
 ri_radar.collision_mask = {}
 ri_radar.selection_box = {{-0.5, -0.5}, {0.5, 0.5}}

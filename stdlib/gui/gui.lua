@@ -2,7 +2,7 @@
 -- @module Gui
 
 require 'stdlib/event/event'
-local fail_if_missing = require 'stdlib/core'
+local Core = require 'stdlib/core'
 
 Gui = {}
 -- Factorio's gui events are so monolithic we need a special event system for it.
@@ -17,8 +17,8 @@ Gui.Event = {
 -- @param handler Function to call when event is triggered
 -- @return #Gui.Event
 function Gui.Event.register(event, gui_element_pattern, handler)
-    fail_if_missing(event, "missing event name argument")
-    fail_if_missing(gui_element_pattern, "missing gui name or pattern argument")
+    Core.fail_if_missing(event, "missing event name argument")
+    Core.fail_if_missing(gui_element_pattern, "missing gui name or pattern argument")
 
     if type(gui_element_pattern) ~= "string" then
         error("gui_element_pattern argument must be a string")
@@ -44,9 +44,9 @@ function Gui.Event.register(event, gui_element_pattern, handler)
 end
 
 --- Calls the registered handlers
--- @param event LuaEvent as created by game.raise_event
+-- @param event LuaEvent as created by script.raise_event
 function Gui.Event.dispatch(event)
-    fail_if_missing(event, "missing event argument")
+    Core.fail_if_missing(event, "missing event argument")
 
     local gui_element = event.element
     if gui_element and gui_element.valid then
@@ -65,7 +65,17 @@ function Gui.Event.dispatch(event)
         for gui_element_pattern, handler in pairs(Gui.Event._registry[event.name]) do
             local match_str = string.match(gui_element_name, gui_element_pattern)
             if match_str ~= nil then
-                local new_event = { tick = event.tick, name = event.name, _handler = handler, match = match_str, element = gui_element, state=gui_element_state, text=gui_element_text, player_index = event.player_index , _event = event}
+                local new_event = {
+                    tick = event.tick,
+                    name = event.name,
+                    _handler = handler,
+                    match = match_str,
+                    element = gui_element,
+                    state = gui_element_state,
+                    text = gui_element_text,
+                    player_index = event.player_index ,
+                    _event = event
+                }
                 local success, err = pcall(handler, new_event)
                 if not success then
                     game.print(err)
@@ -80,8 +90,8 @@ end
 -- @param gui_element_pattern the name or string regular expression to remove the handler for
 -- @return #Gui.Event
 function Gui.Event.remove(event, gui_element_pattern)
-    fail_if_missing(event, "missing event argument")
-    fail_if_missing(gui_element_pattern, "missing gui_element_pattern argument")
+    Core.fail_if_missing(event, "missing event argument")
+    Core.fail_if_missing(gui_element_pattern, "missing gui_element_pattern argument")
 
     if type(gui_element_pattern) ~= "string" then
         error("gui_element_pattern argument must be a string")

@@ -1,3 +1,5 @@
+--This is horrendous.. What was I thinking
+
 local function print_log(msg, level)
     local fullname = MOD.fullname or MOD.name or "Error"
     level = math.max(level or 0, ((global and global.config and global.config.loglevel) or MOD.config.control.loglevel or 0))

@@ -14,11 +14,11 @@ end
 
 local Queue = {}
 
-Queue.new = function ()
+function Queue.new()
     return {_hash={}}
 end
 
-Queue.set_hash = function(t, data)
+function Queue.set_hash(t, data)
     local index = data.entity.unit_number or cantorPair_v7(data.entity.position)
     local hash = t._hash
     hash[index] = hash[index] or {}
@@ -27,12 +27,12 @@ Queue.set_hash = function(t, data)
     return index
 end
 
-Queue.get_hash = function(t, entity)
+function Queue.get_hash(t, entity)
     local index = entity.unit_number or cantorPair_v7(entity.position)
     return t._hash[index]
 end
 
-Queue.insert = function (t, data, tick, count)
+function Queue.insert(t, data, tick, count)
     data.hash = Queue.set_hash(t, data)
     t[tick] = t[tick] or {}
     t[tick][#t[tick] + 1] = data
@@ -40,7 +40,7 @@ Queue.insert = function (t, data, tick, count)
     return t, count
 end
 
-Queue.next = function (t, _next_tick, tick_spacing, dont_combine)
+function Queue.next(t, _next_tick, tick_spacing, dont_combine)
     tick_spacing = tick_spacing or 1
     local count = 0
     local tick = (_next_tick and _next_tick >= game.tick and _next_tick) or game.tick
@@ -60,7 +60,7 @@ Queue.next = function (t, _next_tick, tick_spacing, dont_combine)
 end
 
 --Tick handler, handles executing multiple data tables in a queue
-Queue.execute = function(event, queue)
+function Queue.execute(event, queue)
     if queue[event.tick] then
         for _, data in ipairs(queue[event.tick]) do
             local hash, index = queue._hash, data.hash

@@ -1,29 +1,33 @@
 -------------------------------------------------------------------------------
 --[[Force]]
 -------------------------------------------------------------------------------
+require("stdlib/event/event")
 local Force = {}
--- local List = require("stdlib/utils/list")
 
-Force.get_object_and_data = function (name)
+function Force.get_object_and_data(name)
     if game.forces[name] then
         return game.forces[name], global.forces[name]
     end
 end
 
-Force.new = function(force_name)
+function Force.new(force_name)
     local obj = {
         index = force_name,
     }
     return obj
 end
 
-Force.init = function(force_name, overwrite)
+function Force.add_data_all(data)
+    local fdata = global.forces
+    table.each(fdata, function(v) table.merge(v, table.deepcopy(data)) end)
+end
+
+function Force.init(event, overwrite)
     global.forces = global.forces or {}
     local fdata = global.forces or {}
-    if force_name then
-        if not game.forces[force_name] then error("Invalid Force "..force_name) end
-        if not fdata[force_name] or (fdata[force_name] and overwrite) then
-            fdata[force_name] = Force.new(force_name)
+    if event and event.force.name then
+        if not fdata[event.force.name] or (fdata[event.force.name] and overwrite) then
+            fdata[event.force.name] = Force.new(event.force.name)
         end
     else
         for name in pairs(game.forces) do
@@ -32,8 +36,11 @@ Force.init = function(force_name, overwrite)
             end
         end
     end
-    --Force.quick_list(fdata)
-    return fdata
 end
+Event.register(defines.events.on_force_created, function(event) Force.init(event.force.name) end)
+
+function Force.merge()
+end
+Event.register(defines.events.on_forces_merging, Force.merge)
 
 return Force

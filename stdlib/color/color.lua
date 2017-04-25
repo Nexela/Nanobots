@@ -7,9 +7,7 @@ local Color = {}
 
 function Color.set(color, alpha)
     color = color or defines.colors.white
-    if alpha then
-        color.a = alpha
-    end
+    color.a = alpha or 1
     return color
 end
 

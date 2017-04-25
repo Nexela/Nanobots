@@ -1,7 +1,7 @@
 --- Config module
 -- @module Config
+-- luacheck: ignore 143 options reservedCharacters value
 
-require 'stdlib/core'
 require 'stdlib/string'
 require 'stdlib/table'
 

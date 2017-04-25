@@ -1,3 +1,4 @@
+local Proto = require("stdlib/data/protohelpers")
 local sound_creators = {
     type = "explosion",
     name = "nano-sound-build-tiles",

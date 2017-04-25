@@ -163,5 +163,5 @@ local projectile_termites = {
 -------------------------------------------------------------------------------
 data:extend({recipe, termites, cloud_big_termites, cloud_small_termites, projectile_termites})
 
-local effects = data.raw.technology["automated-construction"].effects
+local effects = data.raw.technology["nanobots"].effects
 effects[#effects + 1] = {type = "unlock-recipe", recipe="ammo-nano-termites"}

@@ -235,9 +235,8 @@ local function build_roboport_interface(event)
         interface.energy = 0
         --Use the same backer name for the interface and radar
         ra.backer_name = interface.backer_name
-        --max_health = 0 / revive() bug, try and set health to 1 to not trigger repair alerts.
-        ra.health = 1
-        cc.health = 1
+        cc.destructible = false
+        ra.destructible = false
         --cc.rotatable = false
     end
 end

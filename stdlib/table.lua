@@ -1,5 +1,6 @@
 --- Table module
 -- @module table
+-- luacheck: ignore 432
 
 --- Given a mapping function, creates a transformed copy of the table
 --- by calling the function for each element in the table, and using

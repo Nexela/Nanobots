@@ -1,11 +1,12 @@
 --- Data module
 -- @module Data
+-- luacheck: ignore selection
 
-require 'stdlib/core'
+local Core = require 'stdlib/core'
 require 'stdlib/string'
 require 'stdlib/table'
 
-Data = {}
+local Data = {}
 
 --- Selects all data values where the key matches the selector pattern.
 -- The selector pattern is divided into groups. The pattern should have a colon character `:` to denote the selection for each group.
@@ -17,7 +18,7 @@ Data = {}
 -- @param pattern to search with
 -- @return table containing the elements matching the selector pattern, or an empty table if there was no matches
 function Data.select(pattern)
-    fail_if_missing(pattern, "missing pattern argument")
+    Core.fail_if_missing(pattern, "missing pattern argument")
 
     local parts = string.split(pattern, ":")
     local category_pattern = table.first(parts)
@@ -46,16 +47,16 @@ Data._select_metatable.new = function(selection)
         if key == 'apply' then
             return function(k, v)
                 table.each(tbl, function(obj)
-                    obj[k] = v
-                end)
+                        obj[k] = v
+                    end)
                 return tbl
             end
         end
     end
     self.__newindex = function(tbl, key, value)
         table.each(tbl, function(obj)
-            obj[key] = value
-        end)
+                obj[key] = value
+            end)
     end
 
     return self

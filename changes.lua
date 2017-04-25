@@ -95,10 +95,10 @@ local Queue = require("stdlib/utils/queue")
 local Player = require("stdlib/player")
 local Force = require("stdlib/force")
 changes["1.7.0"] = function ()
-    global.forces = Force.init(nil, true)
-    global.players = Player.init(nil, true)
+    Force.init(nil, true)
+    Player.init(nil, true)
     global.robointerfaces = robointerface.init()
-    global.config = MOD.config.control
+    global.config = table.deepcopy(MOD.config.control)
     global.nano_queue = Queue.new()
     global.cell_queue = Queue.new()
 
@@ -128,7 +128,7 @@ changes["1.7.0"] = function ()
 end
 
 changes["1.7.4"] = function()
-    global.config = MOD.config.control
+    global.config = table.deepcopy(MOD.config.control)
     global._changes["1.7.1"] = nil
     global.robointerfaces = nil
     global.cell_queue = Queue.new()

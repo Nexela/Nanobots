@@ -26,7 +26,6 @@ local function create_gui(player)
     end
 end
 
---local second=false
 local function handler(event)
     local i=event.element.player_index
     local p=game.players[event.player_index]
@@ -34,7 +33,6 @@ local function handler(event)
     local s=p.gui.left.console.console_line.text
     assert(loadstring(s))()
     game.write_file('console.log',s..'\n',true,i)
-    --second=true
 end
 Gui.on_click("console_enter", handler)
 

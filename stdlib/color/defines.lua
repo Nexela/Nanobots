@@ -1,6 +1,6 @@
 --Global color defines.
 --@usage: font_color=defines.colors.red to set a styles font color to red.
---defines = defines or {}
+
 defines.colors = {
     white = {r = 1.00, g = 1.00, b = 1.00},
     black = {r = 0.00, g = 0.00, b = 0.00},
