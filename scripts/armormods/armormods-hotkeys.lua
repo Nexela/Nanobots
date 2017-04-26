@@ -65,6 +65,7 @@ local function get_eq_type_names(type)
 end
 
 Event.armor_hotkeys = Event.armor_hotkeys or {}
+Event.armor_hotkeys["toggle-equipment-belt-immunity"] = function(event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("belt-immunity-equipment")) end
 Event.armor_hotkeys["toggle-equipment-roboport"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("roboport-equipment")) end
 Event.armor_hotkeys["toggle-equipment-movement-bonus"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("movement-bonus-equipment")) end
 Event.armor_hotkeys["toggle-equipment-night-vision"] = function (event) toggle_armor_modules(event, "equipment-bot-chip-all", get_eq_type_names("night-vision-equipment")) end

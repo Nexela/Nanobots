@@ -15,4 +15,5 @@ if bobmods and bobmods.lib then
     add("equipment-bot-chip-nanointerface", "gun-nano-emitter")
     add("equipment-bot-chip-launcher", "robot-brain-combat")
     add("equipment-bot-chip-feeder", "robot-brain-combat")
+    add("belt-immunity-equipment", "robot-brain-construction")
 end

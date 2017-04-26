@@ -62,7 +62,7 @@ end
 -- @param entity: the entity object
 -- @return bool: personal roboport construction radius > 0
 local function is_personal_roboport_ready(entity)
-    return entity.logistic_cell and entity.logistic_cell.mobile and entity.logistic_cell.construction_radius > 0
+    return entity.grid and entity.logistic_cell and entity.logistic_cell.mobile and entity.logistic_cell.construction_radius > 0
 end
 
 --TODO .15 will have a better/more reliable way to get the construction network

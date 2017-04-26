@@ -68,4 +68,10 @@ data:extend
         key_sequence = "CONTROL + F9",
         consuming = "game-only"
     },
+    {
+        type = "custom-input",
+        name = "toggle-equipment-belt-immunity",
+        key_sequence = "CONTROL + F10",
+        consuming = "game-only"
+    },
 }

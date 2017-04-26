@@ -33,3 +33,4 @@
 -   1.7.4 - Migration/frozen load issue with entity type change
 -   1.7.5 - Factorio .15 readyish
 -   1.7.6 - Fix termites borked, Log spam
+-   1.7.7 - Adds in belt immunity equipment

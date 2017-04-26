@@ -20,6 +20,7 @@ require("prototypes/equipment/equipment-bot-chip-trees")
 require("prototypes/equipment/equipment-bot-chip-launcher")
 require("prototypes/equipment/equipment-bot-chip-nanointerface")
 require("prototypes/equipment/equipment-bot-chip-feeder")
+require("prototypes/equipment/belt-immunity-equipment")
 
 --Gun, When equipped and selected will automaticly revive ghosts around it
 require("prototypes/gun-nano-emitter")
