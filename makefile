@@ -20,7 +20,7 @@ SED_EXPRS += -e 's/{{VERSION}}/$(VERSION_STRING)/g'
 
 all: clean
 
-release: clean check package
+release: clean check package tag
 
 optimized-release: clean check optimize-package
 
