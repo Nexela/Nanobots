@@ -10,7 +10,7 @@ old_version :: string: Old version of the mod. May be nil if the mod wasn't prev
 new_version :: string: New version of the mod. May be nil if the mod is no longer present (i.e. it was just removed).
 --]]
 local mod_name = MOD.name or "not-set"
-local migrations = {"1.2.0", "1.2.3", "1.7.0", "1.7.4"}
+local migrations = {"1.2.0", "1.2.3", "1.7.0", "1.7.4", "1.8.0"}
 local changes = {}
 
 --Mark all migrations as complete during Init.
@@ -76,8 +76,6 @@ end
 --Major changes made
 changes["1.2.0"] = function ()
     global.current_index = 1
-    global.config = global.config or table.deepcopy(MOD.config.control)
-    remote.call("nanobots", "reset_config")
 end
 
 --Minor changes to reformat the changes made table
@@ -98,13 +96,13 @@ changes["1.7.0"] = function ()
     Force.init(nil, true)
     Player.init(nil, true)
     global.robointerfaces = robointerface.init()
-    global.config = table.deepcopy(MOD.config.control)
     global.nano_queue = Queue.new()
     global.cell_queue = Queue.new()
 
     --Migrate old queued to new nano_queue
+    local tick_spacing = settings["global"]["nanobots-nano-queue-rate"].value
     local old_queue = table.deepcopy(global.queued)
-    local next_tick = Queue.next(global.cell_queue, game.tick, global.config.nanobots_tick_spacing)
+    local next_tick = Queue.next(global.cell_queue, game.tick, tick_spacing)
     if old_queue and type(old_queue) == "table" and old_queue.next then
         for _, qdata in pairs(old_queue) do
             if type("qdata") == "table" and qdata.action then
@@ -128,10 +126,13 @@ changes["1.7.0"] = function ()
 end
 
 changes["1.7.4"] = function()
-    global.config = table.deepcopy(MOD.config.control)
     global._changes["1.7.1"] = nil
     global.robointerfaces = nil
     global.cell_queue = Queue.new()
+end
+
+changes["1.8.0"] = function()
+    global.config = nil
 end
 
 -------------------------------------------------------------------------------

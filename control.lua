@@ -19,7 +19,7 @@ local Entity = require("stdlib/entity/entity")
 Event.build_events = {defines.events.on_built_entity, defines.events.on_robot_built_entity}
 Event.mined_events = {defines.events.on_preplayer_mined_item, defines.events.on_robot_pre_mined}
 
-if MOD.config.DEBUG then --luacheck: ignore DEBUG
+if MOD.config.DEBUG then
     log(MOD.name .. " Debug mode enabled")
     QS = MOD.config.quickstart --luacheck: ignore QS
     require("stdlib/debug/quickstart")
@@ -69,7 +69,7 @@ local min, random, max, floor, ceil, abs = math.min, math.random, math.max, math
 -- @param p: the player object
 -- @return bool: cheating
 local function get_cheat_mode(p)
-    return p.cheat_mode and global.config.sync_cheat_mode
+    return p.cheat_mode and settings.get_player_settings(p)["nanobots-sync-cheat-mode"].value
 end
 
 --table.find functions
@@ -542,9 +542,9 @@ end
 --queue the ghosts in range for building, heal stuff needing healed
 
 local function queue_ghosts_in_range(player, pos, nano_ammo)
-    local queue, config = global.nano_queue, global.config
+    local queue, config = global.nano_queue, settings["global"]
     local pdata = global.players[player.index]
-    local tick_spacing = max(1, config.nanobots_tick_spacing - queue_speed[player.force.get_gun_speed_modifier("nano-ammo")])
+    local tick_spacing = max(1, config["nanobots-nano-queue-rate"].value - queue_speed[player.force.get_gun_speed_modifier("nano-ammo")])
     local next_tick, queue_count = Queue.next(queue, pdata._next_nano_tick or game.tick, tick_spacing)
     local radius = get_ammo_radius(player, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
@@ -552,8 +552,8 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
     for _, ghost in pairs(player.surface.find_entities(area)) do
         if allowed_not_on_map[ghost.name] or ghost.type == "item-on-ground"or not ghost.has_flag("not-on-map") then
             if nano_ammo.valid and nano_ammo.valid_for_read then
-                if config.no_network_limits or nano_network_check(player.character, ghost) then
-                    if queue_count() < config.nano_emmiter_queues_per_cycle then
+                if not config["nanobots-network-limits"].value or nano_network_check(player.character, ghost) then
+                    if queue_count() < config["nanobots-nano-queue-per-cycle"].value then
                         if ghost.to_be_deconstructed(player.force) and ghost.minable then
                             if not Queue.get_hash(queue, ghost) then
                                 local data = {
@@ -679,13 +679,13 @@ end
 -------------------------------------------------------------------------------
 --The Tick Handler!
 local function poll_players(event)
-    local config = global.config
+    local config = settings["global"]
     --Run logic for nanobots and power armor modules
-    if event.tick % math.max(config.poll_rate/#game.connected_players) == 0 then
+    if event.tick % math.max(config["nanobots-nano-poll-rate"].value/#game.connected_players) == 0 then
         local last_player, player = next(game.connected_players, global._last_player)
         --Establish connected, non afk, player character
         if player and is_connected_player_ready(player) then
-            if config.auto_nanobots and (config.no_network_limits or nano_network_check(player.character)) then
+            if config["nanobots-nanobots-auto"].value and (not config["nanobots-network-limits"].value or nano_network_check(player.character)) then
                 local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
                 if gun then
                     if ammo_name == "ammo-nano-constructors" then
@@ -695,7 +695,7 @@ local function poll_players(event)
                     end
                 end --Gun and Ammo check
             end
-            if config.auto_equipment then
+            if config["nanobots-equipment-auto"].value then
                 armormods.prepare_chips(player)
             end --Auto Equipment
         end --Player Ready
@@ -746,7 +746,6 @@ function MOD.on_init()
     global.nano_queue = Queue.new()
     robointerface.init()
 
-    global.config = table.deepcopy(MOD.config.control)
     MOD.log("Nanobots are now ready to serve", 2)
 end
 Event.register(Event.core_events.init, MOD.on_init)

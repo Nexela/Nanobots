@@ -4,7 +4,7 @@
 local armormods = {}
 require("scripts/armormods/armormods-hotkeys")
 
---TODO: Store this in global and update in on_configuration_changed
+--TODO: Store this in global and update in on_con_changed
 --TODO: Remote call for inserting/removing into table
 local combat_robots = MOD.config.COMBAT_ROBOTS
 local healer_capsules = MOD.config.FOOD

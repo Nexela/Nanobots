@@ -52,7 +52,7 @@ local function place_equipment(event)
 end
 Event.register(defines.events.on_player_placed_equipment, place_equipment)
 
---TODO Store this in global and update on config changed?
+--TODO Store this in global and update on con changed?
 local function get_eq_type_names(type)
     --Add non disabled equipment prototype names to a table if they have a disabled prototype
     local t = {}

@@ -87,21 +87,20 @@ Queue.mark_items_or_trees = function(data)
         local surface, force, position = get_entity_info(data.logistic_cell.owner)
         if not (data.find_type or data.find_name) then data.find_type = "NIL" end
         if not surface.find_nearest_enemy{position = position, max_distance = data.logistic_cell.construction_radius, force = force} then
-            local config = global.config
+            local config = settings["global"]
             local filter = {
                 area = Position.expand_to_area(position, data.logistic_cell.construction_radius),
                 name = data.find_name,
                 type = data.find_type,
                 limit = 300
             }
-            local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots * (config.robo_interface_free_bots_per / 100))
+            local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots * (config["nanobots-free-bots-per"].value / 100))
             local limit = -99999999999
             if data.value < 0 and data.item_name then
                 limit = (data.logistic_cell.logistic_network.get_contents()[data.item_name] or 0) - data.value
             end
 
             for _, item in pairs(surface.find_entities_filtered(filter)) do
-                game.print("in")
                 if available_bots > 0 and (limit < 0) then
                     if not item.to_be_deconstructed(force) then
                         item.order_deconstruction(force)
@@ -130,7 +129,6 @@ Queue.deconstruct_finished_miners = function(data)
     if not game.active_mods["AutoDeconstruct"] then
         if data.logistic_cell.valid and data.logistic_cell.construction_radius > 0 and data.logistic_cell.logistic_network then
             local surface, force, position = get_entity_info(data.logistic_cell.owner)
-            --local config = global.config
             local filter = {area = Position.expand_to_area(position, data.logistic_cell.construction_radius), type = data.find_type or "error", force = force}
             for _, miner in pairs(surface.find_entities_filtered(filter)) do
                 if not miner.to_be_deconstructed(force) and miner.minable and not miner.has_flag("not-deconstructable") and not has_resources(miner) then
@@ -155,7 +153,7 @@ local function run_interface(interface)
     if behaviour and behaviour.enabled then
         local logistic_network, logistic_cell = find_network_and_cell(interface)
         if logistic_network and logistic_network.available_construction_robots > 0 then
-            local queue, tick_spacing = global.cell_queue, global.config.robo_interface_tick_spacing
+            local queue, tick_spacing = global.cell_queue, settings["global"]["nanobots-cell-queue-rate"].value
             local parameters = get_parameters(behaviour.parameters)
             --game.print(serpent.block(parameters, {comment=false, sparse=false}))
             -- If the closest roboport signal is present and > 0 then just run on the attached cell
@@ -164,7 +162,6 @@ local function run_interface(interface)
             local next_tick = Queue.next(queue, fdata._next_cell_tick or game.tick, tick_spacing, true)
             for param_name, param_table in pairs(params_to_check) do
                 if (parameters[param_name] or 0) ~= 0 then
-                    game.print(param_name)
                     for _, cell in pairs(just_cell or logistic_network.cells) do
                         local hash = Queue.get_hash(queue, cell.owner)
                         if not cell.mobile and cell.construction_radius > 0 and not (hash and hash[param_table.action]) then

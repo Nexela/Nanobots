@@ -1,4 +1,3 @@
--- local NANO = require("config")
 local recipe_nano_gun = {
     type = "recipe",
     name = "gun-nano-emitter",

@@ -1,5 +1,3 @@
---local NANO = require("config")
-
 local recipe_chip = {
     type = "recipe",
     name = "equipment-bot-chip-items",

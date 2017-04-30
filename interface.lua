@@ -12,10 +12,6 @@ function interface.reset_mod(are_you_sure)
     end
 end
 
-function interface.reset_config()
-    interface.config("reset")
-end
-
 function interface.reset_nano_queue()
     global.nano_queue = Queue.new()
     MOD.log("Resetting Nano Queue", 2)
@@ -23,39 +19,6 @@ end
 function interface.reset_cell_queue()
     global.nano_queue = Queue.new()
     MOD.log("Resetting Interface Queue", 2)
-end
-
-function interface.config(key, value, silent)
-    local config = Config.new(global.config)
-    if key then
-        if key == "reset" then
-            global.config = MOD.config.control
-            if not silent then MOD.log("Reset config to default.", 2) end
-            return true
-        end
-        --key=string.upper(key)
-        if config.get(key) ~= nil then
-            if value ~= nil then
-                config.set(key, value)
-                local val=config.get(key)
-                if not silent then MOD.log("New value for '" .. key .. "' is " .. "'" .. tostring(val) .."'", 2) end
-                return val-- all is well
-            else --value nil
-                local val = config.get(key)
-                if not silent then MOD.log("Current value for '" .. key .. "' is " .. "'" .. tostring(val) .."'") end
-                return val
-            end
-        else --key is nill
-            if not silent then game.print(MOD.log("Config '" .. key .. "' does not exist", 2)) end
-            return nil
-        end
-    else
-        if not silent then
-            MOD.log("Config requires a key name", 2)
-            game.print(serpent.block(global.config, {comment = false, compact = true, nocode = true}))
-        end
-        return nil
-    end
 end
 
 function interface.get_nano_queue()
@@ -82,24 +45,6 @@ function interface.print_global(name)
     end
 end
 
--- function interface.toggle_tick_handler()
--- interface.toggle_handlers("tick", nil, false)
--- end
-
-function interface.nano_fast_test_mode()
-    local config = Config.new(global.config)
-    config.set("poll_rate", 10)
-    config.set("nanobots_tick_spacing", 1)
-    MOD.log("Fast test mode enabled", 2)
-end
-
-function interface.nano_slow_test_mode()
-    local config = Config.new(global.config)
-    config.set("poll_rate", 60)
-    config.set("nanobots_tick_spacing", 60)
-    MOD.log("Slow test mode enabled", 2)
-end
-
 interface.console = require("stdlib/debug/console")
 
 --Register with creative-mode for easy testing
@@ -107,11 +52,7 @@ if remote.interfaces["creative-mode"] and remote.interfaces["creative-mode"]["re
     log("Nanobots - Registering with Creative Mode")
     remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "print_global")
     remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "reset_mod")
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "reset_config")
     remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "reset_queue")
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "toggle_tick_handler")
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "fast_test_mode")
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "slow_test_mode")
     remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "console")
 end
 
