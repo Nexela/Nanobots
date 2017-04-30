@@ -38,9 +38,12 @@ local queue_speed = MOD.config.QUEUE_SPEED_BONUS
 local transport_types = MOD.config.TRANSPORT_TYPES
 local train_types = MOD.config.TRAIN_TYPES
 
+local allowed_not_on_map = MOD.config.ALLOWED_NOT_ON_MAP
+
 local AFK_TIME = 4 * defines.time.second
 
--- Limited list of inventorys to search
+-- Remove duplicate inventory defines values for quicker searching
+-- through inventories
 local function cull_inventory_list(list)
     local temp , culled_list = {}, {}
     for _, value in pairs(list) do
@@ -318,7 +321,9 @@ local function ammo_drain(player, ammo, amount)
     end
 end
 
--- Get the radius for the ammo
+-- Get the radius to use based on tehnology and player defined radius
+-- @param player: the player entity to check
+-- @param nano_ammo: the ammo to check
 local function get_ammo_radius(player, nano_ammo)
     local data = global.players[player.index]
     local max_radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.get_ammo_type().category)] or 7
@@ -326,32 +331,24 @@ local function get_ammo_radius(player, nano_ammo)
     return custom_radius <= max_radius and custom_radius or max_radius
 end
 
--- Get the stacks of modules not inserted and modules to insert
+-- Attempt to satisfy module requests from player inventory
+-- @param requests: the item request proxy to get requests from
+-- @param entity: the entity to satisfy requests for
 -- @param player: the entity to get modules from
--- @param entity: the ghost entity to get requests from (.15 can switch to item-proxy)
--- @return table: array of SimpleItemStacks missing modules
--- @return table: array of SimpleItemStacks to insert
-local function get_insertable_module_requests(player, entity)
-    if entity.name == "entity-ghost" and entity.item_requests then
-        local item_requests = entity.item_requests
-        local module_contents = {}
-        if (entity.ghost_type == "assembling-machine" and entity.recipe) or entity.ghost_type ~= "assembling-machine" then
-            item_requests = entity.item_requests
-            for i, module_stack in pairs(item_requests) do
-                local removed_modules = player.remove_item({name=module_stack.item, count=module_stack.count})
-                if removed_modules > 0 then
-                    --Modules removed from inventory that can be inserted
-                    table.insert(module_contents, {name=module_stack.item, count=removed_modules})
-                end
-                if removed_modules < module_stack.count then
-                    item_requests[i].count = module_stack.count - removed_modules
-                else
-                    item_requests[i] = nil
-                end
-            end
+local function satisfy_requests(requests, entity, player)
+    local pinv = player.get_inventory(defines.inventory.player_main) or player.get_inventory(defines.inventory.god_main)
+    local new_requests = {}
+    for name, count in pairs(requests.item_requests) do
+        if entity.can_insert(name) then
+            local removed = get_cheat_mode(player) and count or pinv.remove({name = name, count = count})
+            local inserted = removed > 0 and entity.insert({name = name, count = removed}) or 0
+            local balance = count - inserted
+            new_requests[name] = balance > 0 and balance or nil
+        else
+            new_requests[name] = count
         end
-        return item_requests, module_contents[1] and module_contents
     end
+    requests.item_requests = new_requests
 end
 
 -- Create a beam if the player is present, create a proxy target if target doesn't have health
@@ -484,36 +481,39 @@ function Queue.build_entity_ghost(data)
             if Area.inside(Position.expand_to_area(ghost.position, 40), player.position) then
                 local item_stacks = get_all_items_on_ground(ghost)
                 if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
-                    local module_stacks
-                    local old_item_requests = table.deepcopy(ghost.item_requests)
+                    -- local module_stacks
+                    -- local old_item_requests = table.deepcopy(ghost.item_requests)
 
                     --Ignore module requests if module inserter is installed until further debuggin can commence
-                    if not remote.interfaces["mi"] then
-                        ghost.item_requests, module_stacks = get_insertable_module_requests(player, ghost)
-                    end
+                    -- if not remote.interfaces["mi"] then
+                    -- ghost.item_requests, module_stacks = get_insertable_module_requests(player, ghost)
+                    -- end
 
-                    local revived, entity = ghost.revive()
+                    local revived, entity, requests = ghost.revive(true)
                     if revived then
                         create_projectile("nano-projectile-constructors", entity.surface, entity.force, player.position, entity.position)
                         entity.health = (entity.health > 0) and ((data.place_item.health or 1) * entity.prototype.max_health)
-                        --item_stacks = insert_into_entity(entity, item_stacks)
                         if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
                             create_projectile("nano-projectile-return", ghost_surf, player.force, ghost_pos, player.position)
                         end
-                        local module_inventory = entity.get_module_inventory()
-                        if module_inventory and module_stacks then
-                            for _,v in pairs(module_stacks) do
-                                module_inventory.insert(v)
-                            end
+                        if requests then
+                            satisfy_requests(requests, entity, player)
                         end
+
+                        -- local module_inventory = entity.get_module_inventory()
+                        -- if module_inventory and module_stacks then
+                        -- for _,v in pairs(module_stacks) do
+                        -- module_inventory.insert(v)
+                        -- end
+                        -- end
                         script.raise_event(defines.events.on_built_entity, {player_index=player.index, created_entity=entity, revived=true})
                     else --not revived, return item
-                        if module_stacks then
-                            insert_or_spill_items(player, module_stacks)
-                            if ghost.valid then
-                                ghost.item_requests = old_item_requests
-                            end
-                        end
+                        -- if module_stacks then
+                        -- insert_or_spill_items(player, module_stacks)
+                        -- if ghost.valid then
+                        -- ghost.item_requests = old_item_requests
+                        -- end
+                        -- end
                         insert_or_spill_items(player, {data.place_item})
                     end --revived
                 else --can't build
@@ -573,6 +573,7 @@ end
 --TODO: replace table_find entity-match with hashed lookup
 --Nano Constructors
 --queue the ghosts in range for building, heal stuff needing healed
+
 local function queue_ghosts_in_range(player, pos, nano_ammo)
     local queue, config = global.nano_queue, global.config
     local pdata = global.players[player.index]
@@ -582,7 +583,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
 
     for _, ghost in pairs(player.surface.find_entities(area)) do
-        if not ghost.has_flag("not-on-map") then
+        if allowed_not_on_map[ghost.name] or ghost.type == "item-on-ground"or not ghost.has_flag("not-on-map") then
             if nano_ammo.valid and nano_ammo.valid_for_read then
                 if config.no_network_limits or nano_network_check(player, ghost) then
                     if queue_count() < config.nano_emmiter_queues_per_cycle then

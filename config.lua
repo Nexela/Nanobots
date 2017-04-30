@@ -30,6 +30,12 @@ NANO.TRAIN_TYPES = {
     ["cargo-wagon"] = true
 }
 
+NANO.ALLOWED_NOT_ON_MAP = {
+    ["entity-ghost"] = true,
+    ["tile-ghost"] = true,
+    ["item-on-ground"] = true,
+}
+
 --Tables linked to technologies, values are the tile radius
 NANO.BOT_RADIUS = {[0] = 7, [1] = 9, [2] = 11, [3] = 13, [4] = 15}
 --NANO.TERMITE_RADIUS = {[0] = 7, [1] = 9, [2] = 11, [3] = 13, [4] = 15}
