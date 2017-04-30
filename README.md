@@ -24,6 +24,7 @@ Reprogram your personal roboport to do a lot of the mundane tasks for you. Most 
 -   The tree cutter module will mark all trees within your personal roboport range for deconstruction.
 -   The unit launcher module will launch Destroys/Defenders/Distractors when enemies get inside your roboport range.
 -   The feeder will automatically heal you when you are low on health. For a bigger healing bonus keep a stack of healing capsules in your inventory.
+-   The Belt Immunity chip stops belts from moving you around.
 -   The Nano interface will allow your nanobots to work even while you are inside logistic networks.
 
 --------------------------------------------------------------------------------
@@ -34,7 +35,7 @@ If a piece of equipment in your armor is not enabled, adding more pieces of that
 Equipment states will stay with the power armor making it easy to swap out power armors without having to remember to also toggle the equipment. It is also possible to limit the range that nanobots will work in.
 
 -   Switching weapons in a vehicle will now also switch your characters weapons. as long as it is assigned to the same as the switch weapon key, Or you can assign it to a separate key.
--   Ctrl F1 - F6 Will toggle specific modular armor equipment on or off. A visual GUI is planned for this in the future.
+-   Ctrl F1 - F7 Will toggle specific modular armor equipment on or off. A visual GUI is planned for this in the future.
 -   Set the maximum radius that a module or nanobot ammo will work by holding the ammo or module in your hand and using the GUI or hotkeys to increase or decrease the range. It is possible to set this value higher than the maximum allowed but it will have no effect.
 
 --------------------------------------------------------------------------------
@@ -44,6 +45,7 @@ The roboport interface allows you to program your logistic networks to do mundan
 
 -   Find items: Will scan for any items on the ground in your network and order your construction robots to pick them up.
 -   Chop trees: Scan for any trees in range and chop them up. Setting this to a negative symbol will only chop trees if you have less than that amount of raw wood in the network.
+-   Gather fish: Sends your construction robots on a fishing expedition. Set to a negative amount to only fish if there is less then that amount in the network.
 -   Roboport only: Set this signal to only run this scanner in the nearest roboports zone and not the whole network.
 -   (Not implemented yet): Tile builder: Set a tile item signal to pave the network with this tile.
 -   (Not implemented yet): Tile remover: Set this virtual signal to dig up all tiles and return them to the network

@@ -36,8 +36,6 @@ local bot_radius = MOD.config.BOT_RADIUS
 local queue_speed = MOD.config.QUEUE_SPEED_BONUS
 
 local transport_types = MOD.config.TRANSPORT_TYPES
-local train_types = MOD.config.TRAIN_TYPES
-
 local allowed_not_on_map = MOD.config.ALLOWED_NOT_ON_MAP
 
 local AFK_TIME = 4 * defines.time.second
@@ -78,8 +76,9 @@ end
 local table_find = table.find
 -- return the name of the item found for table.find if we found at least 1 item or cheat_mode is enabled.
 local _find_item = function(_, k, p)
-    return get_cheat_mode(p) or p.get_item_count(k) > 0 or
-    (p.vehicle and (p.vehicle.get_item_count(k) > 0 or (train_types[p.vehicle.type] and p.vehicle.train.get_item_count(k) > 0)))
+    return get_cheat_mode(p) or p.get_item_count(k) > 0 or (
+        p.vehicle and (p.vehicle.get_item_count(k) > 0 or (pcall(function(e) return e.train end, p.vehicle) and p.vehicle.train.get_item_count(k) > 0))
+    )
 end
 
 -- Is the player connected, not afk, and have an attached character
@@ -89,12 +88,14 @@ local function is_connected_player_ready(player)
     return (player.afk_time < AFK_TIME and player.character)
 end
 
-local function has_powered_equipment(player, eq_name)
-    local armor = player.get_inventory(defines.inventory.player_armor)[1]
-    if armor and armor.valid_for_read and armor.grid and armor.grid.equipment then
+local function has_powered_equipment(character, eq_name)
+    --local armor = player.get_inventory(defines.inventory.player_armor)[1]
+    --if armor and armor.valid_for_read and armor.grid and armor.grid.equipment then
+    local grid = character.grid
+    if grid and grid.get_contents()[eq_name] then
         return table_find
         (
-            armor.grid.equipment,
+            grid.equipment,
             function(v, _, name)
                 return v.name == name and v.energy > 0
             end,
@@ -104,19 +105,19 @@ local function has_powered_equipment(player, eq_name)
 end
 
 -- Is the player not in a logistic network or has a working nano-interface
--- @param player: the player object
+-- @param player: the player character object
 -- @return bool: true if has chip or not in network
-local function nano_network_check(p, e)
-    if has_powered_equipment(p, "equipment-bot-chip-nanointerface") then
+local function nano_network_check(character, e)
+    if has_powered_equipment(character, "equipment-bot-chip-nanointerface") then
         return true
     else
-        local c = p.character
-        local network = e and e.surface.find_logistic_network_by_position(e.position, e.force) or p.surface.find_logistic_network_by_position(p.position, p.force)
+        local c = character
+        local networks = e and e.surface.find_logistic_networks_by_construction_area(e.position, e.force) or c.surface.find_logistic_networks_by_construction_area(c.position, c.force)
         -- Con bots in network
-        local bots = network and network.all_construction_robots or 0
-        -- con bots in personal cell
-        local pbots = (c.logistic_cell and c.logistic_cell.construction_radius > 0 and c.logistic_cell.logistic_network and c.logistic_cell.logistic_network.all_construction_robots) or 0
-        return not (bots > 0 or pbots > 0)
+        local pnetwork = c.logistic_cell and c.logistic_cell and c.logistic_cell.mobile and c.logistic_cell.logistic_network
+        local has_pbots = c.logistic_cell and c.logistic_cell.construction_radius > 0 and c.logistic_cell.logistic_network and c.logistic_cell.logistic_network.all_construction_robots > 0
+        local has_nbots = table.any(networks, function(network) return network ~= pnetwork and network.all_construction_robots > 0 end)
+        return not (has_pbots or has_nbots)
     end
 end
 
@@ -255,21 +256,6 @@ local function get_all_items_on_ground(entity, existing_stacks)
     return (item_stacks[1] and item_stacks) or {}
 end
 
-local function has_item_in_inv(entity, item, cheat) --luacheck: ignore
-    if not cheat then
-        local count = 0
-        if entity.vehicle and train_types[entity.vehicle.type] and entity.vehicle.train then
-            count = entity.vehicle.train.get_item_count(item)
-        elseif entity.vehicle then
-            count = entity.vehicle.get_item_count(item)
-        end
-        count = count + entity.get_item_count(item)
-        return count
-    else
-        return 1
-    end
-end
-
 -- Get one item with health data from the inventory
 -- @param entity: the entity object to search
 -- @param item: the item to look for
@@ -277,7 +263,7 @@ end
 local function get_one_item_from_inv(entity, item, cheat)
     if not cheat then
         local sources
-        if entity.vehicle and train_types[entity.vehicle.type] and entity.vehicle.train then
+        if entity.vehicle and pcall(function(e) return e.train end, entity.vehicle) and entity.vehicle.train then
             sources = entity.vehicle.train.cargo_wagons
             sources[#sources+1] = entity
         elseif entity.vehicle then
@@ -394,7 +380,7 @@ end
 -------------------------------------------------------------------------------
 --Queued items are handled one at a time,
 --check validity of all stored objects at this point, They could have become
---invalidated between the time the where entered into the queue and now.
+--invalidated between the time they were entered into the queue and now.
 
 local Queue = require("stdlib/utils/queue")
 
@@ -481,14 +467,6 @@ function Queue.build_entity_ghost(data)
             if Area.inside(Position.expand_to_area(ghost.position, 40), player.position) then
                 local item_stacks = get_all_items_on_ground(ghost)
                 if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
-                    -- local module_stacks
-                    -- local old_item_requests = table.deepcopy(ghost.item_requests)
-
-                    --Ignore module requests if module inserter is installed until further debuggin can commence
-                    -- if not remote.interfaces["mi"] then
-                    -- ghost.item_requests, module_stacks = get_insertable_module_requests(player, ghost)
-                    -- end
-
                     local revived, entity, requests = ghost.revive(true)
                     if revived then
                         create_projectile("nano-projectile-constructors", entity.surface, entity.force, player.position, entity.position)
@@ -499,21 +477,8 @@ function Queue.build_entity_ghost(data)
                         if requests then
                             satisfy_requests(requests, entity, player)
                         end
-
-                        -- local module_inventory = entity.get_module_inventory()
-                        -- if module_inventory and module_stacks then
-                        -- for _,v in pairs(module_stacks) do
-                        -- module_inventory.insert(v)
-                        -- end
-                        -- end
                         script.raise_event(defines.events.on_built_entity, {player_index=player.index, created_entity=entity, revived=true})
                     else --not revived, return item
-                        -- if module_stacks then
-                        -- insert_or_spill_items(player, module_stacks)
-                        -- if ghost.valid then
-                        -- ghost.item_requests = old_item_requests
-                        -- end
-                        -- end
                         insert_or_spill_items(player, {data.place_item})
                     end --revived
                 else --can't build
@@ -585,7 +550,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
     for _, ghost in pairs(player.surface.find_entities(area)) do
         if allowed_not_on_map[ghost.name] or ghost.type == "item-on-ground"or not ghost.has_flag("not-on-map") then
             if nano_ammo.valid and nano_ammo.valid_for_read then
-                if config.no_network_limits or nano_network_check(player, ghost) then
+                if config.no_network_limits or nano_network_check(player.character, ghost) then
                     if queue_count() < config.nano_emmiter_queues_per_cycle then
                         if ghost.to_be_deconstructed(player.force) and ghost.minable then
                             if not Queue.get_hash(queue, ghost) then
@@ -708,40 +673,38 @@ end
 --[[EVENTS]]--
 -------------------------------------------------------------------------------
 --The Tick Handler!
---Future improvments: 1 player per tick, move gun/ammo/equip checks to event handlers.
 local function poll_players(event)
     local config = global.config
     --Run logic for nanobots and power armor modules
-    if event.tick % config.poll_rate == 0 then
-        for _, player in pairs(game.connected_players) do
-            --Establish connected, non afk, player character
-            if is_connected_player_ready(player) then
-                if config.auto_nanobots and (config.no_network_limits or nano_network_check(player)) then
-                    local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
-                    if gun then
-                        if ammo_name == "ammo-nano-constructors" then
-                            queue_ghosts_in_range(player, player.position, nano_ammo)
-                        elseif ammo_name == "ammo-nano-termites" then
-                            everyone_hates_trees(player, player.position, nano_ammo)
-                        end
-                    end --Gun and Ammo check
-                end
-                if config.auto_equipment then
-                    armormods.prepare_chips(player)
-                end --Auto Equipment
-            end --Player Ready
-        end --For Players
+    if event.tick % math.max(config.poll_rate/#game.connected_players) == 0 then
+        local last_player, player = next(game.connected_players, global._last_player)
+        --Establish connected, non afk, player character
+        if player and is_connected_player_ready(player) then
+            if config.auto_nanobots and (config.no_network_limits or nano_network_check(player.character)) then
+                local gun, nano_ammo, ammo_name = get_gun_ammo_name(player, "gun-nano-emitter")
+                if gun then
+                    if ammo_name == "ammo-nano-constructors" then
+                        queue_ghosts_in_range(player, player.position, nano_ammo)
+                    elseif ammo_name == "ammo-nano-termites" then
+                        everyone_hates_trees(player, player.position, nano_ammo)
+                    end
+                end --Gun and Ammo check
+            end
+            if config.auto_equipment then
+                armormods.prepare_chips(player)
+            end --Auto Equipment
+        end --Player Ready
+        global._last_player = last_player
     end --NANO Automatic scripts
 end
 Event.register(defines.events.on_tick, poll_players)
+Event.register(defines.events.on_player_joined_game, function() global._last_player = nil end)
+Event.register(defines.events.on_player_left_game, function() global._last_player = nil end)
 
 local function execute_nano_queue(event)
     Queue.execute(event, global.nano_queue)
 end
 Event.register(defines.events.on_tick, execute_nano_queue)
-
--- Event.register(defines.events.on_player_created, function(event) Player.init(event.player_index) end)
--- Event.register(defines.events.on_force_created, function(event) Force.init(event.force.name) end)
 
 local function switch_player_gun_while_driving(event)
     local player = game.players[event.player_index]
@@ -769,7 +732,6 @@ local changes = require("changes")
 Event.register(Event.core_events.configuration_changed, changes.on_configuration_changed)
 
 function MOD.on_init()
-    global = {}
     global._changes = changes.on_init(game.active_mods[MOD.name] or MOD.version)
     Force.init()
     Player.init()

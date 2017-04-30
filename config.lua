@@ -25,11 +25,6 @@ NANO.TRANSPORT_TYPES = {
     ["loader"] = 2,
 }
 
-NANO.TRAIN_TYPES = {
-    ["locomotive"] = true,
-    ["cargo-wagon"] = true
-}
-
 NANO.ALLOWED_NOT_ON_MAP = {
     ["entity-ghost"] = true,
     ["tile-ghost"] = true,

@@ -4,6 +4,7 @@ local interface = {}
 function interface.reset_mod(are_you_sure)
     local player_name = game.player and game.player.name or "script"
     if are_you_sure then
+        global = {}
         MOD.on_init()
         MOD.log("Full Reset Completed by "..player_name)
     else
@@ -45,7 +46,7 @@ function interface.config(key, value, silent)
                 return val
             end
         else --key is nill
-            if not silent then game.print(MOD.log"Config '" .. key .. "' does not exist", 2) end
+            if not silent then game.print(MOD.log("Config '" .. key .. "' does not exist", 2)) end
             return nil
         end
     else
@@ -73,11 +74,11 @@ end
 
 function interface.print_global(name)
     if name and type(name) == "string" then
-        game.print(name.."="..serpent.block(global[name], {comment=false, sparse=true}))
-        game.write_file("/Nanobots/global.lua", name.."="..serpent.block(global[name], {comment=false, sparse=true}))
+        --game.print(name.."="..serpent.block(global[name], {comment=false, sparse=true}))
+        game.write_file("/Nanobots/global.lua", name.."="..serpent.block(global[name], {nocode=true, sortkeys=true, comment=false, sparse=true}))
     else
-        game.print(serpent.block(global, {comment=false, sparse=true}))
-        game.write_file("/Nanobots/global.lua", serpent.block(global, {comment=false, sparse=true}))
+        --game.print(serpent.block(global, {comment=false, sparse=true}))
+        game.write_file("/Nanobots/global.lua", serpent.block(global, {nocode=true, sortkeys=true, comment=false, sparse=true}))
     end
 end
 
