@@ -1,6 +1,5 @@
 --- Table module
 -- @module table
--- luacheck: ignore 432
 
 --- Given a mapping function, creates a transformed copy of the table
 --- by calling the function for each element in the table, and using
@@ -104,7 +103,8 @@ end
 -- @return a new table that represents the flattened contents of the given table
 function table.flatten(tbl, level)
     local flattened = {}
-    table.each(tbl, function(value)
+    table.each(tbl,
+        function(value)
             if type(value) == "table" and #value > 0 then
                 if level then
                     if level > 0 then
@@ -118,7 +118,8 @@ function table.flatten(tbl, level)
             else
                 table.insert(flattened, value)
             end
-        end)
+        end
+    )
     return flattened
 end
 
@@ -213,25 +214,25 @@ end
 
 -- copied from factorio/data/core/luablib/util.lua
 
---- Creates a deep copy of table, not coyping Factorio objects
+--- Creates a deep copy of table, not copying Factorio objects
 -- @param object the table to copy
 -- @return a copy of the table
 function table.deepcopy(object)
     local lookup_table = {}
-    local function _copy(object)
-        if type(object) ~= "table" then
-            return object
-        elseif object.__self then
-            return object
-        elseif lookup_table[object] then
-            return lookup_table[object]
+    local function _copy(this_object)
+        if type(this_object) ~= "table" then
+            return this_object
+        elseif this_object.__self then
+            return this_object
+        elseif lookup_table[this_object] then
+            return lookup_table[this_object]
         end
         local new_table = {}
-        lookup_table[object] = new_table
-        for index, value in pairs(object) do
+        lookup_table[this_object] = new_table
+        for index, value in pairs(this_object) do
             new_table[_copy(index)] = _copy(value)
         end
-        return setmetatable(new_table, getmetatable(object))
+        return setmetatable(new_table, getmetatable(this_object))
     end
     return _copy(object)
 end
@@ -241,17 +242,24 @@ end
 -- @param sorted (optional) whether to sort the keys (slower) or keep the random order from pairs()
 -- @param as_string (optional) whether to try and parse the values as strings, or leave them as their existing type
 -- @return an array with a copy of all the values in the table
-function table.values(tbl,sorted,as_string)
+function table.values(tbl, sorted, as_string)
     if not tbl then return {} end
     local valueset = {}
     local n = 0
-    if as_string == true then --checking as_string /before/ looping is faster
-        for _,v in pairs(tbl) do n = n+1 ; valueset[n] = tostring(v) end
+    if as_string then --checking as_string /before/ looping is faster
+        for _, v in pairs(tbl) do
+            n = n + 1
+            valueset[n] = tostring(v)
+        end
     else
-        for _,v in pairs(tbl) do n = n+1 ; valueset[n] = v end
+        for _, v in pairs(tbl) do
+            n = n + 1
+            valueset[n] = v
+        end
     end
-    if sorted == true then
-        table.sort(valueset, function(x,y) --sorts tables with mixed index types.
+    if sorted then
+        table.sort(valueset,
+            function(x, y) --sorts tables with mixed index types.
                 local tx = type(x) == 'number'
                 local ty = type(y) == 'number'
                 if tx == ty then
@@ -261,7 +269,8 @@ function table.values(tbl,sorted,as_string)
                 else
                     return false --only y is a number and goes first
                 end
-            end)
+            end
+        )
     end
     return valueset
 end
@@ -271,17 +280,24 @@ end
 -- @param sorted (optional) whether to sort the keys (slower) or keep the random order from pairs()
 -- @param as_string (optional) whether to try and parse the keys as strings, or leave them as their existing type
 -- @return an array with a copy of all the keys in the table
-function table.keys(tbl,sorted,as_string)
+function table.keys(tbl, sorted,as_string)
     if not tbl then return {} end
     local keyset = {}
     local n = 0
-    if as_string == true then --checking as_string /before/ looping is faster
-        for k,_ in pairs(tbl) do n = n+1 ; keyset[n] = tostring(k) end
+    if as_string then --checking as_string /before/ looping is faster
+        for k,_ in pairs(tbl) do
+            n = n+1
+            keyset[n] = tostring(k)
+        end
     else
-        for k,_ in pairs(tbl) do n = n+1 ; keyset[n] = k end
+        for k,_ in pairs(tbl) do
+            n = n + 1
+            keyset[n] = k
+        end
     end
-    if sorted == true then
-        table.sort(keyset, function(x,y) --sorts tables with mixed index types.
+    if sorted then
+        table.sort(keyset,
+            function(x, y) --sorts tables with mixed index types.
                 local tx = type(x) == 'number'
                 local ty = type(y) == 'number'
                 if tx == ty then
@@ -291,7 +307,8 @@ function table.keys(tbl,sorted,as_string)
                 else
                     return false --only y is a number and goes first
                 end
-            end)
+            end
+        )
     end
     return keyset
 end

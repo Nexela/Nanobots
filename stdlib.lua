@@ -1,7 +1,8 @@
 --stdlib table mutates
 require("stdlib.table")
 require("stdlib.string")
-require("stdlib.color.defines")
+require("stdlib.defines.colors")
+require("stdlib.defines.time")
 
 --stdlib Globals
 require("stdlib.log.logger")

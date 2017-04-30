@@ -1,4 +1,4 @@
-local Proto = require("stdlib/data/protohelpers")
+local Prototype = require("stdlib/data/prototype")
 local sound_creators = {
     type = "explosion",
     name = "nano-sound-build-tiles",
@@ -6,7 +6,7 @@ local sound_creators = {
     rotate = false,
     animations =
     {
-        Proto.empty_animation
+        Prototype.empty_animation
     },
     sound =
     {
@@ -44,7 +44,7 @@ local sound_deconstruct = {
     rotate = false,
     animations =
     {
-        Proto.empty_animation
+        Prototype.empty_animation
     },
     sound =
     {
@@ -65,7 +65,7 @@ local sound_repair = {
     rotate = false,
     animations =
     {
-        Proto.empty_animation
+        Prototype.empty_animation
     },
     sound =
     {
@@ -86,7 +86,7 @@ local sound_termites = {
     flags = {"not-on-map"},
     animations =
     {
-        Proto.empty_animation
+        Prototype.empty_animation
     },
     sound =
     {

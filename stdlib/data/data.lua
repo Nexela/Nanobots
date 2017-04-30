@@ -1,8 +1,7 @@
 --- Data module
 -- @module Data
--- luacheck: ignore selection
 
-local Core = require 'stdlib/core'
+local fail_if_missing = require 'stdlib/core'["fail_if_missing"]
 require 'stdlib/string'
 require 'stdlib/table'
 
@@ -18,7 +17,7 @@ local Data = {}
 -- @param pattern to search with
 -- @return table containing the elements matching the selector pattern, or an empty table if there was no matches
 function Data.select(pattern)
-    Core.fail_if_missing(pattern, "missing pattern argument")
+    fail_if_missing(pattern, "missing pattern argument")
 
     local parts = string.split(pattern, ":")
     local category_pattern = table.first(parts)
@@ -41,7 +40,7 @@ end
 
 -- this metatable is set on recipes, to control access to ingredients and results
 Data._select_metatable = {}
-Data._select_metatable.new = function(selection)
+Data._select_metatable.new = function()
     local self = { }
     self.__index = function(tbl, key)
         if key == 'apply' then
@@ -61,3 +60,5 @@ Data._select_metatable.new = function(selection)
 
     return self
 end
+
+return Data

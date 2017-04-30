@@ -2,7 +2,7 @@
 -- @module Gui
 
 require 'stdlib/event/event'
-local Core = require 'stdlib/core'
+local fail_if_missing = require 'stdlib/core'["fail_if_missing"]
 
 Gui = {}
 -- Factorio's gui events are so monolithic we need a special event system for it.
@@ -17,8 +17,8 @@ Gui.Event = {
 -- @param handler Function to call when event is triggered
 -- @return #Gui.Event
 function Gui.Event.register(event, gui_element_pattern, handler)
-    Core.fail_if_missing(event, "missing event name argument")
-    Core.fail_if_missing(gui_element_pattern, "missing gui name or pattern argument")
+    fail_if_missing(event, "missing event name argument")
+    fail_if_missing(gui_element_pattern, "missing gui name or pattern argument")
 
     if type(gui_element_pattern) ~= "string" then
         error("gui_element_pattern argument must be a string")
@@ -46,7 +46,7 @@ end
 --- Calls the registered handlers
 -- @param event LuaEvent as created by script.raise_event
 function Gui.Event.dispatch(event)
-    Core.fail_if_missing(event, "missing event argument")
+    fail_if_missing(event, "missing event argument")
 
     local gui_element = event.element
     if gui_element and gui_element.valid then
@@ -90,8 +90,8 @@ end
 -- @param gui_element_pattern the name or string regular expression to remove the handler for
 -- @return #Gui.Event
 function Gui.Event.remove(event, gui_element_pattern)
-    Core.fail_if_missing(event, "missing event argument")
-    Core.fail_if_missing(gui_element_pattern, "missing gui_element_pattern argument")
+    fail_if_missing(event, "missing event argument")
+    fail_if_missing(gui_element_pattern, "missing gui_element_pattern argument")
 
     if type(gui_element_pattern) ~= "string" then
         error("gui_element_pattern argument must be a string")

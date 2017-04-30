@@ -1,5 +1,4 @@
---luacheck: globals List
-List = {}
+local List = {}
 
 function List.new ()
   return {first = 1, last = 0}
@@ -26,7 +25,7 @@ function List.pop_left (list)
   local first = list.first
   if first > list.last then return nil end
   local value = list[first]
-  list[first] = nil        -- to allow garbage collection
+  list[first] = nil
   list.first = first + 1
   return value
 end
@@ -35,7 +34,7 @@ function List.pop_right (list)
   local last = list.last
   if list.first > last then return nil end
   local value = list[last]
-  list[last] = nil         -- to allow garbage collection
+  list[last] = nil
   list.last = last - 1
   return value
 end

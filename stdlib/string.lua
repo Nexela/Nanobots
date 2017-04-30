@@ -68,13 +68,3 @@ function string.split(s, sep, pattern)
     end
     return fields
 end
-
-function string.PrettyNumber( number )
-    if number < 1000 then
-        return string.format("%i", number)
-    elseif number < 1000000 then
-        return string.format("%.1fk", (number/1000))
-    else
-        return string.format("%.1fm", (number/1000000))
-    end
-end

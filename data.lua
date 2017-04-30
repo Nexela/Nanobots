@@ -1,6 +1,8 @@
 local NANO = require("config")
-require("stdlib/color/defines")
+require("stdlib/defines/colors")
+require("stdlib/defines/time")
 
+--Custom GUI's
 require("prototypes/gui")
 
 --Custom hotkeys
@@ -24,6 +26,7 @@ require("prototypes/equipment/belt-immunity-equipment")
 
 --Gun, When equipped and selected will automaticly revive ghosts around it
 require("prototypes/gun-nano-emitter")
+
 --Ammo for nano guns
 require("prototypes/ammo/proxies")
 require("prototypes/ammo/constructors")

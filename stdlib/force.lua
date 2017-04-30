@@ -2,42 +2,40 @@
 --[[Force]]
 -------------------------------------------------------------------------------
 require("stdlib/event/event")
+
 local Force = {}
 
-function Force.get_object_and_data(name)
-    if game.forces[name] then
-        return game.forces[name], global.forces[name]
-    end
-end
-
-function Force.new(force_name)
+local function new(force_name)
     local obj = {
         index = force_name,
     }
     return obj
 end
 
+function Force.get(name)
+    return game.forces[name], global.forces[name] or Force.init(name) and global.forces[name]
+end
+
 function Force.add_data_all(data)
-    local fdata = global.forces
-    table.each(fdata, function(v) table.merge(v, table.deepcopy(data)) end)
+    table.each(global.forces, function(v) table.merge(v, table.deepcopy(data)) end)
 end
 
 function Force.init(event, overwrite)
+    event = event and type(event) == "string" and {force={name=event}} or event
     global.forces = global.forces or {}
-    local fdata = global.forces or {}
     if event and event.force.name then
-        if not fdata[event.force.name] or (fdata[event.force.name] and overwrite) then
-            fdata[event.force.name] = Force.new(event.force.name)
+        if not global.forces[event.force.name] or (global.forces[event.force.name] and overwrite) then
+            global.forces[event.force.name] = new(event.force.name)
         end
     else
         for name in pairs(game.forces) do
-            if not fdata[name] or (fdata[name] and overwrite) then
-                fdata[name] = Force.new(name)
+            if not global.forces[name] or (global.forces[name] and overwrite) then
+                global.forces[name] = new(name)
             end
         end
     end
 end
-Event.register(defines.events.on_force_created, function(event) Force.init(event.force.name) end)
+Event.register(defines.events.on_force_created, Force.init)
 
 function Force.merge()
 end

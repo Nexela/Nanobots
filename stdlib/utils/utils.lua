@@ -31,6 +31,26 @@ local author_name2 = "Nexela"
 -- return false
 -- end
 
+function string.PrettyNumber( number )
+    if number < 1000 then
+        return string.format("%i", number)
+    elseif number < 1000000 then
+        return string.format("%.1fk", (number/1000))
+    else
+        return string.format("%.1fm", (number/1000000))
+    end
+end
+
+function Time.FormatTicksToTime( ticks )
+    local seconds = ticks / 60
+    local minutes = seconds / 60
+    local hours = minutes / 60
+    return string.format("%02d:%02d:%02d",
+        math.floor(hours + 0.5),
+        math.floor(minutes + 0.5) % 60,
+        math.floor(seconds + 0.5) % 60)
+end
+
 --------------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------------

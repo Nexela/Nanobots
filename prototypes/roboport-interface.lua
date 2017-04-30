@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --[[Roboport Interface]]-- Logistic Network roboport interface module
 -------------------------------------------------------------------------------
-local Proto = require("stdlib/data/protohelpers")
+local Prototype = require("stdlib/data/prototype")
 --Roboport with custom GFX no zones, no recharge, radar with nil gfx, cc with nil gfx - selectable
 --256 x 224
 
@@ -55,7 +55,7 @@ Constant-Combinator interface for setting the signals.
 -------------------------------------------------------------------------------
 --[[Combinator]]--
 -------------------------------------------------------------------------------
-local ri_cc = Proto.dupli_proto( "constant-combinator", "constant-combinator", "roboport-interface-cc", true )
+local ri_cc = Prototype.duplicate( "constant-combinator", "constant-combinator", "roboport-interface-cc", true )
 ri_cc.icon = nil
 ri_cc.icons = {
     {icon = "__Nanobots__/graphics/icons/roboport-interface-cc.png"}
@@ -109,7 +109,7 @@ ri_cc.activity_led_light =
 -------------------------------------------------------------------------------
 --[[Radar]]--
 -------------------------------------------------------------------------------
-local ri_radar = Proto.dupli_proto("radar", "radar", "roboport-interface-scanner", true)
+local ri_radar = Prototype.duplicate("radar", "radar", "roboport-interface-scanner", true)
 ri_radar.flags = {"not-blueprintable", "not-deconstructable"}
 ri_radar.icon = "__Nanobots__/graphics/icons/roboport-interface.png"
 --ri_radar.max_health = 0
@@ -117,7 +117,7 @@ ri_radar.minable = nil
 ri_radar.collision_mask = {}
 ri_radar.selection_box = {{-0.5, -0.5}, {0.5, 0.5}}
 ri_radar.collision_box = {{-0.4, -0.4}, {0.4, 0.4}}
-ri_radar.pictures = Proto.empty_animation
+ri_radar.pictures = Prototype.empty_animation
 ri_radar.max_distance_of_sector_revealed = 0
 ri_radar.max_distance_of_nearby_sector_revealed = 1
 ri_radar.energy_per_sector = "20MJ"
@@ -157,7 +157,7 @@ local ri_roboport = {
     material_slots_count = 0,
     stationing_offset = nil,
     charging_offsets = nil,
-    base = Proto.empty_sprite,
+    base = Prototype.empty_sprite,
     base_animation =
     {
         filename = "__Nanobots__/graphics/entity/roboport-interface/roboport-interface.png",
@@ -171,10 +171,10 @@ local ri_roboport = {
         line_length = 8,
         shift = {0.4, -2.0}
     },
-    base_patch = Proto.empty_animation,
-    door_animation_up = Proto.empty_animation,
-    door_animation_down = Proto.empty_animation,
-    recharging_animation = Proto.empty_animation,
+    base_patch = Prototype.empty_animation,
+    door_animation_up = Prototype.empty_animation,
+    door_animation_down = Prototype.empty_animation,
+    recharging_animation = Prototype.empty_animation,
     recharging_light = nil,
     request_to_open_door_timeout = 15,
     spawn_and_station_height = 1.75,

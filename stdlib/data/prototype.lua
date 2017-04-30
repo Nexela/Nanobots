@@ -1,27 +1,33 @@
--------------------------------------------------------------------------------
---[[Helper Proto Functions]]--
-local Proto = {}
+--- Prototype module
+-- @module Prototype
+
+local Prototype = {}
 
 --Quickly duplicate an existing prototype into a new one.
-function Proto.dupli_proto( type, name1, name2, adaptMiningResult )
-    if data.raw[type][name1] then
-        local proto = table.deepcopy(data.raw[type][name1])
-        proto.name = name2
-        if adaptMiningResult then
-            if proto.minable and proto.minable.result then proto.minable.result = name2 end
+function Prototype.duplicate(data_type, orig_name, new_name, mining_result)
+    mining_result = type(mining_result) == "boolean" and new_name or mining_result
+    if data.raw[data_type][orig_name] then
+        local proto = table.deepcopy(data.raw[data_type][orig_name])
+        proto.name = new_name
+        if mining_result then
+            if proto.minable and proto.minable.result then
+                proto.minable.result = mining_result
+            end
         end
-        if proto.place_result then proto.place_result = name2 end
-        if proto.result then proto.result = name2 end
+        if proto.place_result then
+            proto.place_result = new_name
+        end
+        if proto.result then
+            proto.result = new_name
+        end
         return(proto)
     else
-        error("prototype unknown " .. name1 )
-        return(nil)
+        error("Unknown Prototype "..data_type.."/".. orig_name )
     end
 end
 
---------------------------------------------------------------------------------------
 --Prettier monolith extracting
-function Proto.extract_monolith(filename, x, y, w, h)
+function Prototype.extract_monolith(filename, x, y, w, h)
     return {
         type = "monolith",
 
@@ -41,8 +47,28 @@ function Proto.extract_monolith(filename, x, y, w, h)
     }
 end
 
+--Quick to use empty sprite
+Prototype.empty_sprite ={
+    filename = "__core__/graphics/empty.png",
+    priority = "extra-high",
+    width = 1,
+    height = 1
+}
+
+--Quick to use empty animation
+Prototype.empty_animation = {
+    filename = Prototype.empty_sprite.filename,
+    width = Prototype.empty_sprite.width,
+    height = Prototype.empty_sprite.height,
+    line_length = 1,
+    frame_count = 1,
+    shift = { 0, 0},
+    animation_speed = 1,
+    direction_count=1
+}
+
 --Define pipe connection pipe pictures, not all entities use these. This function needs some work though.
-Proto.pipes = function (pictures, shift_north, shift_south, shift_west, shift_east)
+function Prototype.pipes(pictures, shift_north, shift_south, shift_west, shift_east)
     if pictures == "turret" then
         shift_north = shift_north or {0, 0}
         shift_south = shift_south or {0, 0}
@@ -126,28 +152,8 @@ Proto.pipes = function (pictures, shift_north, shift_south, shift_west, shift_ea
     end
 end
 
---Quick to use empty sprite
-Proto.empty_sprite ={
-    filename = "__core__/graphics/empty.png",
-    priority = "extra-high",
-    width = 1,
-    height = 1
-}
-
---Quick to use empty animation
-Proto.empty_animation = {
-    filename = Proto.empty_sprite.filename,
-    width = Proto.empty_sprite.width,
-    height = Proto.empty_sprite.height,
-    line_length = 1,
-    frame_count = 1,
-    shift = { 0, 0},
-    animation_speed = 1,
-    direction_count=1
-}
-
 --return pipe covers for true directions.
-Proto.pipe_covers = function(n, s, e, w)
+function Prototype.pipe_covers(n, s, e, w)
     if (n == nil and s == nil and e == nil and w == nil) then
         n, s, e, w = true, true, true, true
     end
@@ -158,7 +164,7 @@ Proto.pipe_covers = function(n, s, e, w)
             height = 32
         }
     else
-        n = Proto.empty_sprite
+        n = Prototype.empty_sprite
     end
     if e == true then
         e = {
@@ -168,7 +174,7 @@ Proto.pipe_covers = function(n, s, e, w)
             height = 32
         }
     else
-        e = Proto.empty_sprite
+        e = Prototype.empty_sprite
     end
     if s == true then
         s =
@@ -179,7 +185,7 @@ Proto.pipe_covers = function(n, s, e, w)
             height = 52
         }
     else
-        s = Proto.empty_sprite
+        s = Prototype.empty_sprite
     end
     if w == true then
         w =
@@ -190,10 +196,10 @@ Proto.pipe_covers = function(n, s, e, w)
             height = 32
         }
     else
-        w = Proto.empty_sprite
+        w = Prototype.empty_sprite
     end
 
     return {north = n, south = s, east = e, west = w}
 end
 
-return Proto
+return Prototype

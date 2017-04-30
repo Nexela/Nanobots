@@ -1,8 +1,7 @@
 --- Position module
 -- @module Position
 
-local Core = require 'stdlib/core'
-
+local fail_if_missing = require 'stdlib/core'["fail_if_missing"]
 local Position = {}
 
 --- Creates a table representing the position from x and y
@@ -10,8 +9,8 @@ local Position = {}
 -- @param y y-position
 -- @return Position
 function Position.construct(x, y)
-    Core.fail_if_missing(x, "missing x position argument")
-    Core.fail_if_missing(y, "missing y position argument")
+    fail_if_missing(x, "missing x position argument")
+    fail_if_missing(y, "missing y position argument")
     return { x = x, y = y }
 end
 
@@ -19,7 +18,7 @@ end
 -- @param pos the position to copy
 -- @return Position
 function Position.copy(pos)
-    Core.fail_if_missing(pos, "missing position argument")
+    fail_if_missing(pos, "missing position argument")
     pos = Position.to_table(pos)
     return { x = pos.x, y = pos.y }
 end
@@ -30,9 +29,9 @@ end
 -- @param y the amount to offset the position in the y direction
 -- @return a new position, offset by the x,y coordinates
 function Position.offset(pos, x, y)
-    Core.fail_if_missing(pos, "missing position argument")
-    Core.fail_if_missing(x, "missing x-coordinate value")
-    Core.fail_if_missing(y, "missing y-coordinate value")
+    fail_if_missing(pos, "missing position argument")
+    fail_if_missing(x, "missing x-coordinate value")
+    fail_if_missing(y, "missing y-coordinate value")
 
     if #pos == 2 then
         return { x = pos[1] + x, y = pos[2] + y }
@@ -46,8 +45,8 @@ end
 -- @param pos2 the second position
 -- @return a new position
 function Position.add(pos1, pos2)
-    Core.fail_if_missing(pos1, "missing first position argument")
-    Core.fail_if_missing(pos2, "missing second position argument")
+    fail_if_missing(pos1, "missing first position argument")
+    fail_if_missing(pos2, "missing second position argument")
 
     pos1 = Position.to_table(pos1)
     pos2 = Position.to_table(pos2)
@@ -59,8 +58,8 @@ end
 -- @param pos2 the second position
 -- @return a new position
 function Position.subtract(pos1, pos2)
-    Core.fail_if_missing(pos1, "missing first position argument")
-    Core.fail_if_missing(pos2, "missing second position argument")
+    fail_if_missing(pos1, "missing first position argument")
+    fail_if_missing(pos2, "missing second position argument")
 
     pos1 = Position.to_table(pos1)
     pos2 = Position.to_table(pos2)
@@ -73,9 +72,9 @@ end
 -- @param distance distance of the translation
 -- @return the translated position
 function Position.translate(pos, direction, distance)
-    Core.fail_if_missing(pos, "missing position argument")
-    Core.fail_if_missing(direction, "missing direction argument")
-    Core.fail_if_missing(distance, "missing distance argument")
+    fail_if_missing(pos, "missing position argument")
+    fail_if_missing(direction, "missing direction argument")
+    fail_if_missing(distance, "missing distance argument")
 
     pos = Position.to_table(pos)
 
@@ -103,8 +102,8 @@ end
 -- @param radius half the side length of the area
 -- @return a bounding box
 function Position.expand_to_area(pos, radius)
-    Core.fail_if_missing(pos, "missing position argument")
-    Core.fail_if_missing(radius, "missing radius argument")
+    fail_if_missing(pos, "missing position argument")
+    fail_if_missing(radius, "missing radius argument")
 
     if #pos == 2 then
         return { left_top = { x = pos[1] - radius, y = pos[2] - radius }, right_bottom = { x = pos[1] + radius, y = pos[2] + radius } }
@@ -117,8 +116,8 @@ end
 -- @param pos2 the second position
 -- @return the square of the Euclidean distance
 function Position.distance_squared(pos1, pos2)
-    Core.fail_if_missing(pos1, "missing first position argument")
-    Core.fail_if_missing(pos2, "missing second position argument")
+    fail_if_missing(pos1, "missing first position argument")
+    fail_if_missing(pos2, "missing second position argument")
 
     pos1 = Position.to_table(pos1)
     pos2 = Position.to_table(pos2)
@@ -132,8 +131,8 @@ end
 -- @param pos2 the second position
 -- @return the square of the Euclidean distance
 function Position.distance(pos1, pos2)
-    Core.fail_if_missing(pos1, "missing first position argument")
-    Core.fail_if_missing(pos2, "missing second position argument")
+    fail_if_missing(pos1, "missing first position argument")
+    fail_if_missing(pos2, "missing second position argument")
 
     return math.sqrt(Position.distance_squared(pos1, pos2))
 end
@@ -143,8 +142,8 @@ end
 -- @param pos2 the second position
 -- @return the square of the Euclidean distance
 function Position.manhattan_distance(pos1, pos2)
-    Core.fail_if_missing(pos1, "missing first position argument")
-    Core.fail_if_missing(pos2, "missing second position argument")
+    fail_if_missing(pos1, "missing first position argument")
+    fail_if_missing(pos2, "missing second position argument")
     pos1 = Position.to_table(pos1)
     pos2 = Position.to_table(pos2)
 
@@ -182,7 +181,7 @@ end
 -- @param pos_arr the position to convert
 -- @return a converted position, { x = pos_arr[1], y = pos_arr[2] }
 function Position.to_table(pos_arr)
-    Core.fail_if_missing(pos_arr, "missing position argument")
+    fail_if_missing(pos_arr, "missing position argument")
 
     if #pos_arr == 2 then
         return { x = pos_arr[1], y = pos_arr[2] }
@@ -194,12 +193,29 @@ end
 -- @param pos the position to convert
 -- @return string representation of pos
 function Position.tostring(pos)
-    Core.fail_if_missing(pos, "missing position argument")
+    fail_if_missing(pos, "missing position argument")
     if #pos == 2 then
         return "Position {x = " .. pos[1] .. ", y = " .. pos[2] .. "}"
     else
         return "Position {x = " .. pos.x .. ", y = " .. pos.y .. "}"
     end
+end
+
+--- Returns the opposite direction - Adapted from Factorio util.lua
+-- @param direction the defines.direction to get the opposite of
+-- @return the opposite direction
+function Position.opposite_direction(direction)
+    local opposites = {
+        [defines.direction.north] = defines.direction.south,
+        [defines.direction.south] = defines.direction.north,
+        [defines.direction.east] = defines.direction.west,
+        [defines.direction.west] = defines.direction.east,
+        [defines.direction.northeast] = defines.direction.southwest,
+        [defines.direction.southwest] = defines.direction.northeast,
+        [defines.direction.northwest] = defines.direction.southeast,
+        [defines.direction.southeast] = defines.direction.northwest,
+    }
+    return opposites[direction or defines.direction.north]
 end
 
 return Position

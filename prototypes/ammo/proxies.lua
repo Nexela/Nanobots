@@ -1,4 +1,4 @@
-local Proto = require("stdlib/data/protohelpers")
+local Prototype = require("stdlib/data/prototype")
 local constants = require("constants")
 local TTL = 60 * 10
 
@@ -32,10 +32,10 @@ local proxy = {
             action = nil,
         }
     },
-    idle = Proto.empty_animation,
-    shadow_idle = Proto.empty_animation,
-    in_motion = Proto.empty_animation,
-    shadow_in_motion = Proto.empty_animation,
+    idle = Prototype.empty_animation,
+    shadow_idle = Prototype.empty_animation,
+    in_motion = Prototype.empty_animation,
+    shadow_in_motion = Prototype.empty_animation,
 }
 
 local projectile_return = {

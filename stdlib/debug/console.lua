@@ -1,6 +1,8 @@
-local USE_FALLBACK_INTERFACE = false
-
---Console Code from adil modified for use with STDlib
+-------------------------------------------------------------------------------
+--[[CONSOLE]]--
+-------------------------------------------------------------------------------
+-- Console Code from adil modified for use with STDlib
+-- Creates a textfield allowing you to run commands directly in your mods enviorment
 require("stdlib.gui.gui")
 
 local function create_gui_player(player)
@@ -47,14 +49,6 @@ local function clear(event)
     p.gui.left.console.console_line.text = ""
 end
 Gui.on_click("console_clear", clear)
-
---Fallback interface --- set USE_FALLBACK_INTERACE = true and
---just using a require("path.to.console") in your control will
---create the console interface, this interface is only recomended for local testing.
---If more then 1 mod adds it, the first mod to add it will be the enviorment used
-if USE_FALLBACK_INTERFACE and not remote.interfaces.console then
-    remote.add_interface("console", {show = function(player) create_gui(player) end})
-end
 
 --return the create_gui function
 --example usage:

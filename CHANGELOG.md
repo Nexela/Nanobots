@@ -34,3 +34,5 @@
 -   1.7.5 - Factorio .15 readyish
 -   1.7.6 - Fix termites borked, Log spam
 -   1.7.7 - Adds in belt immunity equipment
+-   1.7.8 - Quick Fix for Forces
+-   1.7.9 - Update custom stdlib

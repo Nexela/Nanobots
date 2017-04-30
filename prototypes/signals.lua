@@ -47,6 +47,14 @@ local signal5 = {
     subgroup = "nanobot-signals",
     order = "[nano-signal]-e"
 }
+local signal6 = {
+    type = "virtual-signal",
+    name = "nano-signal-catch-fish",
+    special_signal = false,
+    icon = "__Nanobots__/graphics/icons/signals/remove-fish.png",
+    subgroup = "nanobot-signals",
+    order = "[nano-signal]-f"
+}
 local signal99 = {
     type = "virtual-signal",
     name = "nano-signal-closest-roboport",
@@ -56,4 +64,4 @@ local signal99 = {
     order = "[nano-signal]-z"
 }
 
-data:extend{group, signal1, signal2, signal5, signal99}
+data:extend{group, signal1, signal2, signal5, signal6, signal99}
