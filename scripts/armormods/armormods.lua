@@ -16,11 +16,6 @@ local min, max, abs, ceil, floor = math.min, math.max, math.abs, math.ceil, math
 --[[Helper functions]]--
 -------------------------------------------------------------------------------
 
-local function get_armor_grid(player)
-    local armor = player.get_inventory(defines.inventory.player_armor)[1]
-    return armor and armor.valid_for_read and armor.grid
-end
-
 -- Loop through equipment grid and return a table of valid equipment tables indexed by equipment name
 -- @param entity: the entity object
 -- @return table: all equipment - name as key, arrary of named equipment as value
@@ -28,14 +23,12 @@ end
 -- @return table: shield_level = number, max_shield = number, equipment = array of shields
 local function get_valid_equipment(grid)
     if grid and grid.valid then
-        local all, charged, energy_shields = {}, {}, {shield_level = 0, max_shield = 0, shields = {}}
+        local all, charged, energy_shields = {}, {}, {shield_level = grid.shield, max_shield = grid.max_shield, shields = {}}
         for _, equip in pairs(grid.equipment) do
             all[equip.name] = all[equip.name] or {}
             all[equip.name][#all[equip.name] + 1] = equip
             if equip.type == "energy-shield-equipment" and equip.shield < equip.max_shield * .75 then
                 energy_shields.shields[#energy_shields.shields + 1] = equip
-                energy_shields.shield_level = energy_shields.shield_level + (equip.shield or 0)
-                energy_shields.max_shield = energy_shields.max_shield + (equip.max_shield or 0)
             end
             if equip.energy > 0 then
                 charged[equip.name] = charged[equip.name] or {}
@@ -61,8 +54,8 @@ end
 -- Is the personal roboport ready and have a radius greater than 0
 -- @param entity: the entity object
 -- @return bool: personal roboport construction radius > 0
-local function is_personal_roboport_ready(entity)
-    return entity.grid and entity.logistic_cell and entity.logistic_cell.mobile and entity.logistic_cell.construction_radius > 0
+local function is_personal_roboport_ready(entity, ignore_radius)
+    return entity.grid and entity.logistic_cell and entity.logistic_cell.mobile and (entity.logistic_cell.construction_radius > 0 or ignore_radius)
 end
 
 --TODO .15 will have a better/more reliable way to get the construction network
@@ -83,14 +76,11 @@ local function get_bot_counts(entity, mobile_only, stationed_only)
             end
         else
             local bots = 0
-            --get bots availble in cells network
-            bots = bots + (entity.logistic_cell and entity.logistic_cell.logistic_network.available_construction_robots) or 0
-
             --.15 will have find by construction zone for this!
-            local port = entity.surface.find_logistic_network_by_position(entity.position, entity.force)
-
-            bots = bots + ((port and port ~= entity.logistic_network and port.available_construction_robots) or 0)
-
+            table.each(entity.surface.find_logistic_networks_by_construction_area(entity.position, entity.force), function(network)
+                    bots = bots + network.available_construction_robots
+                end
+            )
             return bots
         end
     else
@@ -259,7 +249,7 @@ end
 -------------------------------------------------------------------------------
 function armormods.prepare_chips(player)
     if is_personal_roboport_ready(player.character) then
-        local _, _, charged, energy_shields = get_valid_equipment(get_armor_grid(player))
+        local _, _, charged, energy_shields = get_valid_equipment(player.character.grid)
         if charged["equipment-bot-chip-launcher"] or charged["equipment-bot-chip-items"] or charged["equipment-bot-chip-trees"] then
             process_ready_chips(player, charged)
         end
