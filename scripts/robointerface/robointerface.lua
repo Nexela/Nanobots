@@ -13,24 +13,30 @@ local robointerface = {}
 local params_to_check = {
     ["nano-signal-chop-trees"] = {
         action = "mark_items_or_trees",
-        find_filter ="tree"
+        find_type ="tree",
+        item_name = "raw-wood"
     },
     ["nano-signal-item-on-ground"] = {
         action = "mark_items_or_trees",
-        find_filter = "item-entity"
+        find_type = "item-entity"
     },
     ["nano-tile"] = {
         action = "tile_ground"
     },
     ["nano-signal-deconstruct-finished-miners"] = {
         action = "deconstruct_finished_miners",
-        find_filter = "mining-drill"
+        find_type = "mining-drill"
     },
     ["nano-signal-landfill-the-world"] = {
         action = "landfill_the_world",
     },
     ["nano-signal-remove-tiles"] = {
         action = "remove_tiles",
+    },
+    ["nano-signal-catch-fish"] = {
+        action = "mark_items_or_trees",
+        find_type = "fish",
+        item_name = "fish"
     }
 }
 
@@ -79,16 +85,23 @@ end
 Queue.mark_items_or_trees = function(data)
     if data.logistic_cell.valid and data.logistic_cell.construction_radius > 0 and data.logistic_cell.logistic_network then
         local surface, force, position = get_entity_info(data.logistic_cell.owner)
+        if not (data.find_type or data.find_name) then data.find_type = "NIL" end
         if not surface.find_nearest_enemy{position = position, max_distance = data.logistic_cell.construction_radius, force = force} then
             local config = global.config
-            local filter = {area = Position.expand_to_area(position, data.logistic_cell.construction_radius), type = data.find_type or "error", limit = 300}
+            local filter = {
+                area = Position.expand_to_area(position, data.logistic_cell.construction_radius),
+                name = data.find_name,
+                type = data.find_type,
+                limit = 300
+            }
             local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots * (config.robo_interface_free_bots_per / 100))
             local limit = -99999999999
-            if data.value < 0 and data.find_type == " tree" then
-                limit = (data.logistic_cell.logistic_network.get_contents()["raw-wood"] or 0) - data.value
+            if data.value < 0 and data.item_name then
+                limit = (data.logistic_cell.logistic_network.get_contents()[data.item_name] or 0) - data.value
             end
 
             for _, item in pairs(surface.find_entities_filtered(filter)) do
+                game.print("in")
                 if available_bots > 0 and (limit < 0) then
                     if not item.to_be_deconstructed(force) then
                         item.order_deconstruction(force)
@@ -144,12 +157,14 @@ local function run_interface(interface)
         if logistic_network and logistic_network.available_construction_robots > 0 then
             local queue, tick_spacing = global.cell_queue, global.config.robo_interface_tick_spacing
             local parameters = get_parameters(behaviour.parameters)
+            --game.print(serpent.block(parameters, {comment=false, sparse=false}))
             -- If the closest roboport signal is present and > 0 then just run on the attached cell
             local just_cell = (parameters["nano-signal-closest-roboport"] or 0) > 0 and logistic_cell and {logistic_cell} or nil
             local fdata = global.forces[logistic_cell.owner.force.name]
             local next_tick = Queue.next(queue, fdata._next_cell_tick or game.tick, tick_spacing, true)
             for param_name, param_table in pairs(params_to_check) do
                 if (parameters[param_name] or 0) ~= 0 then
+                    game.print(param_name)
                     for _, cell in pairs(just_cell or logistic_network.cells) do
                         local hash = Queue.get_hash(queue, cell.owner)
                         if not cell.mobile and cell.construction_radius > 0 and not (hash and hash[param_table.action]) then
@@ -159,8 +174,11 @@ local function run_interface(interface)
                                 entity = cell.owner,
                                 logistic_network = logistic_network,
                                 name = param_name,
+                                hash = param_name,
                                 action = param_table.action,
-                                find_type = param_table.find_filter,
+                                find_type = param_table.find_type,
+                                find_name = param_table.find_name,
+                                item_name = param_table.item_name,
                                 value = parameters[param_name],
                                 unit_number = cell.owner.unit_number
                             }
@@ -228,7 +246,8 @@ local function build_roboport_interface(event)
             cc = interface.surface.create_entity{name="roboport-interface-cc", position=pos, force=interface.force}
         end
         if not ra.valid then
-            local pos = {x = interface.position.x - 0.5, y = interface.position.y + 0.5}
+            --local pos = {x = interface.position.x - 0.5, y = interface.position.y + 0.5}
+            local pos = interface.position
             ra = interface.surface.create_entity{name="roboport-interface-scanner", position=pos, force=interface.force}
         end
         --roboports start with a buffer of energy. Lets take that away!

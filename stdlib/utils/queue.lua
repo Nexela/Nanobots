@@ -23,7 +23,7 @@ function Queue.set_hash(t, data)
     local hash = t._hash
     hash[index] = hash[index] or {}
     hash[index].count = (hash[index].count or 0) + 1
-    hash[index][data.action] = data.action
+    hash[index][data.hash] = data.hash
     return index
 end
 

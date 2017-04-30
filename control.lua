@@ -163,9 +163,11 @@ local function insert_or_spill_items(entity, item_stacks)
         end
         for _, stack in pairs(new_stacks) do
             local name, count, health = stack.name, stack.count, stack.health or 1
-            local inserted = entity.insert({name=name, count=count, health=health})
-            if inserted ~= count then
-                entity.surface.spill_item_stack(entity.position, {name=name, count=count-inserted, health=health}, true)
+            if game.item_prototypes[name] and not game.item_prototypes[name].has_flag("hidden") then
+                local inserted = entity.insert({name=name, count=count, health=health})
+                if inserted ~= count then
+                    entity.surface.spill_item_stack(entity.position, {name=name, count=count-inserted, health=health}, true)
+                end
             end
         end
         return new_stacks[1] and new_stacks[1].name and true
@@ -563,6 +565,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                     surface = ghost.surface,
                                     unit_number = ghost.unit_number,
                                     ammo = nano_ammo,
+                                    hash = "deconstruction"
                                 }
                                 Queue.insert(queue, data, next_tick())
                                 ammo_drain(player, nano_ammo, 1)
@@ -585,6 +588,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                         local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
                                         if place_item then
                                             data.action = "build_entity_ghost"
+                                            data.hash = "build_entity_ghost"
                                             data.place_item = place_item
                                             Queue.insert(queue, data, next_tick())
                                             ammo_drain(player, nano_ammo, 1)
@@ -598,7 +602,8 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                                 local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
                                                 if place_item then
                                                     data.place_item = place_item
-                                                    data.action="build_tile_ghost"
+                                                    data.action = "build_tile_ghost"
+                                                    data.hash = "build_tile_ghost"
                                                     Queue.insert(queue, data, next_tick())
                                                     ammo_drain(player, nano_ammo, 1)
                                                 end

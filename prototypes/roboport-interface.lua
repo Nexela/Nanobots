@@ -110,13 +110,13 @@ ri_cc.activity_led_light =
 --[[Radar]]--
 -------------------------------------------------------------------------------
 local ri_radar = Prototype.duplicate("radar", "radar", "roboport-interface-scanner", true)
-ri_radar.flags = {"not-blueprintable", "not-deconstructable"}
+ri_radar.flags = {"not-deconstructable", "player-creation"}
 ri_radar.icon = "__Nanobots__/graphics/icons/roboport-interface.png"
 --ri_radar.max_health = 0
 ri_radar.minable = nil
 ri_radar.collision_mask = {}
-ri_radar.selection_box = {{-0.5, -0.5}, {0.5, 0.5}}
-ri_radar.collision_box = {{-0.4, -0.4}, {0.4, 0.4}}
+ri_radar.selection_box = {{-1, -0.0}, {0.0, 1}}
+ri_radar.collision_box = {{-0.9, -0.9}, {0.9, 0.9}}
 ri_radar.pictures = Prototype.empty_animation
 ri_radar.max_distance_of_sector_revealed = 0
 ri_radar.max_distance_of_nearby_sector_revealed = 1
@@ -136,7 +136,7 @@ local ri_roboport = {
     --fast_replaceable_group = "roboport",
     max_health = 500,
     corpse = "small-remnants",
-    collision_box = {{-0.9, -0.9}, {0.9, 0.4}},
+    collision_box = {{-0.9, -0.9}, {0.9, 0.9}},
     selection_box = {{-1, -1}, {1, 0}},
     dying_explosion = "medium-explosion",
     energy_source =
