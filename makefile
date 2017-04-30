@@ -20,9 +20,18 @@ SED_EXPRS += -e 's/{{VERSION}}/$(VERSION_STRING)/g'
 
 all: clean
 
-release: clean check package tag
+release: clean check package
 
 optimized-release: clean check optimize-package
+
+commit-release:
+	git add .
+	git commit -m "Package for Release $(VERSION_STRING)"
+	git checkout master
+	git merge develop
+	git tag v$(VERSION_STRING)
+	git push --all
+	git push --tags
 
 package-copy: $(PKG_DIRS) $(PKG_FILES)
 	@mkdir -p $(OUTPUT_DIR)
