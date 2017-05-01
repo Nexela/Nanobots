@@ -36,7 +36,6 @@ local bot_radius = MOD.config.BOT_RADIUS
 local queue_speed = MOD.config.QUEUE_SPEED_BONUS
 
 local transport_types = MOD.config.TRANSPORT_TYPES
-local allowed_not_on_map = MOD.config.ALLOWED_NOT_ON_MAP
 
 local AFK_TIME = 4 * defines.time.second
 
@@ -550,7 +549,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
 
     for _, ghost in pairs(player.surface.find_entities(area)) do
-        if allowed_not_on_map[ghost.name] or ghost.type == "item-on-ground"or not ghost.has_flag("not-on-map") then
+        if ghost.to_be_deconstructed or ghost.force == player.force then
             if nano_ammo.valid and nano_ammo.valid_for_read then
                 if not config["nanobots-network-limits"].value or nano_network_check(player.character, ghost) then
                     if queue_count() < config["nanobots-nano-queue-per-cycle"].value then
@@ -681,7 +680,7 @@ end
 local function poll_players(event)
     local config = settings["global"]
     --Run logic for nanobots and power armor modules
-    if event.tick % math.max(config["nanobots-nano-poll-rate"].value/#game.connected_players) == 0 then
+    if event.tick % math.max(1, math.floor(config["nanobots-nano-poll-rate"].value/#game.connected_players)) == 0 then
         local last_player, player = next(game.connected_players, global._last_player)
         --Establish connected, non afk, player character
         if player and is_connected_player_ready(player) then

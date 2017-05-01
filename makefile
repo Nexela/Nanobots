@@ -4,6 +4,8 @@ OUTPUT_NAME := $(PACKAGE_NAME)_$(VERSION_STRING)
 BUILD_DIR := .build
 OUTPUT_DIR := $(BUILD_DIR)/$(OUTPUT_NAME)
 CONFIG = ./$(OUTPUT_DIR)/config.lua
+MODS_DIRECTORY := ../.mods.15
+##MOD_LINK := $(shell find $(MODS_DIRECTORY)/$(OUTPUT_NAME) -mindepth 1 -maxdepth 1 -type d)
 
 PKG_COPY := $(wildcard *.md) $(wildcard .*.md) $(wildcard graphics) $(wildcard locale) $(wildcard sounds)
 
@@ -20,18 +22,9 @@ SED_EXPRS += -e 's/{{VERSION}}/$(VERSION_STRING)/g'
 
 all: clean
 
-release: clean check package
+release: clean check package tag
 
 optimized-release: clean check optimize-package
-
-commit-release:
-	git add .
-	git commit -m "Package for Release $(VERSION_STRING)"
-	git checkout master
-	git merge develop
-	git tag v$(VERSION_STRING)
-	git push --all
-	git push --tags
 
 package-copy: $(PKG_DIRS) $(PKG_FILES)
 	@mkdir -p $(OUTPUT_DIR)
@@ -47,6 +40,24 @@ $(OUTPUT_DIR)/%.lua: %.lua
 $(OUTPUT_DIR)/%: %
 	@mkdir -p $(@D)
 	@sed $(SED_EXPRS) $< > $@
+
+link2:
+	([ -d "$(MODS_DIRECTORY)/$(OUTPUT_NAME)" ]  && \
+	echo "Junction does not need updating.") || \
+	@[ -d "$(MODS_DIRECTORY)/$(PACKAGE_NAME)*" ] && \
+	echo "Updating Junction" && \
+	mv $(MODS_DIRCTORY)/$(PACKAGE_NAME)* $(MODS_DIRECTORY)/$(OUTPUT_NAME)
+
+link:
+	if test -d $(MODS_DIRECTORY)/$(PACKAGE_NAME)*; then \
+		if test -d $(MODS_DIRECTORY)/$(OUTPUT_NAME); then \
+			echo "Dont Update"; \
+		else \
+			echo "DO STUFF"; \
+		fi \
+	else \
+		echo "No Target to Link"; \
+	fi
 
 tag:
 	git tag -f v$(VERSION_STRING)

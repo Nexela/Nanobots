@@ -1,24 +1,11 @@
-data:extend({
-        {
-            type = "font",
-            name = "nano-button-font",
-            from = "default",
-            size = 8
-        },
-        {
-            type = "custom-input",
-            name = "nano-increase-radius",
-            key_sequence = "PAD +",
-            consuming = "all"
-        },
-        {
-            type = "custom-input",
-            name = "nano-decrease-radius",
-            key_sequence = "PAD -",
-            consuming = "all"
-        }
-
-    })
+data:extend{
+    {
+        type = "font",
+        name = "nano-button-font",
+        from = "default",
+        size = 8
+    },
+}
 
 local style = data.raw["gui-style"].default
 

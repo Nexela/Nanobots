@@ -23,7 +23,7 @@ local item_nano_gun = {
     {
         type = "projectile",
         ammo_category = "nano-ammo",
-        cooldown = 30,
+        cooldown = 60,
         movement_slow_down_factor = 0.0,
         shell_particle = nil,
         projectile_creation_distance = 1.125,

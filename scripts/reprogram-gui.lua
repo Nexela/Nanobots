@@ -7,6 +7,10 @@ local match_to_item = {
 
 local bot_radius = MOD.config.BOT_RADIUS
 
+local function get_match(stack)
+    return stack.valid_for_read and match_to_item[stack.name]
+end
+
 local function remove_gui(player, frame_name)
     return player.gui.left[frame_name] and player.gui.left[frame_name].destroy()
 end
@@ -61,19 +65,32 @@ local function increase_decrease_reprogrammer(event, change)
             end
             pdata.ranges[stack.name] = ((radius > 0 and radius < 1000) and radius) or nil
             text_field.text = pdata.ranges[stack.name] or max_radius
-            --game.print(stack.name .." max = "..max_radius.." stored = ".. (pdata.ranges[stack.name] or "not saved"))
         end
     else
         remove_gui(player, "nano_frame_main")
     end
 end
 
-Event.gui_hotkeys = Event.gui_hotkeys or {}
-Event.gui_hotkeys["nano-increase-radius"] = function (event) increase_decrease_reprogrammer(event, 1) end
-Event.gui_hotkeys["nano-decrease-radius"] = function (event) increase_decrease_reprogrammer(event, -1) end
-for event_name in pairs(Event.gui_hotkeys) do
-    script.on_event(event_name, Event.gui_hotkeys[event_name])
+local function adjust_pad(event)
+    local player = game.players[event.player_index]
+    if get_match(player.cursor_stack) and player.gui.left["nano_frame_main"] then
+        if event.input_name == "adjustment-pad-increase" then
+            increase_decrease_reprogrammer(event, 1)
+        elseif event.input_name == "adjustment-pad-decrease" then
+            increase_decrease_reprogrammer(event, -1)
+        end
+    end
 end
+
+local function load_pad()
+    if remote.interfaces["picker"] and remote.interfaces["picker"]["get_adjustment_pad_id"] then
+        Event.register(remote.call("picker", "get_adjustment_pad_id"), adjust_pad)
+    end
+end
+
+Event.register(Event.core_events.load, load_pad)
+Event.register(Event.core_events.init, load_pad)
+
 Event.register(defines.events.on_player_cursor_stack_changed, increase_decrease_reprogrammer)
 Gui.on_text_changed("nano_text_box", function (event) increase_decrease_reprogrammer(event, 0) end)
 Gui.on_click("nano_btn_up", function (event) increase_decrease_reprogrammer(event, 1) end)

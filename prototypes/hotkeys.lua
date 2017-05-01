@@ -11,7 +11,7 @@ data:extend
     {
         type = "custom-input",
         name = "switch-player-gun-while-driving",
-        key_sequence = "Q",
+        key_sequence = "TAB",
         consuming = "none",
     },
     {
