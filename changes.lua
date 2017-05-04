@@ -10,7 +10,7 @@ old_version :: string: Old version of the mod. May be nil if the mod wasn't prev
 new_version :: string: New version of the mod. May be nil if the mod is no longer present (i.e. it was just removed).
 --]]
 local mod_name = MOD.name or "not-set"
-local migrations = {"1.2.0", "1.2.3", "1.7.0", "1.7.4", "1.8.0"}
+local migrations = {"1.2.0", "1.2.3", "1.7.0", "1.7.4", "1.8.0", "1.8.2"}
 local changes = {}
 
 --Mark all migrations as complete during Init.
@@ -133,6 +133,10 @@ end
 
 changes["1.8.0"] = function()
     global.config = nil
+end
+
+changes["1.8.2"] = function()
+    MOD.interface.reset_queue("nano_queue")
 end
 
 -------------------------------------------------------------------------------

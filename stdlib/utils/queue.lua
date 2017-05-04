@@ -27,6 +27,19 @@ function Queue.set_hash(t, data)
     return index
 end
 
+function Queue.count(t)
+    local count, hash_count = 0, 0
+    for index in pairs(t) do
+        if type(index) == "number" then
+            count = count + 1
+        end
+    end
+    for _ in pairs(t._hash) do
+        hash_count = hash_count + 1
+    end
+    return count, hash_count
+end
+
 function Queue.get_hash(t, entity)
     local index = entity.unit_number or cantorPair_v7(entity.position)
     return t._hash[index]

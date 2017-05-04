@@ -12,25 +12,33 @@ function interface.reset_mod(are_you_sure)
     end
 end
 
-function interface.reset_nano_queue()
-    global.nano_queue = Queue.new()
-    MOD.log("Resetting Nano Queue", 2)
-end
-function interface.reset_cell_queue()
-    global.nano_queue = Queue.new()
-    MOD.log("Resetting Interface Queue", 2)
-end
-
-function interface.get_nano_queue()
-    return(global.nano_queue)
-end
-function interface.get_cell_queue()
-    return(global.cell_queue)
+function interface.reset_queue(queue)
+    queue = queue or "nano_queue"
+    MOD.log("Resetting "..queue, 2)
+    if global[queue] then
+        global[queue] = Queue.new()
+        for _, player in pairs(global.players) do
+            player._next_nano_tick = 0
+        end
+    end
 end
 
-function interface.add_to_queue(data, tick)
-    if tick and data and type(data) =="table" and data.action then
-        Queue.insert(global.queue, data, tick)
+function interface.count_queue(queue)
+    local a, b = Queue.count(global[queue])
+    MOD.log("Queued:"..a.." Hashed:"..b, 2)
+end
+
+function interface.get_queue(queue)
+    queue = queue or "nano_queue"
+    if global[queue] then
+        return(global.nano_queue)
+    end
+end
+
+function interface.add_to_queue(queue, data, tick)
+    queue = queue or "nano_queue"
+    if global[queue] and tick and data and type(data) =="table" and data.action then
+        Queue.insert(global[queue], data, tick)
         return true
     end
 end
@@ -50,10 +58,10 @@ interface.console = require("stdlib/debug/console")
 --Register with creative-mode for easy testing
 if remote.interfaces["creative-mode"] and remote.interfaces["creative-mode"]["register_remote_function_to_modding_ui"] then
     log("Nanobots - Registering with Creative Mode")
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "print_global")
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "reset_mod")
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "reset_queue")
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.interface, "console")
+    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "print_global")
+    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "reset_mod")
+    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "reset_queue")
+    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "console")
 end
 
 return interface

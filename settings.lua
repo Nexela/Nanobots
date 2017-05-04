@@ -35,20 +35,20 @@ data:extend{
         type = "int-setting",
         name = "nanobots-nano-queue-per-cycle",
         setting_type = "runtime-global",
-        default_value = 80,
-        maximum_value = 400,
+        default_value = 100,
+        maximum_value = 800,
         minimum_value = 1,
         order = "nanobots-ad[nano-queue-rate]-f"
     },
-    {
-        type = "int-setting",
-        name = "nanobots-indside-area-radius",
-        setting_type = "runtime-global",
-        default_value = 60,
-        maximum_value = 600,
-        minimum_value = 6,
-        order = "nanobots-ae[nano-poll-rate]-f"
-    },
+    -- {
+    --     type = "int-setting",
+    --     name = "nanobots-indside-area-radius",
+    --     setting_type = "runtime-global",
+    --     default_value = 60,
+    --     maximum_value = 600,
+    --     minimum_value = 6,
+    --     order = "nanobots-ae[nano-poll-rate]-f"
+    -- },
     {
         type = "int-setting",
         name = "nanobots-cell-queue-rate",
@@ -82,5 +82,3 @@ data:extend{
         order = "nanobots-z[sync-cheat-mode]-f"
     },
 }
-
--- NANO.control.inside_area_radius = 60

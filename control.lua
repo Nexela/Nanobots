@@ -3,7 +3,8 @@ require("stdlib")
 MOD = {}
 MOD.name = "Nanobots"
 MOD.fullname = "Nanobots"
-MOD.interface = "nanobots"
+MOD.if_name = "nanobots"
+MOD.interface = require("interface")
 MOD.config = require("config")
 MOD.version = "1.7.0"
 MOD.logfile = Logger.new(MOD.fullname, "log", MOD.config.DEBUG or false, {log_ticks = true, file_extension = "lua"})
@@ -390,73 +391,71 @@ function Queue.deconstruction(data)
     local entity, player = data.entity, game.players[data.player_index]
     if player and player.valid then
         if entity and entity.valid and entity.to_be_deconstructed(player.force) then
-            if Area.inside(Position.expand_to_area(entity.position, 40), player.position) then
-                local item_stacks, this_product = {}, {}
+            local item_stacks, this_product = {}, {}
 
-                --Get all items inside of the entity.
-                if entity.has_items_inside() then
-                    item_stacks = get_all_items_inside(entity, item_stacks)
-                end
+            --Get all items inside of the entity.
+            if entity.has_items_inside() then
+                item_stacks = get_all_items_inside(entity, item_stacks)
+            end
 
-                --Loop through the minable products and add the item(s) to the list
-                local products
-                if (entity.name ~= "deconstructible-tile-proxy"
-                    and entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable) then
-                    products = entity.prototype.mineable_properties.products
-                elseif entity.name == "deconstructible-tile-proxy" then
-                    local tile = entity.surface.get_tile(entity.position)
-                    if tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
-                        products = tile.prototype.mineable_properties.products
-                    else
-                        --Can't mine the tile so destroy the proxy.
-                        entity.destroy()
-                        return
-                    end
-                end
-
-                if products then
-                    for _, item in pairs(products) do
-                        local max_health = entity.health and entity.prototype.max_health
-                        local health = 1
-                        if entity.force == player.force then
-                            health = (entity.health and entity.health/max_health) or 1
-                        end
-                        item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or random(item.amount_min, item.amount_max), health=health}
-                    end
-                    this_product = item_stacks[#item_stacks]
-                end
-
-                --Get all of the items on ground.
-                if entity.type == "item-entity" then
-                    item_stacks[#item_stacks+1] = {name=entity.stack.name, count=entity.stack.count, health=entity.stack.health or 1}
-                    if not this_product.name then this_product = item_stacks[#item_stacks] end
-                end
-
-                create_projectile("nano-projectile-deconstructors", entity.surface, entity.force, player.position, entity.position)
-                --Start inserting items!
-                if #item_stacks > 0 then
-                    insert_or_spill_items(player, item_stacks)
-                    create_projectile("nano-projectile-return", entity.surface, entity.force, entity.position, player.position)
-                end
-
-                --This shouldn't be needed but it won't hurt.
-                if not this_product.name then
-                    this_product = {name=(entity.type == "item-entity" and entity.stack.name) or entity.name, count=1}
-                end
-
-                if entity.name ~= "deconstructible-tile-proxy" then -- Destroy Entities
-                    script.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
-                    script.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
+            --Loop through the minable products and add the item(s) to the list
+            local products
+            if (entity.name ~= "deconstructible-tile-proxy"
+                and entity.prototype.mineable_properties and entity.prototype.mineable_properties.minable) then
+                products = entity.prototype.mineable_properties.products
+            elseif entity.name == "deconstructible-tile-proxy" then
+                local tile = entity.surface.get_tile(entity.position)
+                if tile.prototype.mineable_properties and tile.prototype.mineable_properties.minable then
+                    products = tile.prototype.mineable_properties.products
+                else
+                    --Can't mine the tile so destroy the proxy.
                     entity.destroy()
-                else -- Destroy tiles
-                    local surface, position = entity.surface, entity.position
-                    script.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
-                    entity.destroy()
-                    surface.set_tiles({{name=surface.get_hidden_tile(position), position=position}})
-                    script.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
-                    script.raise_event(defines.events.on_player_mined_tile, {player_index=player.index, positions={position}})
+                    return
                 end
-            end -- Inside working area
+            end
+
+            if products then
+                for _, item in pairs(products) do
+                    local max_health = entity.health and entity.prototype.max_health
+                    local health = 1
+                    if entity.force == player.force then
+                        health = (entity.health and entity.health/max_health) or 1
+                    end
+                    item_stacks[#item_stacks+1] = {name=item.name, count=item.amount or random(item.amount_min, item.amount_max), health=health}
+                end
+                this_product = item_stacks[#item_stacks]
+            end
+
+            --Get all of the items on ground.
+            if entity.type == "item-entity" then
+                item_stacks[#item_stacks+1] = {name=entity.stack.name, count=entity.stack.count, health=entity.stack.health or 1}
+                if not this_product.name then this_product = item_stacks[#item_stacks] end
+            end
+
+            create_projectile("nano-projectile-deconstructors", entity.surface, entity.force, player.position, entity.position)
+            --Start inserting items!
+            if #item_stacks > 0 then
+                insert_or_spill_items(player, item_stacks)
+                create_projectile("nano-projectile-return", entity.surface, entity.force, entity.position, player.position)
+            end
+
+            --This shouldn't be needed but it won't hurt.
+            if not this_product.name then
+                this_product = {name=(entity.type == "item-entity" and entity.stack.name) or entity.name, count=1}
+            end
+
+            if entity.name ~= "deconstructible-tile-proxy" then -- Destroy Entities
+                script.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
+                script.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
+                entity.destroy()
+            else -- Destroy tiles
+                local surface, position = entity.surface, entity.position
+                script.raise_event(defines.events.on_preplayer_mined_item, {player_index=player.index, entity=entity})
+                entity.destroy()
+                surface.set_tiles({{name=surface.get_hidden_tile(position), position=position}})
+                script.raise_event(defines.events.on_player_mined_item, {player_index=player.index, item_stack=this_product})
+                script.raise_event(defines.events.on_player_mined_tile, {player_index=player.index, positions={position}})
+            end
         end--Valid entity
     end--Valid player
 end
@@ -465,29 +464,25 @@ function Queue.build_entity_ghost(data)
     local ghost, player, ghost_surf, ghost_pos = data.entity, game.players[data.player_index], data.surface, data.position
     if (player and player.valid) then
         if ghost.valid then
-            if Area.inside(Position.expand_to_area(ghost.position, 40), player.position) then
-                local item_stacks = get_all_items_on_ground(ghost)
-                if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
-                    local revived, entity, requests = ghost.revive(true)
-                    if revived then
-                        create_projectile("nano-projectile-constructors", entity.surface, entity.force, player.position, entity.position)
-                        entity.health = (entity.health > 0) and ((data.place_item.health or 1) * entity.prototype.max_health)
-                        if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
-                            create_projectile("nano-projectile-return", ghost_surf, player.force, ghost_pos, player.position)
-                        end
-                        if requests then
-                            satisfy_requests(requests, entity, player)
-                        end
-                        script.raise_event(defines.events.on_built_entity, {player_index=player.index, created_entity=entity, revived=true})
-                    else --not revived, return item
-                        insert_or_spill_items(player, {data.place_item})
-                    end --revived
-                else --can't build
+            local item_stacks = get_all_items_on_ground(ghost)
+            if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
+                local revived, entity, requests = ghost.revive(true)
+                if revived then
+                    create_projectile("nano-projectile-constructors", entity.surface, entity.force, player.position, entity.position)
+                    entity.health = (entity.health > 0) and ((data.place_item.health or 1) * entity.prototype.max_health)
+                    if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
+                        create_projectile("nano-projectile-return", ghost_surf, player.force, ghost_pos, player.position)
+                    end
+                    if requests then
+                        satisfy_requests(requests, entity, player)
+                    end
+                    script.raise_event(defines.events.on_built_entity, {player_index=player.index, created_entity=entity, revived=true})
+                else --not revived, return item
                     insert_or_spill_items(player, {data.place_item})
-                end --can build
-            else --not inside area
+                end --revived
+            else --can't build
                 insert_or_spill_items(player, {data.place_item})
-            end --inside area
+            end --can build
         else --not valid ghost
             insert_or_spill_items(player, {data.place_item})
         end --valid ghost
@@ -498,7 +493,6 @@ function Queue.build_tile_ghost(data)
     local ghost, surface, position, player = data.entity, data.surface, data.position, game.players[data.player_index]
     if (player and player.valid) then
         if ghost.valid then
-            if Area.inside(Position.expand_to_area(ghost.position, 40), player.position) then
                 local tile, hidden_tile = surface.get_tile(position), surface.get_hidden_tile(position)
                 local force = ghost.force
                 -- Is there any existing tile that needs returned
@@ -522,9 +516,6 @@ function Queue.build_tile_ghost(data)
                 else --Can't revive tile
                     insert_or_spill_items(player, {data.place_item})
                 end --revive tile
-            else --not inside area
-                insert_or_spill_items(player, {data.place_item})
-            end --inside area
         else --Give the item back ghost isn't valid anymore.
             insert_or_spill_items(player, {data.place_item})
         end --valid ghost
@@ -543,13 +534,14 @@ end
 local function queue_ghosts_in_range(player, pos, nano_ammo)
     local queue, config = global.nano_queue, settings["global"]
     local pdata = global.players[player.index]
+    local _next_nano_tick = (pdata._next_nano_tick and pdata._next_nano_tick < (game.tick + 2000) and pdata._next_nano_tick) or game.tick
     local tick_spacing = max(1, config["nanobots-nano-queue-rate"].value - queue_speed[player.force.get_gun_speed_modifier("nano-ammo")])
-    local next_tick, queue_count = Queue.next(queue, pdata._next_nano_tick or game.tick, tick_spacing)
+    local next_tick, queue_count = Queue.next(queue, _next_nano_tick, tick_spacing)
     local radius = get_ammo_radius(player, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
 
     for _, ghost in pairs(player.surface.find_entities(area)) do
-        if ghost.to_be_deconstructed or ghost.force == player.force then
+        if ghost.to_be_deconstructed(player.force) or ghost.force == player.force then
             if nano_ammo.valid and nano_ammo.valid_for_read then
                 if not config["nanobots-network-limits"].value or nano_network_check(player.character, ghost) then
                     if queue_count() < config["nanobots-nano-queue-per-cycle"].value then
@@ -640,7 +632,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
             end --valid ammo
         end -- not flag not_on_map
     end --looping through entities
-    pdata._next_nano_tick = next_tick()
+    pdata._next_nano_tick = queue_count() > 0 and next_tick() or game.tick
 end --function
 
 --Nano Termites
@@ -749,5 +741,6 @@ function MOD.on_init()
 end
 Event.register(Event.core_events.init, MOD.on_init)
 
-local interface = require("interface")
-remote.add_interface(MOD.interface, interface)
+local interface = MOD.interface
+remote.add_interface(MOD.if_name, interface)
+commands.add_command("Nanobots-reset", "Reset Nano Queue", function() interface.reset_queue() end)

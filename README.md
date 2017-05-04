@@ -61,6 +61,7 @@ The roboport interface allows you to program your logistic networks to do mundan
 -   Found a bug? Report it here: <https://github.com/Nexela/Nanobots/issues>
 
 #### Latest changes
+-   1.8.2 - Fixed instances where next tick would be far in the future, Removed inside area checks to avoid bad queue.
 -   1.8.1 - Minor bugs fixed.
 -   1.8.0 - Convert to Mod settings, Fix power icons, fix module insertion, update custom stdlib, Fix network checks, Better MP queuing, Roboport interface can order bots to go fishing!
 
