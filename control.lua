@@ -22,7 +22,7 @@ Event.mined_events = {defines.events.on_preplayer_mined_item, defines.events.on_
 
 if MOD.config.DEBUG then
     log(MOD.name .. " Debug mode enabled")
-    QS = MOD.config.quickstart --luacheck: ignore QS
+    --QS = MOD.config.quickstart --luacheck: ignore QS
     require("stdlib/debug/quickstart")
 end
 

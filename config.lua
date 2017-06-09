@@ -1,6 +1,6 @@
 local NANO = {}
 
-NANO.DEBUG = true
+NANO.DEBUG = false
 
 --Combat robot names, indexed by capsule name
 NANO.COMBAT_ROBOTS = {
@@ -41,20 +41,26 @@ NANO.control.loglevel = 2
 --These settings only affect debug mode, no need to change them
 NANO.quickstart = {
     clear_items = true,
-    power_armor = true,
+    power_armor = "power-armor-mk2",
+    equipment = {
+        "creative_mode-super-fusion-reactor-equipment",
+        "personal-roboport-mk2-equipment",
+        "belt-immunity-equipment"
+    },
     destroy_everything = true,
     disable_rso_starting = true,
     disable_rso_chunk = true,
     floor_tile = "concrete",
     mod_name = "Nanobots",
-    area_box = {{-200, -200}, {200, 200}},
+    area_box = {{-250, -250}, {250, 250}},
+    chunk_bounds = true,
+    center_map_tag = true,
+    setup_power = true,
     stacks = {
-        "blueprint",
-        "deconstruction-planner",
         "creative-mode_matter-source",
         "creative-mode_fluid-source",
         "creative-mode_energy-source",
-        "creative-mode_super-electric-pole",
+        "creative-mode_super-substation",
         "construction-robot",
         "creative-mode_magic-wand-modifier",
         "creative-mode_super-roboport",
@@ -62,13 +68,6 @@ NANO.quickstart = {
         "ammo-nano-constructors",
         "stone-furnace",
         "ammo-nano-deconstructors",
-        "equipment-bot-chip-launcher",
-        "equipment-bot-chip-trees",
-        "equipment-bot-chip-items",
-        "chain-gun",
-        "chain-ammo",
-        "roboport-interface-main",
-        "belt-immunity-equipment"
     }
 }
 

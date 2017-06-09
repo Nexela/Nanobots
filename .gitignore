@@ -6,3 +6,4 @@
 /.legacy
 /build
 /.build
+.luacompleterc

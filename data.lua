@@ -1,4 +1,6 @@
 local NANO = require("config")
+require("stdlib/string")
+require("stdlib/table")
 require("stdlib/defines/colors")
 require("stdlib/defines/time")
 
@@ -40,4 +42,6 @@ require("prototypes/sounds")
 
 if NANO.DEBUG then
     data.raw["furnace"]["stone-furnace"].max_health = 10000
+    local debug_prototypes = require("stdlib/debug/prototypes")
+    debug_prototypes.make_chunk_markers("Nanobots")
 end
