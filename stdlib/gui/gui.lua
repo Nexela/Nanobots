@@ -1,6 +1,8 @@
 --- Gui module
 -- @module Gui
 
+--luacheck: ignore Gui
+
 require 'stdlib/event/event'
 local fail_if_missing = require 'stdlib/core'["fail_if_missing"]
 
