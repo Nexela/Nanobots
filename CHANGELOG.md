@@ -36,3 +36,6 @@
 -   1.7.7 - Adds in belt immunity equipment
 -   1.7.8 - Quick Fix for Forces
 -   1.8.0 - Convert to Mod settings, Fix power icons, fix module insertion, update custom stdlib, Fix network checks, Better MP queuing, Roboport interface can order bots to go fishing!
+-   1.8.1 - Minor bugs fixed.
+-   1.8.2 - Fixed instances where next tick would be far in the future, Removed inside area checks to avoid bad queue.
+-   1.8.3 - Add setting to disable tile building, Switch to mine_entity and mine_tile, Cache settings

@@ -87,13 +87,13 @@ Queue.mark_items_or_trees = function(data)
         local surface, force, position = get_entity_info(data.logistic_cell.owner)
         if not (data.find_type or data.find_name) then data.find_type = "NIL" end
         if not surface.find_nearest_enemy{position = position, max_distance = data.logistic_cell.construction_radius, force = force} then
-            local config = settings["global"]
             local filter = {
                 area = Position.expand_to_area(position, data.logistic_cell.construction_radius),
                 name = data.find_name,
                 type = data.find_type,
                 limit = 300
             }
+            local config = settings["global"]
             local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots * (config["nanobots-free-bots-per"].value / 100))
             local limit = -99999999999
             if data.value < 0 and data.item_name then

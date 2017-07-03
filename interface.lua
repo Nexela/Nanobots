@@ -24,6 +24,7 @@ function interface.reset_queue(queue)
 end
 
 function interface.count_queue(queue)
+    queue = queue or "nano_queue"
     local a, b = Queue.count(global[queue])
     MOD.log("Queued:"..a.." Hashed:"..b, 2)
 end
@@ -45,10 +46,8 @@ end
 
 function interface.print_global(name)
     if name and type(name) == "string" then
-        --game.print(name.."="..serpent.block(global[name], {comment=false, sparse=true}))
         game.write_file("/Nanobots/global.lua", name.."="..serpent.block(global[name], {nocode=true, sortkeys=true, comment=false, sparse=true}))
     else
-        --game.print(serpent.block(global, {comment=false, sparse=true}))
         game.write_file("/Nanobots/global.lua", serpent.block(global, {nocode=true, sortkeys=true, comment=false, sparse=true}))
     end
 end
@@ -57,10 +56,7 @@ interface.console = require("stdlib/debug/console")
 
 --Register with creative-mode for easy testing
 if remote.interfaces["creative-mode"] and remote.interfaces["creative-mode"]["register_remote_function_to_modding_ui"] then
-    log("Nanobots - Registering with Creative Mode")
     remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "print_global")
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "reset_mod")
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "reset_queue")
     remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "console")
 end
 

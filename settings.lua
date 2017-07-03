@@ -8,6 +8,13 @@ data:extend{
     },
     {
         type = "bool-setting",
+        name = "nanobots-nano-build-tiles",
+        setting_type = "runtime-global",
+        default_value = true,
+        order = "nanobots-aa[build-tiles]-f"
+    },
+    {
+        type = "bool-setting",
         name = "nanobots-network-limits",
         setting_type = "runtime-global",
         default_value = true,
@@ -40,15 +47,6 @@ data:extend{
         minimum_value = 1,
         order = "nanobots-ad[nano-queue-rate]-f"
     },
-    -- {
-    --     type = "int-setting",
-    --     name = "nanobots-indside-area-radius",
-    --     setting_type = "runtime-global",
-    --     default_value = 60,
-    --     maximum_value = 600,
-    --     minimum_value = 6,
-    --     order = "nanobots-ae[nano-poll-rate]-f"
-    -- },
     {
         type = "int-setting",
         name = "nanobots-cell-queue-rate",
