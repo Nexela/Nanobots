@@ -52,12 +52,23 @@ function interface.print_global(name)
     end
 end
 
+function interface.print_settings()
+    local tab = {startup = {}, global = {}, user = {}}
+    for _, group in pairs({"startup", "global"}) do
+        for name, setting in pairs(settings[group]) do
+            tab[group][name] = setting.value
+        end
+    end
+    game.write_file("/Nanobots/settings.lua", serpent.block(tab, {nocode = true, sortkeys = true, comment = false, sparse = true}))
+end
 interface.console = require("stdlib/debug/console")
 
 --Register with creative-mode for easy testing
-if remote.interfaces["creative-mode"] and remote.interfaces["creative-mode"]["register_remote_function_to_modding_ui"] then
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "print_global")
-    remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "console")
+function interface.creative_mode_register()
+    if remote.interfaces["creative-mode"] and remote.interfaces["creative-mode"]["register_remote_function_to_modding_ui"] then
+        remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "print_global")
+        remote.call("creative-mode", "register_remote_function_to_modding_ui", MOD.if_name, "console")
+    end
 end
 
 return interface

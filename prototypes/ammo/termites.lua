@@ -64,7 +64,7 @@ local cloud_big_termites = {
     duration = 60*2,
     fade_away_duration = 60,
     spread_duration = 10,
-    color = Color.set(defines.colors.lightgreen, .35),
+    color = Color.set(defines.color.lightgreen, .35),
     action_cooldown = 60,
     action =
     {
@@ -99,7 +99,7 @@ local cloud_small_termites = {
     duration = 60*10,
     fade_away_duration = 2*60,
     spread_duration = 10,
-    color = Color.set(defines.colors.lightgreen, .35),
+    color = Color.set(defines.color.lightgreen, .35),
     action_cooldown = 30,
     action =
     {

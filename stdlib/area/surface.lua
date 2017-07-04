@@ -1,10 +1,12 @@
---- Surface module
--- @module Surface
+--- A "domain" of the world.
+-- @module Surface For working with surfaces
+-- @usage local Surface = require('stdlib/area/surface')
+-- @see LuaSurface
 
-local fail_if_missing = require 'stdlib/core'["fail_if_missing"]
+local fail_if_missing = require 'stdlib/core'['fail_if_missing']
 local Area = require 'stdlib/area/area'
 
-local Surface = {}
+Surface = {} --luacheck: allow defined top
 
 --- Flexible, safe lookup function for surfaces. <p>
 -- May be given a string, the name of a surface, or may be given a table with surface names,
@@ -13,42 +15,46 @@ local Surface = {}
 -- Returns an array of surface objects of all valid, existing surfaces
 -- If a surface does not exist for the surface, it is ignored, if no surfaces
 -- are given, an empty array is returned.
--- @param surface to lookup
--- @treturn LuaSurface[] the list of surfaces looked up
+-- @tparam ?|string|{string,...}|LuaSurface|{LuaSurface,...} surface to lookup
+-- @treturn {nil|LuaSurface,..} the list of valid surfaces looked up
 function Surface.lookup(surface)
     if not surface then
         return {}
     end
     if type(surface) == 'string' then
-        if game.surfaces[surface] then
-            return {game.surfaces[surface]}
+        local lookup = game.surfaces[surface]
+        if lookup then
+            return { lookup }
         end
         return {}
     end
-    local result = {}
+    if type(surface) == 'table' and surface['__self'] then
+        return Surface.lookup(surface.name)
+    end
+    local results = {}
     for _, surface_item in pairs(surface) do
         if type(surface_item) == 'string' then
             if game.surfaces[surface_item] then
-                table.insert(result, game.surfaces[surface_item])
+                table.insert(results, game.surfaces[surface_item])
             end
         elseif type(surface_item) == 'table' and surface_item['__self'] then
-            table.insert(result, surface_item)
+            table.insert(results, surface_item)
         end
     end
-    return result
+    return results
 end
 
 --- Given search criteria, a table that contains a name or type of entity to search for,
 -- and optionally surface or force, searches all loaded chunks for the entities that
 -- match the critera.
--- @usage
-----Surface.find_all_entities({ type = 'unit', surface = 'nauvis', area = {{-1000,20},{-153,2214}}) --returns a list containing all unit entities on the nauvis surface in the given area
+-- @usage surface.find_all_entities({ type = 'unit', surface = 'nauvis', area = {{-1000,20},{-153,2214}})
+-- --returns a list containing all unit entities on the nauvis surface in the given area
 -- @tparam table search_criteria a table of criteria. Must contain either the *name* or *type* or *force* of an entity. May contain *surface* or *force* or *area*.
--- @treturn table an array of all entities that matched the criteria
+-- @treturn {nil|LuaEntity,...} an array of all entities that matched the criteria
 function Surface.find_all_entities(search_criteria)
-    fail_if_missing(search_criteria, "missing search_criteria argument")
+    fail_if_missing(search_criteria, 'missing search_criteria argument')
     if search_criteria.name == nil and search_criteria.type == nil and search_criteria.force == nil and search_criteria.area == nil then
-        error("Missing search criteria field: name or type or force or area of entity", 2)
+        error('Missing search criteria field: name or type or force or area of entity', 2)
     end
 
     local surface_list = Surface.lookup(search_criteria.surface)
@@ -80,7 +86,7 @@ end
 -- @tparam LuaSurface surface
 -- @treturn table Area
 function Surface.get_surface_bounds(surface)
-    fail_if_missing(surface, "missing surface value")
+    fail_if_missing(surface, 'missing surface value')
     local x1, y1, x2, y2 = 0, 0, 0, 0
 
     for chunk in surface.get_chunks() do

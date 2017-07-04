@@ -3,7 +3,7 @@
 -------------------------------------------------------------------------------
 -- Console Code from adil modified for use with STDlib
 -- Creates a textfield allowing you to run commands directly in your mods enviorment
-require("stdlib.gui.gui")
+require("stdlib.event.gui")
 
 local function create_gui_player(player)
     if player.gui.left.console then player.gui.left.console.destroy() end

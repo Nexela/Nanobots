@@ -1,14 +1,14 @@
 --stdlib table mutates
 require("stdlib.table")
 require("stdlib.string")
-require("stdlib.defines.colors")
+require("stdlib.defines.color")
 require("stdlib.defines.time")
 
 --stdlib Globals
 require("stdlib.log.logger")
 require("stdlib.config.config")
 require("stdlib.event.event")
-require("stdlib.gui.gui")
+require("stdlib.event.gui")
 
 MOD = {}
 MOD.name = "Nanobots"
@@ -25,7 +25,6 @@ local Force = require("stdlib/force")
 local Player = require("stdlib/player")
 local Position = require("stdlib/area/position")
 local Area = require("stdlib/area/area")
-local Entity = require("stdlib/entity/entity")
 
 Event.build_events = {defines.events.on_built_entity, defines.events.on_robot_built_entity}
 Event.mined_events = {defines.events.on_preplayer_mined_item, defines.events.on_robot_pre_mined}
@@ -69,7 +68,7 @@ local inv_list = cull_inventory_list{
 }
 
 -- Local functions for commonly used math functions
-local min, random, max, floor, ceil, abs = math.min, math.random, math.max, math.floor, math.ceil, math.abs --luacheck: ignore
+local min, max, floor, ceil, abs = math.min, math.max, math.floor, math.ceil, math.abs -- luacheck: ignore
 
 local function get_settings()
     local cfg = {}
@@ -455,7 +454,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                 Queue.insert(queue, data, next_tick())
                                 ammo_drain(player, nano_ammo, 1)
                             end
-                        elseif (ghost.name == "entity-ghost" or ghost.name == "tile-ghost") and ghost.force == player.force then
+                        elseif (ghost.name == "entity-ghost" or (ghost.name == "tile-ghost" and cfg.build_tiles)) and ghost.force == player.force then
                             if not Queue.get_hash(queue, ghost) then
                                 --get first available item that places entity from inventory that is not in our hand.
                                 local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
@@ -479,9 +478,9 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                             ammo_drain(player, nano_ammo, 1)
                                         end
                                         --end
-                                    elseif ghost.name == "tile-ghost" and cfg.build_tiles then
+                                    elseif ghost.name == "tile-ghost" then
                                         --Don't queue tile ghosts if entity ghost is on top of it.
-                                        if ghost.surface.count_entities_filtered{name="entity-ghost", area = Entity.to_collision_area(ghost), limit=1} == 0 then
+                                        if ghost.surface.count_entities_filtered{name="entity-ghost", area = Area.to_collision_area(ghost), limit=1} == 0 then
                                             local tile = ghost.surface.get_tile(ghost.position)
                                             if tile then
                                                 local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
@@ -565,7 +564,9 @@ end
 --The Tick Handler!
 local function poll_players(event)
     --Run logic for nanobots and power armor modules
-    if event.tick % math.ceil(#game.connected_players/cfg.poll_rate) == 0 then
+    --if event.tick % math.ceil(#game.connected_players/cfg.poll_rate) == 0 then
+    if event.tick % max(1, floor(cfg.poll_rate/#game.connected_players)) == 0 then
+        game.print(game.tick)
         local last_player, player = next(game.connected_players, global._last_player)
         --Establish connected, non afk, player character
         if player and is_connected_player_ready(player) then

@@ -91,7 +91,7 @@ end
 
 --------------------------------------------------------------------------------------
 function flying_text(line, color, pos, surface)
-    color = color or defines.colors.red
+    color = color or defines.color.red
     line = line or "missing text" --If we for some reason didn't pass a message make a message
     if not pos then
         for _, p in pairs(game.players) do

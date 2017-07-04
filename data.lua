@@ -1,7 +1,7 @@
 local NANO = require("config")
 require("stdlib/string")
 require("stdlib/table")
-require("stdlib/defines/colors")
+require("stdlib/defines/color")
 require("stdlib/defines/time")
 
 --Custom GUI's

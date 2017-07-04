@@ -3,7 +3,6 @@
 -------------------------------------------------------------------------------
 local Area = require("stdlib/area/area")
 local Position = require("stdlib/area/position")
-local Entity = require("stdlib/entity/entity")
 local Queue = require("stdlib/utils/queue")
 
 local floor = math.floor
@@ -140,7 +139,7 @@ Queue.deconstruct_finished_miners = function(data)
 end
 
 local function find_network_and_cell(interface)
-    local port = interface.surface.find_entities_filtered{name = "roboport-interface-main", area=Entity.to_collision_area(interface)}[1]
+    local port = interface.surface.find_entities_filtered{name = "roboport-interface-main", area=Area.to_collision_area(interface)}[1]
     if port.valid then
         local network = port.logistic_network
         local cell = table.find(port.logistic_cell.neighbours, function(v) return v.construction_radius > 0 end) or port.logistic_cell
@@ -201,7 +200,7 @@ local function kill_or_remove_interface_parts(event, destroy)
     destroy = destroy or event.mod == "creative-mode"
     if event.entity.name == "roboport-interface-main" then
         local interface = event.entity
-        for _, entity in pairs(interface.surface.find_entities_filtered{area=Entity.to_collision_area(interface), force=interface.force}) do
+        for _, entity in pairs(interface.surface.find_entities_filtered{area=Area.to_collision_area(interface), force=interface.force}) do
             if entity ~= interface and entity.name:find("^roboport%-interface") then
                 _ = (destroy and entity.destroy()) or entity.die()
             end
@@ -217,7 +216,7 @@ local function build_roboport_interface(event)
     if event.created_entity.name == "roboport-interface-main" then
         local interface = event.created_entity
         local cc, ra = {}, {}
-        for _, entity in pairs(interface.surface.find_entities_filtered{area=Entity.to_collision_area(interface), force=interface.force}) do
+        for _, entity in pairs(interface.surface.find_entities_filtered{area=Area.to_collision_area(interface), force=interface.force}) do
             if entity ~= interface then
                 --If we have ghosts either via blueprint or something killed them
                 if entity.name == "entity-ghost" then
@@ -262,7 +261,7 @@ local function on_sector_scanned(event)
     --if not cc build cc.
     if event.radar.name == "roboport-interface-scanner" then
         local entity = event.radar
-        local area = Area.offset(Entity.to_collision_area(entity), {x=1, y=0})
+        local area = Area.offset(Area.to_collision_area(entity), {x=1, y=0})
         local interface = entity.surface.find_entities_filtered{name="roboport-interface-cc", area = area, limit=1}
         if interface[1] and interface[1].valid then
             run_interface(interface[1])

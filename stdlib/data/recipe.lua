@@ -1,11 +1,12 @@
---- Recipe module
+--- For working with raw recipes.
+-- Only useable in the mod data stage.
 -- @module Recipe
--- luacheck: ignore item
+-- @usage local Data = require('stdlib/data/data')
 
-local fail_if_missing = require 'stdlib/core'["fail_if_missing"]
+local fail_if_missing = require 'stdlib/core'['fail_if_missing']
 local Data = require 'stdlib/data/data'
 
-local Recipe = {}
+Recipe = {} --luacheck: allow defined top
 
 --- Selects all recipe values where the key matches the selector pattern.
 -- The selector pattern is divided into groups. The pattern should have a colon character `:` to denote the selection for each group.
@@ -66,7 +67,7 @@ end
 
 -- this metatable is set on recipes, to control access to ingredients and results
 Recipe._item_metatable = {}
-Recipe._item_metatable.new = function(item)
+Recipe._item_metatable.new = function(item)  --luacheck: ignore item
     local self = { }
     self.__index = function(tbl, key)
         if type(key) == 'number' then
