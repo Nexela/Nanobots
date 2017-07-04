@@ -566,7 +566,6 @@ local function poll_players(event)
     --Run logic for nanobots and power armor modules
     --if event.tick % math.ceil(#game.connected_players/cfg.poll_rate) == 0 then
     if event.tick % max(1, floor(cfg.poll_rate/#game.connected_players)) == 0 then
-        game.print(game.tick)
         local last_player, player = next(game.connected_players, global._last_player)
         --Establish connected, non afk, player character
         if player and is_connected_player_ready(player) then

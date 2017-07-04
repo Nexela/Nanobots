@@ -39,3 +39,5 @@
 -   1.8.1 - Minor bugs fixed.
 -   1.8.2 - Fixed instances where next tick would be far in the future, Removed inside area checks to avoid bad queue.
 -   1.8.3 - Add setting to disable tile building, Switch to mine_entity and mine_tile, Cache settings
+-   1.8.4 - Fix script bug, update stdlib
+-   1.8.5 - Remove degbug spam
