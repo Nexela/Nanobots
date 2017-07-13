@@ -2,7 +2,6 @@
 --[[armormods]]-- Power Armor module code.
 -------------------------------------------------------------------------------
 local armormods = {}
-require("scripts/armormods/armormods-hotkeys")
 
 --TODO: Store this in global and update in on_con_changed
 --TODO: Remote call for inserting/removing into table

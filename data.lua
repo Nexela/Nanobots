@@ -8,7 +8,6 @@ require("stdlib/defines/time")
 require("prototypes/gui")
 
 --Custom hotkeys
-require("prototypes/hotkeys")
 
 --Custom virtual signals
 require("prototypes/signals")
