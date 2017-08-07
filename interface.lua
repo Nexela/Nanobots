@@ -1,4 +1,4 @@
-local Queue = require("stdlib/utils/queue")
+local Queue = require("stdlib/utils/hash_queue")
 local interface = {}
 
 function interface.reset_mod(are_you_sure)
@@ -61,7 +61,7 @@ function interface.print_settings()
     end
     game.write_file("/Nanobots/settings.lua", serpent.block(tab, {nocode = true, sortkeys = true, comment = false, sparse = true}))
 end
-interface.console = require("stdlib/debug/console")
+interface.console = require("stdlib/utils/console")
 
 --Register with creative-mode for easy testing
 function interface.creative_mode_register()

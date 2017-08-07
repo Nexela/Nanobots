@@ -96,7 +96,7 @@ local table_find = table.find
 -- return the name of the item found for table.find if we found at least 1 item or cheat_mode is enabled.
 local _find_item = function(_, k, p)
     return get_cheat_mode(p) or p.get_item_count(k) > 0 or (
-        p.vehicle and (p.vehicle.get_item_count(k) > 0 or (pcall(function(e) return e.train end, p.vehicle) and p.vehicle.train.get_item_count(k) > 0))
+        p.vehicle and (p.vehicle.get_item_count(k) > 0 or (p.vehicle and p.vehicle.train and p.vehicle.train.get_item_count(k) > 0))
     )
 end
 
@@ -224,7 +224,7 @@ local function get_all_items_on_ground(entity, existing_stacks)
         item_stacks[#item_stacks+1] = {name=item_on_ground.stack.name, count=item_on_ground.stack.count, health=item_on_ground.health or 1}
         item_on_ground.destroy()
     end
-    local inserter_area = Area.expand(area, 3)
+    local inserter_area = Area.expand(Area.copy(area), 3)
     for _ , inserter in pairs(surface.find_entities_filtered{area=inserter_area, type="inserter"}) do
         local stack = inserter.held_stack
         if stack.valid_for_read and Area.inside(area, inserter.held_stack_position) then
@@ -242,7 +242,7 @@ end
 local function get_one_item_from_inv(entity, item, cheat)
     if not cheat then
         local sources
-        if entity.vehicle and pcall(function(e) return e.train end, entity.vehicle) and entity.vehicle.train then
+        if entity.vehicle and entity.vehicle.train then
             sources = entity.vehicle.train.cargo_wagons
             sources[#sources+1] = entity
         elseif entity.vehicle then
@@ -335,7 +335,7 @@ end
 --check validity of all stored objects at this point, They could have become
 --invalidated between the time they were entered into the queue and now.
 
-local Queue = require("stdlib/utils/queue")
+local Queue = require("stdlib/utils/hash_queue")
 
 --Handles all of the deconstruction and scrapper related tasks.
 function Queue.deconstruction(data)
@@ -498,8 +498,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             end --hash check
                         elseif nano_repairable_entity(ghost) and ghost.force == player.force and Area.size(ghost.prototype.collision_box) > 0 then
                             --Check if entity needs repair, TODO: Better logic for this?
-                            local ghost_area = Area.offset(ghost.prototype.collision_box, ghost.position)
-                            if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=ghost_area} == 0 then
+                            if ghost.surface.count_entities_filtered{name="nano-cloud-small-repair", area=ghost.bounding_box} == 0 then
                                 ghost.surface.create_entity{
                                     name="nano-projectile-repair",
                                     position=player.position,
@@ -536,7 +535,7 @@ local function everyone_hates_trees(player, pos, nano_ammo)
     for _, stupid_tree in pairs(player.surface.find_entities_filtered{area=area, type="tree", limit = 200}) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if not stupid_tree.to_be_deconstructed(player.force) then
-                local tree_area = Area.expand(Area.offset(stupid_tree.prototype.collision_box, stupid_tree.position), .5)
+                local tree_area = Area.expand(stupid_tree.bounding_box, .5)
                 if player.surface.count_entities_filtered{area=tree_area, name="nano-cloud-small-termites"} == 0 then
                     player.surface.create_entity{
                         name="nano-projectile-termites",

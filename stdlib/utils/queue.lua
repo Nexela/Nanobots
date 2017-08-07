@@ -1,93 +1,151 @@
--------------------------------------------------------------------------------
---[[Queue]]
--------------------------------------------------------------------------------
-local function NtoZ_c(x, y)
-    return (x >= 0 and x or (-0.5 - x)), (y >= 0 and y or (-0.5 - y))
-end
+--- A double queue.
+-- Taken from ***Programming in Lua*** [Queues and Double Queues](http://www.lua.org/pil/11.4.html)
+-- and modified to not allow nil values, and returns nil if @{pop_first} or @{pop_last} is used when the queue is empty.
+-- @module Queue
+-- @usage local Queue = require('stdlib/queue')
 
-local function cantorPair_v7(pos)
-    local x, y = NtoZ_c(math.floor(pos.x), math.floor(pos.y))
-    local s = x + y
-    local h = s * (s + 0.5) + x
-    return h + h
-end
+local fail_if_missing = require 'stdlib/core'['fail_if_missing']
 
-local Queue = {}
+Queue = {} --luacheck: allow defined top
 
+--- Constructs a new Queue object.
+-- @return (<span class="types">@{Queue}</span>) a new, empty queue
 function Queue.new()
-    return {_hash={}}
+    local queue = {first = 0, last = -1}
+    setmetatable(queue, Queue._mt)
+    return queue
 end
 
-function Queue.set_hash(t, data)
-    local index = data.entity.unit_number or cantorPair_v7(data.entity.position)
-    local hash = t._hash
-    hash[index] = hash[index] or {}
-    hash[index].count = (hash[index].count or 0) + 1
-    hash[index][data.hash] = data.hash
-    return index
-end
-
-function Queue.count(t)
-    local count, hash_count = 0, 0
-    for index in pairs(t) do
-        if type(index) == "number" then
-            count = count + 1
+--- Load global.queue or queues during on_load, as metatables are not persisted.
+-- <p>This is only needed if you are using the queue as an object and storing it in global.
+-- @param ... (<span class="types">@{Queue}</span>,...)
+-- @usage global.myqueue1 = Queue.new()
+-- global.myqueue2 = Queue.new()
+-- script.on_load(function() Queue.load(myqueue1, myqueue2))
+function Queue.load(...)
+    if not ... then return end
+    for _, queue in pairs({...}) do
+        if queue.first then
+            setmetatable(queue, Queue._mt)
         end
     end
-    for _ in pairs(t._hash) do
-        hash_count = hash_count + 1
+end
+
+--- Push a new element to the front of the queue.
+-- @param queue (<span class="types">@{Queue}</span>) the queue to push an element to
+-- @tparam Mixed value the element to push
+function Queue.push_first(queue, value)
+    fail_if_missing(value)
+
+    local first = queue.first - 1
+    queue.first = first
+    queue[first] = value
+    return queue
+end
+
+--- Push a new element to the back of the queue.
+-- @param queue (<span class="types">@{Queue}</span>) the queue to push an element to
+-- @tparam Mixed value the element to push
+function Queue.push_last(queue, value)
+    fail_if_missing(value)
+
+    local last = queue.last + 1
+    queue.last = last
+    queue[last] = value
+    return queue
+end
+
+--- Retrieve the element at the front of the queue.
+-- @param queue (<span class="types">@{Queue}</span>) the queue to retrieve the element from
+-- @treturn Mixed value the element at the front of the queue
+function Queue.pop_first(queue)
+    if Queue.is_empty(queue) then
+        return nil
     end
-    return count, hash_count
+    local first = queue.first
+    local value = queue[first]
+    queue[first] = nil -- to allow garbage collection
+    queue.first = first + 1
+    return value
 end
 
-function Queue.get_hash(t, entity)
-    local index = entity.unit_number or cantorPair_v7(entity.position)
-    return t._hash[index]
+--- Return the element at the front of the queue.
+-- @param queue (<span class="types">@{Queue}</span>) the queue to retrieve the element from
+-- @treturn Mixed the element at the front of the queue
+function Queue.peek_first (queue)
+    return queue[queue.first]
 end
 
-function Queue.insert(t, data, tick, count)
-    data.hash = Queue.set_hash(t, data)
-    t[tick] = t[tick] or {}
-    t[tick][#t[tick] + 1] = data
-
-    return t, count
-end
-
-function Queue.next(t, _next_tick, tick_spacing, dont_combine)
-    tick_spacing = tick_spacing or 1
-    local count = 0
-    local tick = (_next_tick and _next_tick >= game.tick and _next_tick) or game.tick
-    local next_tick = function(really_dont_combine)
-        tick = tick + tick_spacing
-        while (dont_combine or really_dont_combine) and t[tick] do
-            tick = tick + 1
-        end
-        count = count + 1
-        return tick, count
+--- Retrieve the element at the back of the queue.
+-- @param queue (<span class="types">@{Queue}</span>) the queue to retrieve the element from
+-- @treturn Mixed the element at the back of the queue
+function Queue.pop_last(queue)
+    if Queue.is_empty(queue) then
+        return nil
     end
-    local queue_count = function(num)
-        count = count + (num or 0)
-        return count
-    end
-    return next_tick, queue_count
+
+    local last = queue.last
+    local value = queue[last]
+    queue[last] = nil -- to allow garbage collection
+    queue.last = last - 1
+    return value
 end
 
---Tick handler, handles executing multiple data tables in a queue
-function Queue.execute(event, queue)
-    if queue[event.tick] then
-        for _, data in ipairs(queue[event.tick]) do
-            local hash, index = queue._hash, data.hash
-            if Queue[data.action] then
-                Queue[data.action](data)
-            end
-            hash[index][data.action] = nil
-            hash[index].count = hash[index].count - 1
-            if hash[index].count <= 0 then
-                hash[index] = nil
-            end
-        end
-        queue[event.tick] = nil
+--- Return the element at the back of the queue.
+-- @param queue (<span class="types">@{Queue}</span>) the queue to retrieve the element from
+-- @treturn Mixed the element at the back of the queue
+function Queue.peek_last (queue)
+    return queue[queue.last]
+end
+
+--- Push a new element to the end of the queue, shortcut for @{push_last}.
+-- @function push
+-- @param queue (<span class="types">@{Queue}</span>) the queue to push an element to
+-- @tparam Mixed value the element to push
+-- @see Queue.push_last
+Queue.push = Queue.push_last
+
+--- Pop an element from the head of the queue, shortcut for @{pop_first}.
+-- @function pop
+-- @param queue (<span class="types">@{Queue}</span>) the queue to retrieve the element from
+-- @treturn Mixed the element at the front of the queue
+-- @see Queue.pop_first
+Queue.pop = Queue.pop_first
+
+--- Peek into the element at the head of the queue, shortcut for @{peek_first}.
+-- @function peek
+-- @param queue (<span class="types">@{Queue}</span>) the queue to peek into
+-- @treturn Mixed the element at the front of the queue
+-- @see Queue.peek_first
+Queue.peek = Queue.peek_fist
+
+--- Returns true if the given queue is empty.
+-- @param queue (<span class="types">@{Queue}</span>) the queue to check
+-- @treturn boolean true if empty, false otherwise
+function Queue.is_empty(queue)
+    return queue.first > queue.last
+end
+
+--- Returns the number of items in the queue.
+-- @param queue (<span class="types">@{Queue}</span>) the queue to check
+-- @treturn number the number of items in the queue
+function Queue.count(queue)
+    if queue.first > queue.last then
+        return 0
+    else
+        return queue.last - queue.first + 1
     end
 end
 
-return Queue
+Queue._mt = {
+    __index = Queue,
+    __len = function(t) return Queue.count(t) end,
+    --TODO custom __ipairs metatable
+}
+
+local _return_mt = {
+    __newindex = function() error("Attempt to mutatate read-only Queue Module") end,
+    __metatable = true
+}
+
+return setmetatable(Queue, _return_mt)

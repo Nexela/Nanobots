@@ -148,7 +148,6 @@ end
 --Mark items for deconstruction if player has roboport
 local function process_ready_chips(player, equipment)
     local rad = player.character.logistic_cell.construction_radius
-    local area = Position.expand_to_area(player.position, rad)
     local enemy = player.surface.find_nearest_enemy{position=player.position, max_distance=rad+10, force=player.force}
     if not enemy and (equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"]) then
         local bots_available = get_bot_counts(player.character)
@@ -171,7 +170,7 @@ local function process_ready_chips(player, equipment)
         local capsule_data = get_best_follower_capsule(player)
         if capsule_data then
             local max_bots = player.force.maximum_following_robot_count + player.character_maximum_following_robot_count_bonus
-            local existing = player.surface.count_entities_filtered{area=area, type="combat-robot", force=player.force}
+            local existing = #player.following_robots
             local next_capsule = 1
             local capsule = capsule_data[next_capsule]
             while capsule and existing < (max_bots - capsule.qty) and capsule.count > 0 and num_launchers > 0 do
