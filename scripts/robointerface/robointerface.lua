@@ -85,7 +85,7 @@ Queue.mark_items_or_trees = function(data)
     if data.logistic_cell.valid and data.logistic_cell.construction_radius > 0 and data.logistic_cell.logistic_network then
         local surface, force, position = get_entity_info(data.logistic_cell.owner)
         if not (data.find_type or data.find_name) then data.find_type = "NIL" end
-        if not surface.find_nearest_enemy{position = position, max_distance = data.logistic_cell.construction_radius, force = force} then
+        if not surface.find_nearest_enemy{position = position, max_distance = data.logistic_cell.construction_radius * 1.5 + 40, force = force} then
             local filter = {
                 area = Position.expand_to_area(position, data.logistic_cell.construction_radius),
                 name = data.find_name,
