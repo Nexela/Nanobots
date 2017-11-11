@@ -96,7 +96,7 @@ Queue.mark_items_or_trees = function(data)
             local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots * (config["nanobots-free-bots-per"].value / 100))
             local limit = -99999999999
             if data.value < 0 and data.item_name then
-                limit = (data.logistic_cell.logistic_network.get_contents()[data.item_name] or 0) - data.value
+                limit = (data.logistic_cell.logistic_network.get_contents()[data.item_name] or 0) + data.value
             end
 
             for _, item in pairs(surface.find_entities_filtered(filter)) do
