@@ -93,7 +93,7 @@ Queue.mark_items_or_trees = function(data)
                 limit = 300
             }
             local config = settings["global"]
-            local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots * (config["nanobots-free-bots-per"].value / 100))
+            local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots - (data.logistic_cell.logistic_network.all_construction_robots * (config["nanobots-free-bots-per"].value / 100)))
             local limit = -99999999999
             if data.value < 0 and data.item_name then
                 limit = (data.logistic_cell.logistic_network.get_contents()[data.item_name] or 0) + data.value
@@ -151,7 +151,7 @@ local function run_interface(interface)
     local behaviour = interface.get_control_behavior()
     if behaviour and behaviour.enabled then
         local logistic_network, logistic_cell = find_network_and_cell(interface)
-        if logistic_network and logistic_network.available_construction_robots > 0 then
+        if logistic_network and logistic_network.available_construction_robots > logistic_network.all_construction_robots * (settings["global"]["nanobots-free-bots-per"].value / 100) then
             local queue, tick_spacing = global.cell_queue, settings["global"]["nanobots-cell-queue-rate"].value
             local parameters = get_parameters(behaviour.parameters)
             --game.print(serpent.block(parameters, {comment=false, sparse=false}))
