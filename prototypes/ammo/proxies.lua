@@ -1,4 +1,4 @@
-local Prototype = require("stdlib/data/prototype")
+local Data = require("stdlib/data/data")
 local constants = require("constants")
 local TTL = 60 * 10
 
@@ -32,10 +32,10 @@ local proxy = {
             action = nil,
         }
     },
-    idle = Prototype.empty_animation,
-    shadow_idle = Prototype.empty_animation,
-    in_motion = Prototype.empty_animation,
-    shadow_in_motion = Prototype.empty_animation,
+    idle = Data.empty_animation(),
+    shadow_idle = Data.empty_animation(),
+    in_motion = Data.empty_animation(),
+    shadow_in_motion = Data.empty_animation(),
 }
 
 local projectile_return = {

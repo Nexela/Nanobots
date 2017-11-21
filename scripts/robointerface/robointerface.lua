@@ -3,7 +3,7 @@
 -------------------------------------------------------------------------------
 local Area = require("stdlib/area/area")
 local Position = require("stdlib/area/position")
-local Queue = require("stdlib/utils/hash_queue")
+local Queue = require("scripts/hash_queue")
 
 local floor = math.floor
 
@@ -115,7 +115,7 @@ Queue.mark_items_or_trees = function(data)
 end
 
 local function has_resources(miner)
-    local _find = function(v, _) return v.prototype.resource_category == "basic_solid" and (v.amount > 0 or v.prototype.infinite_resource) end
+    local _find = function(v, _) return v.prototype.resource_category == "basic-solid" and (v.amount > 0 or v.prototype.infinite_resource) end
     local filter = {area = Position.expand_to_area(miner.position, miner.prototype.mining_drill_radius), type = "resource"}
     if miner.mining_target then
         return (miner.mining_target.amount or 0) > 0

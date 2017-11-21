@@ -2,10 +2,10 @@
 -- @module Color
 -- @usage local Color = require('stdlib/color/color')
 
-require 'stdlib/defines/color'
-local fail_if_missing = require 'stdlib/core'['fail_if_missing']
+Color = {_module_name = "Color"} --luacheck: allow defined top
+setmetatable(Color, {__index = require("stdlib/core")})
 
-Color = {} --luacheck: allow defined top
+local fail_if_missing = Color.fail_if_missing
 
 --- Set a value for the alpha channel in the given color table.
 -- `color.a` represents the alpha channel in the given color table.
@@ -38,7 +38,7 @@ end
 -- @tparam[opt=0] int r 0-255 red
 -- @tparam[opt=0] int g 0-255 green
 -- @tparam[opt=0] int b 0-255 blue
--- @tparam[opt=255] int a o-255 alpha
+-- @tparam[opt=255] int a 0-255 alpha
 -- @treturn Concepts.Color
 function Color.from_rgb(r, g, b, a)
     r = r or 0

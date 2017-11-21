@@ -1,6 +1,3 @@
--------------------------------------------------------------------------------
---[[Queue]]
--------------------------------------------------------------------------------
 local function NtoZ_c(x, y)
     return (x >= 0 and x or (-0.5 - x)), (y >= 0 and y or (-0.5 - y))
 end
@@ -25,19 +22,6 @@ function Queue.set_hash(t, data)
     hash[index].count = (hash[index].count or 0) + 1
     hash[index][data.hash] = data.hash
     return index
-end
-
-function Queue.count(t)
-    local count, hash_count = 0, 0
-    for index in pairs(t) do
-        if type(index) == "number" then
-            count = count + 1
-        end
-    end
-    for _ in pairs(t._hash) do
-        hash_count = hash_count + 1
-    end
-    return count, hash_count
 end
 
 function Queue.get_hash(t, entity)

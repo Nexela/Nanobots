@@ -2,6 +2,8 @@
 -- @module table
 -- @see table
 
+-- luacheck: globals table (Allow mutating global table)
+
 --- Given a mapping function, creates a transformed copy of the table
 --- by calling the function for each element in the table, and using
 --- the result as the new value for the key. Passes the index as second argument to the function.
@@ -287,17 +289,17 @@ end
 -- @tparam[opt] boolean sorted whether to sort the keys (slower) or keep the random order from pairs()
 -- @tparam[opt] boolean as_string whether to try and parse the keys as strings, or leave them as their existing type
 -- @treturn array an array with a copy of all the keys in the table
-function table.keys(tbl, sorted,as_string)
+function table.keys(tbl, sorted, as_string)
     if not tbl then return {} end
     local keyset = {}
     local n = 0
     if as_string then --checking as_string /before/ looping is faster
-        for k,_ in pairs(tbl) do
-            n = n+1
+        for k, _ in pairs(tbl) do
+            n = n + 1
             keyset[n] = tostring(k)
         end
     else
-        for k,_ in pairs(tbl) do
+        for k, _ in pairs(tbl) do
             n = n + 1
             keyset[n] = k
         end
@@ -329,7 +331,7 @@ end
 -- @tparam {Mixed,...} keys an array of keys that exist in the given table
 -- @treturn table tbl without the specified keys
 function table.remove_keys(tbl, keys)
-    for i=1, #keys do
+    for i = 1, #keys do
         tbl[keys[i]] = nil
     end
     return tbl
@@ -370,17 +372,17 @@ end
 -- @treturn table a new table with inverted mapping
 function table.invert(tbl)
     local inverted = {}
-    for k,v in pairs(tbl) do
+    for k, v in pairs(tbl) do
         inverted[v] = k
     end
     return inverted
 end
 
---- Return the size of a table using built in table_size function
+--- Return the size of a table using the factorio built in table_size function
 -- @function size
 -- @tparam table table to use
 -- @treturn int size of the table
-table.size = table_size
+table.size = table_size or table.count_keys --luacheck: globals table_size
 
 --- For all string or number values in an array map them to a key = true table
 -- @usage local a = {"v1", "v2"}

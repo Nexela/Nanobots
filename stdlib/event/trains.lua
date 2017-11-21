@@ -6,12 +6,13 @@
 -- Event registration is performed at the bottom of this file,
 -- once all other functions have been defined
 
-require 'stdlib/event/event'
-require 'stdlib/table'
-local Surface = require 'stdlib/area/surface'
-local Entity = require 'stdlib/entity/entity'
 
-Trains = {} --luacheck: allow defined top
+Trains = {_module_name = "Trains"} --luacheck: allow defined top
+setmetatable(Trains, {__index = require('stdlib/core')})
+require('stdlib/event/event')
+
+local Surface = require('stdlib/area/surface')
+local Entity = require('stdlib/entity/entity')
 
 --- This event fires when a train's ID changes.
 -- <p>The train ID is a property of the main locomotive,
@@ -197,20 +198,17 @@ local function filter_event(event_parameter, entity_type, callback)
 end
 
 -- When a locomotive is removed ...
-Event.register(defines.events.on_entity_died, filter_event('entity', 'locomotive', Trains._on_locomotive_changed))
-Event.register(defines.events.on_preplayer_mined_item, filter_event('entity', 'locomotive', Trains._on_locomotive_changed))
-Event.register(defines.events.on_robot_pre_mined, filter_event('entity', 'locomotive', Trains._on_locomotive_changed))
+local train_remove_events = {defines.events.on_entity_died, defines.events.on_preplayer_mined_item, defines.events.on_robot_pre_mined}
+Event.register(train_remove_events, filter_event('entity', 'locomotive', Trains._on_locomotive_changed))
 
 -- When a locomotive is added ...
-Event.register(defines.events.on_train_created,
-    function(event)
-        local train_id = Trains.get_train_id(event.train)
-        global._train_registry[train_id] = event.train
-    end
-)
+local function on_train_created(event)
+    local train_id = Trains.get_train_id(event.train)
+    global._train_registry[train_id] = event.train
+end
+Event.register(defines.events.on_train_created, on_train_created)
 
 -- When the mod is initialized the first time
-Event.register(Event.core_events.init, create_train_registry)
-Event.register(Event.core_events.configuration_changed, create_train_registry)
+Event.register(Event.core_events.init_and_config, create_train_registry)
 
 return Trains

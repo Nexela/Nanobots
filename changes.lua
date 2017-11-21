@@ -89,9 +89,9 @@ end
 
 --Major changes, add in player and force global tables
 local robointerface = require("scripts/robointerface/robointerface")
-local Queue = require("stdlib/utils/hash_queue")
-local Player = require("stdlib/player")
-local Force = require("stdlib/force")
+local Queue = require("scripts/hash_queue")
+local Player = require("stdlib/event/player")
+local Force = require("stdlib/event/force")
 changes["1.7.0"] = function ()
     Force.init(nil, true)
     Player.init(nil, true)

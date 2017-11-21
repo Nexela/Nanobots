@@ -1,13 +1,8 @@
 local NANO = require("config")
-require("stdlib/string")
-require("stdlib/table")
-require("stdlib/defines/color")
-require("stdlib/defines/time")
+require("stdlib/core")
 
 --Custom GUI's
 require("prototypes/gui")
-
---Custom hotkeys
 
 --Custom virtual signals
 require("prototypes/signals")
@@ -40,7 +35,6 @@ require("prototypes/roboport-interface")
 require("prototypes/sounds")
 
 if NANO.DEBUG then
-    data.raw["furnace"]["stone-furnace"].max_health = 10000
-    local debug_prototypes = require("stdlib/debug/prototypes")
-    debug_prototypes.make_chunk_markers("Nanobots")
+    local developer = require("stdlib.data.developer.developer")
+    developer.make_test_entities("Nanobots")
 end

@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --[[Roboport Interface]]-- Logistic Network roboport interface module
 -------------------------------------------------------------------------------
-local Prototype = require("stdlib/data/prototype")
+local Data = require("stdlib/data/data")
 --Roboport with custom GFX no zones, no recharge, radar with nil gfx, cc with nil gfx - selectable
 --256 x 224
 
@@ -55,7 +55,7 @@ Constant-Combinator interface for setting the signals.
 -------------------------------------------------------------------------------
 --[[Combinator]]--
 -------------------------------------------------------------------------------
-local ri_cc = Prototype.duplicate( "constant-combinator", "constant-combinator", "roboport-interface-cc", true )
+local ri_cc = Data.duplicate( "constant-combinator", "constant-combinator", "roboport-interface-cc", true )
 ri_cc.icon = nil
 ri_cc.icons = {
     {icon = "__Nanobots__/graphics/icons/roboport-interface-cc.png"}
@@ -77,7 +77,7 @@ for index, direction in pairs({"north", "east", "south", "west"}) do
         shift = {0.1, -0.15},
     }
     ri_cc.activity_led_sprites[direction] = {
-        filename = "__base__/graphics/entity/combinator/activity-leds/combinator-led-constant-south.png",
+        filename = "__base__/graphics/entity/combinator/activity-leds/hr-constant-combinator-LED-S.png",
         width = 11,
         height = 11,
         frame_count = 1,
@@ -109,15 +109,14 @@ ri_cc.activity_led_light =
 -------------------------------------------------------------------------------
 --[[Radar]]--
 -------------------------------------------------------------------------------
-local ri_radar = Prototype.duplicate("radar", "radar", "roboport-interface-scanner", true)
+local ri_radar = Data.duplicate("radar", "radar", "roboport-interface-scanner", true)
 ri_radar.flags = {"not-deconstructable", "player-creation"}
 ri_radar.icon = "__Nanobots__/graphics/icons/roboport-interface.png"
---ri_radar.max_health = 0
 ri_radar.minable = nil
 ri_radar.collision_mask = {}
 ri_radar.selection_box = {{-1, -0.0}, {0.0, 1}}
 ri_radar.collision_box = {{-0.9, -0.9}, {0.9, 0.9}}
-ri_radar.pictures = Prototype.empty_animation
+ri_radar.pictures = Data.empty_pictures()
 ri_radar.max_distance_of_sector_revealed = 0
 ri_radar.max_distance_of_nearby_sector_revealed = 1
 ri_radar.energy_per_sector = "20MJ"
@@ -133,7 +132,6 @@ local ri_roboport = {
     icon = "__Nanobots__/graphics/icons/roboport-interface.png",
     flags = {"placeable-player", "player-creation"},
     minable = {hardness = 0.2, mining_time = 0.5, result = "roboport-interface"},
-    --fast_replaceable_group = "roboport",
     max_health = 500,
     corpse = "small-remnants",
     collision_box = {{-0.9, -0.9}, {0.9, 0.9}},
@@ -157,7 +155,7 @@ local ri_roboport = {
     material_slots_count = 0,
     stationing_offset = nil,
     charging_offsets = nil,
-    base = Prototype.empty_sprite,
+    base = Data.empty_picture(),
     base_animation =
     {
         filename = "__Nanobots__/graphics/entity/roboport-interface/roboport-interface.png",
@@ -171,10 +169,10 @@ local ri_roboport = {
         line_length = 8,
         shift = {0.4, -2.0}
     },
-    base_patch = Prototype.empty_animation,
-    door_animation_up = Prototype.empty_animation,
-    door_animation_down = Prototype.empty_animation,
-    recharging_animation = Prototype.empty_animation,
+    base_patch = Data.empty_animation(),
+    door_animation_up = Data.empty_animation(),
+    door_animation_down = Data.empty_animation(),
+    recharging_animation = Data.empty_animation(),
     recharging_light = nil,
     request_to_open_door_timeout = 15,
     spawn_and_station_height = 1.75,
@@ -207,7 +205,6 @@ local tech1 = {
         time = 30
     },
     order = "a-b-ba",
-    --upgrade = true,
 }
 
 data:extend{recipe_ri, item_ri, ri_cc, ri_radar, ri_roboport, item_proxy, tech1}

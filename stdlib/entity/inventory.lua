@@ -2,9 +2,10 @@
 -- @module Inventory
 -- @usage local Inventory = require('stdlib/entity/inventory')
 
-local fail_if_missing = require 'stdlib/core'['fail_if_missing']
+Inventory = {_module_name = "Inventory"} --luacheck: allow defined top
+setmetatable(Inventory, {__index = require('stdlib/core')})
 
-Inventory = {} --luacheck: allow defined top
+local fail_if_missing = Inventory.fail_if_missing
 
 --- Copies the contents of source inventory to destination inventory by using @{Concepts.SimpleItemStack}.
 -- @tparam LuaInventory src the source inventory

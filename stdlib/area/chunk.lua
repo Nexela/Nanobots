@@ -4,11 +4,12 @@
 -- @usage local Chunk = require('stdlib/area/chunk')
 -- @see Concepts.ChunkPosition
 
-local fail_if_missing = require 'stdlib/core'['fail_if_missing']
-local Area = require 'stdlib/area/area'
-local Position = require 'stdlib/area/position'
+Chunk = {_module_name = "Chunk"} --luacheck: allow defined top
+setmetatable(Chunk, {__index = require('stdlib/core')})
 
-Chunk = {} --luacheck: allow defined top
+local fail_if_missing = Chunk.fail_if_missing
+local Area = require('stdlib/area/area')
+local Position = require('stdlib/area/position')
 
 local MAX_UINT = 4294967296
 
@@ -115,9 +116,4 @@ function Chunk.get_index(surface, chunk_pos)
     return surface_chunks[chunk_pos.x][chunk_pos.y]
 end
 
-local _return_mt = {
-    __newindex = function() error("Attempt to mutatate read-only Chunk Module") end,
-    __metatable = true
-}
-
-return setmetatable(Chunk, _return_mt)
+return Chunk:_protect()

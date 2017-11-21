@@ -1,15 +1,12 @@
---stdlib table mutates
-require("stdlib.table")
-require("stdlib.string")
-require("stdlib.defines.color")
-require("stdlib.defines.time")
+require("stdlib/core")
 
 --stdlib Globals
-require("stdlib.log.logger")
-require("stdlib.config.config")
-require("stdlib.event.event")
-require("stdlib.event.gui")
+require("stdlib/log/logger")
+require("stdlib/config/config")
+require("stdlib/event/event")
+require("stdlib/event/gui")
 
+defines.events.on_preplayer_mined_item = defines.events.on_pre_player_mined_item --luacheck: ignore defines
 MOD = {}
 MOD.name = "Nanobots"
 MOD.fullname = "Nanobots"
@@ -18,11 +15,10 @@ MOD.interface = require("interface")
 MOD.config = require("config")
 MOD.version = "1.8.3"
 MOD.logfile = Logger.new(MOD.fullname, "log", MOD.config.DEBUG or false, {log_ticks = true, file_extension = "lua"})
-MOD.logfile.file_name = MOD.logfile.file_name:gsub("logs/", "", 1)
-MOD.log = require("stdlib.debug.debug")
+MOD.log = require("stdlib.utils.wip.debug")
 
-local Force = require("stdlib/force")
-local Player = require("stdlib/player")
+local Force = require("stdlib/event/force")
+local Player = require("stdlib/event/player")
 local Position = require("stdlib/area/position")
 local Area = require("stdlib/area/area")
 
@@ -30,7 +26,7 @@ Event.build_events = {defines.events.on_built_entity, defines.events.on_robot_bu
 Event.mined_events = {defines.events.on_preplayer_mined_item, defines.events.on_robot_pre_mined}
 
 if MOD.config.DEBUG then
-    require("stdlib/debug/quickstart")
+    require("stdlib/utils/scipts/quickstart")
 end
 
 local robointerface = require("scripts/robointerface/robointerface")
@@ -335,7 +331,7 @@ end
 --check validity of all stored objects at this point, They could have become
 --invalidated between the time they were entered into the queue and now.
 
-local Queue = require("stdlib/utils/hash_queue")
+local Queue = require("scripts/hash_queue")
 
 --Handles all of the deconstruction and scrapper related tasks.
 function Queue.deconstruction(data)
@@ -619,4 +615,7 @@ Event.register(Event.core_events.init, MOD.on_init)
 
 local interface = MOD.interface
 remote.add_interface(MOD.if_name, interface)
-commands.add_command("Nanobots-reset", "Reset Nano Queue", function() interface.reset_queue() end)
+commands.add_command("Nanobots-reset", "Reset Nano Queue", function()
+    interface.reset_queue("nano_queue")
+    interface.reset_queue("cell_queue")
+end)
