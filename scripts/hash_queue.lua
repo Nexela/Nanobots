@@ -11,30 +11,31 @@ end
 
 local Queue = {}
 
-function Queue.new()
-    return {_hash={}}
+function Queue.new(t)
+    if t and t._hash then
+        return setmetatable(t, Queue.mt)
+    else
+        return setmetatable({_hash = {}}, Queue.mt)
+    end
 end
 
 function Queue.set_hash(t, data)
     local index = data.entity.unit_number or cantorPair_v7(data.entity.position)
     local hash = t._hash
     hash[index] = hash[index] or {}
-    hash[index].count = (hash[index].count or 0) + 1
-    hash[index][data.hash] = data.hash
+    hash[index][data.action] = data.action
     return index
 end
 
 function Queue.count(t)
-    local count, hash_count = 0, 0
+    local count = 0
     for index in pairs(t) do
         if type(index) == "number" then
             count = count + 1
         end
     end
-    for _ in pairs(t._hash) do
-        hash_count = hash_count + 1
-    end
-    return count, hash_count
+
+    return count, table.size(t._hash)
 end
 
 function Queue.get_hash(t, entity)
@@ -44,6 +45,7 @@ end
 
 function Queue.insert(t, data, tick, count)
     data.hash = Queue.set_hash(t, data)
+
     t[tick] = t[tick] or {}
     t[tick][#t[tick] + 1] = data
 
@@ -70,21 +72,46 @@ function Queue.next(t, _next_tick, tick_spacing, dont_combine)
 end
 
 --Tick handler, handles executing multiple data tables in a queue
-function Queue.execute(event, queue)
-    if queue[event.tick] then
-        for _, data in ipairs(queue[event.tick]) do
-            local hash, index = queue._hash, data.hash
+function Queue.execute(t, event)
+    if t[event.tick] then
+        for _, data in ipairs(t[event.tick]) do
+            local index = data.hash
             if Queue[data.action] then
                 Queue[data.action](data)
             end
-            hash[index][data.action] = nil
-            hash[index].count = hash[index].count - 1
-            if hash[index].count <= 0 then
-                hash[index] = nil
+            t._hash[index][data.action] = nil
+            if table.size(t._hash[index]) <= 0 then
+                t._hash[index] = nil
             end
         end
-        queue[event.tick] = nil
+        t[event.tick] = nil
     end
+    return t
 end
 
-return Queue
+Queue.mt = {__index = Queue, __call = nil}
+local mt = {
+    __call = function(_, ...) return Queue.new(...) end
+}
+
+--[[
+setmetatable(Queue, mt)
+
+local serpent = require("stdlib.utils.scripts.serpent")
+require("stdlib.utils.table")
+
+local data1 = {action = "test", entity = {unit_number = 100}}
+local data2 = {action = "test2", entity = {unit_number = 100}}
+
+local queue = Queue()
+--queue[23] = {}
+queue:insert(data1, 25):insert(data2, 25)
+print(serpent.block(queue, {comment=false}))
+
+--print(queue:count())
+queue:execute({tick = 25})
+print(queue:count())
+print(serpent.block(queue, {comment=false}))
+--]]
+
+return setmetatable(Queue, mt)

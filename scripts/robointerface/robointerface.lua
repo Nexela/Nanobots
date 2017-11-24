@@ -4,10 +4,11 @@
 local Area = require("stdlib/area/area")
 local Position = require("stdlib/area/position")
 local Queue = require("scripts/hash_queue")
+local queue
 
 local floor = math.floor
 
-local robointerface = {}
+Event.reset_cell_queue = script.generate_event_name()
 
 local params_to_check = {
     ["nano-signal-chop-trees"] = {
@@ -152,25 +153,24 @@ local function run_interface(interface)
     if behaviour and behaviour.enabled then
         local logistic_network, logistic_cell = find_network_and_cell(interface)
         if logistic_network and logistic_network.available_construction_robots > 0 then
-            local queue, tick_spacing = global.cell_queue, settings["global"]["nanobots-cell-queue-rate"].value
+            local tick_spacing = settings["global"]["nanobots-cell-queue-rate"].value
             local parameters = get_parameters(behaviour.parameters)
             --game.print(serpent.block(parameters, {comment=false, sparse=false}))
             -- If the closest roboport signal is present and > 0 then just run on the attached cell
             local just_cell = (parameters["nano-signal-closest-roboport"] or 0) > 0 and logistic_cell and {logistic_cell} or nil
             local fdata = global.forces[logistic_cell.owner.force.name]
-            local next_tick = Queue.next(queue, fdata._next_cell_tick or game.tick, tick_spacing, true)
+            local next_tick = queue:next(fdata._next_cell_tick or game.tick, tick_spacing, true)
             for param_name, param_table in pairs(params_to_check) do
                 if (parameters[param_name] or 0) ~= 0 then
                     for _, cell in pairs(just_cell or logistic_network.cells) do
-                        local hash = Queue.get_hash(queue, cell.owner)
-                        if not cell.mobile and cell.construction_radius > 0 and not (hash and hash[param_table.action]) then
+                        local hash = queue:get_hash(cell.owner)
+                        if not cell.mobile and cell.construction_radius > 0 and queue:count() < 5000 and not (hash and hash[param_table.action]) then
                             local data = {
                                 position = cell.owner.position,
                                 logistic_cell = cell,
                                 entity = cell.owner,
                                 logistic_network = logistic_network,
                                 name = param_name,
-                                hash = param_name,
                                 action = param_table.action,
                                 find_type = param_table.find_type,
                                 find_name = param_table.find_name,
@@ -178,18 +178,18 @@ local function run_interface(interface)
                                 value = parameters[param_name],
                                 unit_number = cell.owner.unit_number
                             }
-                            Queue.insert(queue, data, next_tick())
+                            queue:insert(data, next_tick())
                         end
                     end
                 end
             end
-            fdata._next_cell_tick = next_tick()
+            fdata._next_cell_tick = queue:count() > 0 and next_tick() or game.tick
         end
     end
 end
 
 local function execute_nano_queue(event)
-    Queue.execute(event, global.cell_queue)
+    queue:execute(event)
 end
 Event.register(defines.events.on_tick, execute_nano_queue)
 
@@ -270,13 +270,24 @@ local function on_sector_scanned(event)
 end
 Event.register(defines.events.on_sector_scanned, on_sector_scanned)
 
-function robointerface.migrate()
-    --Initial 1.7.0 scannars had to be deleted.
+local function on_init()
+    global.cell_queue = Queue()
+    queue = global.cell_queue
 end
+Event.register(Event.core_events.init, on_init)
 
-function robointerface.init()
-    global.cell_queue = Queue.new()
-    return nil
+local function on_load()
+    queue = Queue(global.cell_queue)
 end
+Event.register(Event.core_events.load, on_load)
 
-return robointerface
+local function reset_cell_queue()
+    global.cell_queue = nil
+    queue = nil
+    global.cell_queue = Queue()
+    queue = global.cell_queue
+    for _, fdata in pairs(global.forces) do
+        fdata._next_cell_tick = game and game.tick or 0
+    end
+end
+Event.register(Event.reset_cell_queue, reset_cell_queue)

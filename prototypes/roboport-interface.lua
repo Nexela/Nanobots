@@ -77,7 +77,7 @@ for index, direction in pairs({"north", "east", "south", "west"}) do
         shift = {0.1, -0.15},
     }
     ri_cc.activity_led_sprites[direction] = {
-        filename = "__base__/graphics/entity/combinator/activity-leds/hr-constant-combinator-LED-S.png",
+        filename = "__base__/graphics/entity/combinator/activity-leds/combinator-led-constant-south.png",
         width = 11,
         height = 11,
         frame_count = 1,
