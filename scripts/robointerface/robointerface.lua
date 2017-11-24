@@ -86,7 +86,7 @@ Queue.mark_items_or_trees = function(data)
     if data.logistic_cell.valid and data.logistic_cell.construction_radius > 0 and data.logistic_cell.logistic_network then
         local surface, force, position = get_entity_info(data.logistic_cell.owner)
         if not (data.find_type or data.find_name) then data.find_type = "NIL" end
-        if not surface.find_nearest_enemy{position = position, max_distance = data.logistic_cell.construction_radius, force = force} then
+        if not surface.find_nearest_enemy{position = position, max_distance = data.logistic_cell.construction_radius * 1.5 + 40, force = force} then
             local filter = {
                 area = Position.expand_to_area(position, data.logistic_cell.construction_radius),
                 name = data.find_name,
@@ -94,10 +94,10 @@ Queue.mark_items_or_trees = function(data)
                 limit = 300
             }
             local config = settings["global"]
-            local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots * (config["nanobots-free-bots-per"].value / 100))
+            local available_bots = floor(data.logistic_cell.logistic_network.available_construction_robots - (data.logistic_cell.logistic_network.all_construction_robots * (config["nanobots-free-bots-per"].value / 100)))
             local limit = -99999999999
             if data.value < 0 and data.item_name then
-                limit = (data.logistic_cell.logistic_network.get_contents()[data.item_name] or 0) - data.value
+                limit = (data.logistic_cell.logistic_network.get_contents()[data.item_name] or 0) + data.value
             end
 
             for _, item in pairs(surface.find_entities_filtered(filter)) do
@@ -152,7 +152,7 @@ local function run_interface(interface)
     local behaviour = interface.get_control_behavior()
     if behaviour and behaviour.enabled then
         local logistic_network, logistic_cell = find_network_and_cell(interface)
-        if logistic_network and logistic_network.available_construction_robots > 0 then
+        if logistic_network and logistic_network.available_construction_robots > logistic_network.all_construction_robots * (settings["global"]["nanobots-free-bots-per"].value / 100) then
             local tick_spacing = settings["global"]["nanobots-cell-queue-rate"].value
             local parameters = get_parameters(behaviour.parameters)
             --game.print(serpent.block(parameters, {comment=false, sparse=false}))
