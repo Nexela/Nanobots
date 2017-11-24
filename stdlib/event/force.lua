@@ -1,53 +1,66 @@
 --- Force global creation.
--- Requiring this module will automatically create a global.forces[index] for all new forces using stdlib's Event system
+-- Requiring this module will register init and force creation events using the stdlib @{Event} module.
+-- <p>All existing and new players will be added to the `global.forces` table.
+-- <p>This module should be first required after any other Init functions but before any scripts needing `global.players`.
+-- <p>This module registers the following events: `on_init`, `on_configuration_changed`, `on_player_created`, and `on_player_removed`.
 -- @module Force
--- @usage local Force = require 'stdlib/event/force'
+-- @usage
+-- local Force = require('stdlib/event/force')
 -- -- The fist time this is required it will register force creation events
 
 require('stdlib/event/event')
-require('stdlib/table')
-local fail_if_missing = require 'stdlib/core'['fail_if_missing']
 
-local Force = {}
+local Force = {_module_name = "Force"}
+setmetatable(Force, {__index = require('stdlib/core')})
+
+local fail_if_missing = Force.fail_if_missing
+local Game = require('stdlib/game')
 
 -- return new default force object
 local function new(force_name)
-    local obj = {
+    return {
         index = force_name,
         name = force_name,
     }
-    return obj
 end
 
---- Get the game.forces[name] and global.forces[name] objects, create the global.forces[name] object if it doesn't exist.
--- @tparam string name the force name to get data for
--- @treturn LuaForce
--- @treturn table The forces global data
--- @usage local Force = require 'stdlib/event/force'
--- local force1, force2_data = Force.get(event.force.name)
--- local force2, force2_data = Force.get("Player") --returns data for the force named "Player"
-function Force.get(name)
-    fail_if_missing(name, 'force name is missing')
-    return game.forces[name], global.forces[name] or Force.init(name) and global.forces[name]
+--- Get `game.forces[name]` & `global.forces[name]`, or create `global.forces[name]` if it doesn't exist.
+-- @tparam string|LuaForce force the force to get data for
+-- @treturn LuaForce the force instance
+-- @treturn table the force's global data
+-- @usage
+-- local Force = require('stdlib/event/force')
+-- local force_name, force_data = Force.get("player")
+-- local force_name, force_data = Force.get(game.forces["player"])
+-- -- Returns data for the force named "player" from either a string or LuaForce object
+function Force.get(force)
+    force = Game.get_force(force)
+    fail_if_missing(force, 'force is missing')
+    return game.forces[force.name], global.forces[force.name] or Force.init(force.name)
 end
 
---- Merge a copy of the passed data to all forces in global.forces
+--- Merge a copy of the passed data to all forces in `global.forces`.
 -- @tparam table data a table containing variables to merge
--- @usage local data = {a = 'abc', b = 'def'}
+-- @usage
+-- local data = {a = "abc", b = "def"}
 -- Force.add_data_all(data)
 function Force.add_data_all(data)
     table.each(global.forces, function(v) table.merge(v, table.deepcopy(data)) end)
 end
 
---- Init or re-init a force or forces,
+--- Init or re-init a force or forces.
+-- Passing a `nil` event will iterate all existing forces.
 -- @tparam[opt] string|table event table or a string containing force name
 -- @tparam[opt=false] boolean overwrite the force data
 function Force.init(event, overwrite)
-    event = event and type(event) == "string" and {force = {name = event}, name = 99999} or event
     global.forces = global.forces or {}
-    if event and event.name >= 0 and event.force.name then
-        if not global.forces[event.force.name] or (global.forces[event.force.name] and overwrite) then
-            global.forces[event.force.name] = new(event.force.name)
+
+    local force = Game.get_force(event)
+
+    if force then
+        if not global.forces[force.name] or (global.forces[force.name] and overwrite) then
+            global.forces[force.name] = new(force.name)
+            return global.forces[force.name]
         end
     else
         for name in pairs(game.forces) do
@@ -57,11 +70,13 @@ function Force.init(event, overwrite)
         end
     end
 end
-Event.register(defines.events.on_force_created, Force.init)
-Event.register(Event.core_events.init, Force.init)
 
+-- TODO Figure out best way to handle this!
 -- function Force.merge()
 -- end
 -- Event.register(defines.events.on_forces_merging, Force.merge)
+
+local events = {defines.events.on_force_created, Event.core_events.init, Event.core_events.configuration_changed}
+Event.register(events, Force.init)
 
 return Force

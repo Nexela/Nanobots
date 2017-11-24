@@ -4,12 +4,15 @@
 -- @usage local Tile = require('stdlib/area/tile')
 -- @see LuaTile
 
-local fail_if_missing = require 'stdlib/core'['fail_if_missing']
-local Area = require 'stdlib/area/area'
-local Position = require 'stdlib/area/position'
-local Chunk = require 'stdlib/area/chunk'
+Tile = {_module_name = "Tile"} --luacheck: allow defined top
+setmetatable(Tile, {__index = require('stdlib/core')})
 
-Tile = {} --luacheck: allow defined top
+local fail_if_missing = Tile.fail_if_missing
+local Tile = require('stdlib/core')
+local Area = require('stdlib/area/area')
+local Position = require('stdlib/area/position')
+local Chunk = require('stdlib/area/chunk')
+
 --local MAX_UINT = 4294967296
 
 --- Get the @{LuaTile.position|tile position} of a tile where the given position resides.
@@ -123,9 +126,4 @@ function Tile.get_index(tile_pos)
     return bit32.band(bit32.bor(bit32.lshift(bit32.band(tile_pos.x, 0x1F), 5), bit32.band(tile_pos.y, 0x1F)), 0x3FF)
 end
 
-local _return_mt = {
-    __newindex = function() error("Attempt to mutatate read-only Tile Module") end,
-    __metatable = true
-}
-
-return setmetatable(Tile, _return_mt)
+return Tile:_protect()

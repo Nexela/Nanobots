@@ -2,10 +2,16 @@
 -- @module Config
 -- @usage require('stdlib/config/config')
 
-require 'stdlib/string'
-require 'stdlib/table'
+---
+-- @tfield function new
+-- @tfield function get
+-- @tfield function set
+-- @tfield function delete
+-- @tfield function is_set
+-- @table Config
+Config = {_module_name = "Config"} --luacheck: allow defined top
+setmetatable(Config, {__index = require("stdlib/core")})
 
---luacheck: ignore value
 -----------------------------------------------------------------------
 --Setup repeated code for use in sub functions here
 -----------------------------------------------------------------------
@@ -19,14 +25,6 @@ local testReservedCharacters = function(path)
     end
     return nil
 end
-
----
--- @tfield function new
--- @tfield function get
--- @tfield function set
--- @tfield function delete
--- @tfield function is_set
-Config = {} --luacheck: allow defined top
 
 --- Creates a new Config object to ease the management of a config table.
 -- @tparam table config_table the config table to manage
@@ -122,7 +120,6 @@ function Config.new(config_table)
 
         local pathParts = path:split('.')
         local part = config
-        local value = nil
 
         for key = 1, #pathParts - 1, 1 do
             local partKey = pathParts[key]
@@ -130,7 +127,6 @@ function Config.new(config_table)
                 part[partKey] = {}
             end
 
-            value = part[partKey]
             part = part[partKey]
         end
 
@@ -152,7 +148,6 @@ function Config.new(config_table)
 
         local pathParts = path:split('.')
         local part = config
-        local value = nil
 
         for key = 1, #pathParts - 1, 1 do
             local partKey = pathParts[key]

@@ -4,10 +4,12 @@
 -- @usage local Surface = require('stdlib/area/surface')
 -- @see LuaSurface
 
-local fail_if_missing = require 'stdlib/core'['fail_if_missing']
-local Area = require 'stdlib/area/area'
+Surface = {_module_name = "Surface"} --luacheck: allow defined top
+setmetatable(Surface, {__index = require('stdlib/core')})
 
-Surface = {} --luacheck: allow defined top
+local fail_if_missing = Surface.fail_if_missing
+local Surface = require('stdlib/core')
+local Area = require('stdlib/area/area')
 
 --- Flexible and safe lookup function for surfaces.
 -- <ul>
@@ -122,9 +124,4 @@ function Surface.get_surface_bounds(surface)
     return Area.construct(x1*32, y1*32, x2*32, y2*32)
 end
 
-local _return_mt = {
-    __newindex = function() error("Attempt to mutatate read-only Surface Module") end,
-    __metatable = true
-}
-
-return setmetatable(Surface, _return_mt)
+return Surface:_protect()

@@ -1,121 +1,94 @@
 --- Tools for working with bounding boxes.
+-- The tables passed into the Area functions are mutated in-place.
 -- @module Area
 -- @usage local Area = require('stdlib/area/area')
 -- @see Position
 -- @see Concepts.BoundingBox
 -- @see Concepts.Position
 
-local fail_if_missing = require 'stdlib/core'['fail_if_missing']
-local Position = require 'stdlib/area/position'
+Area = {_module_name = "Area"} --luacheck: allow defined top
+setmetatable(Area, {__index = require('stdlib/core')})
 
-Area = {} --luacheck: allow defined top
+local fail_if_missing = Area.fail_if_missing
+local Position = require('stdlib/area/position')
+
+--- By default area tables are mutated in place set this to true to make the tables immutable.
+Area.immutable = false
 
 --- Converts an area in either array or table format to an area with a metatable.
 -- Returns itself if it already has a metatable
--- @tparam Concepts.BoundingBox area_arr the area to convert
+-- @tparam Concepts.BoundingBox area the area to convert
+-- @tparam boolean new_copy return a new copy
 -- @treturn Concepts.BoundingBox a converted area
-function Area.new(area_arr)
-    fail_if_missing(area_arr, 'missing area value')
+function Area.new(area, new_copy)
+    fail_if_missing(area, 'missing area value')
 
-    if getmetatable(area_arr) then
-        return area_arr
+    if not (new_copy or Area.immutable) and getmetatable(area) == Area._mt then
+        return area
     end
 
-    local area
-    if #area_arr == 2 then
-        area = {left_top = Position.new(area_arr[1]), right_bottom = Position.new(area_arr[2])}
-    elseif area_arr['left_top'] then
-        area = {left_top = Position.new(area_arr.left_top), right_bottom = Position.new(area_arr.right_bottom)}
-    end
+    local left_top = Position.new(area.left_top or area[1], true)
+    local right_bottom = Position.new(area.right_bottom or area[2], true)
+    local new_area = {left_top = left_top, right_bottom = right_bottom}
+    new_area.orientation = area.orientation
 
-    return setmetatable(area, Area._mt)
+    return setmetatable(new_area, Area._mt)
 end
 
---- Deprecated
--- @function to_table
--- @see Area.new
-Area.to_table = Area.new
-
---- Creates an area from the 2 positions p1 and p2.
--- @tparam number x1 x-position of left_top, first position
--- @tparam number y1 y-position of left_top, first position
--- @tparam number x2 x-position of right_bottom, second position
--- @tparam number y2 y-position of right_bottom, second position
+--- Creates an area from the two positions p1 and p2.
+-- @tparam[opt=0] number x1 x-position of left_top, first position
+-- @tparam[opt=0] number y1 y-position of left_top, first position
+-- @tparam[opt=0] number x2 x-position of right_bottom, second position
+-- @tparam[opt=0] number y2 y-position of right_bottom, second position
 -- @treturn Concepts.BoundingBox the area in a table format
-function Area.construct(x1, y1, x2, y2)
-    return Area.new{ left_top = Position.construct(x1, y1), right_bottom = Position.construct(x2, y2) }
+function Area.construct(...)
+    local args = {...}
+
+    --self was passed as first argument
+    local t = (type(args[1]) == "table" and 1) or 0
+
+    local lt_x, lt_y = args[1+t] or 0, args[2+t] or 0
+    local rb_x, rb_y = args[3+t] or 0, args[4+t]
+
+    return Area.new{{lt_x, lt_y}, {rb_x, rb_y}}
 end
 
 --- Creates an area that is a copy of the given area.
 -- @tparam Concepts.BoundingBox area the position to copy
--- @treturn Concepts.BoundingBox a new area that is a new copy of the passed area
+-- @treturn Concepts.BoundingBox a new area that is a copy of the passed area
 function Area.copy(area)
-    area = Area.new(area)
-
-    return Area.new({Position.copy(area.left_top), Position.copy(area.right_bottom)})
-end
-
---- Returns true if 2 areas are the same.
--- @tparam Concepts.BoundingBox area1
--- @tparam Concepts.BoundingBox area2
--- @treturn boolean true if areas are equal
-function Area.equals(area1, area2)
-    if not area1 or not area2 then return false end
-    area1 = Area.new(area1)
-    area2 = Area.new(area2)
-
-    return area1.left_top == area2.left_top and area1.right_bottom == area2.right_bottom
-end
-
---- Returns the size of the space contained in the 2D area.
--- @tparam Concepts.BoundingBox area the area from which to get the size
--- @treturn number the size of the area &mdash; (width &times; height)
--- @treturn number the width of the area
--- @treturn number the height of the area
--- @treturn number the perimeter of the area &mdash; (2 &times; (width + height))
-function Area.size(area)
-    area = Area.new(area)
-
-    local left_top = area.left_top
-    local right_bottom = area.right_bottom
-
-    local dx = math.abs(left_top.x - right_bottom.x)
-    local dy = math.abs(left_top.y - right_bottom.y)
-    local perimeter = dx + dx + dy + dy
-    return dx * dy, dx, dy, perimeter
-end
-
---- Tests if a position {x, y} is located in an area (including the border).
--- @tparam Concepts.BoundingBox area the search area
--- @tparam Concepts.Position pos the position to check
--- @treturn boolean true if the position is located in the area
-function Area.inside(area, pos)
-    area = Area.new(area)
-    pos = Position.new(pos)
-
-    local left_top = area.left_top
-    local right_bottom = area.right_bottom
-    return pos.x >= left_top.x and pos.y >= left_top.y and pos.x <= right_bottom.x and pos.y <= right_bottom.y
+    return Area.new(area, true)
 end
 
 local function validate_vector(amount)
-    --Validate amount
     fail_if_missing(amount, 'Missing amount to shrink by')
 
     if type(amount) == 'number' then
         if amount < 0 then error('Can not shrink or expand area by a negative amount!', 2) end
         return amount, amount
-    elseif type(amount) == 'table' and assert(amount[1], 'missing x vector')  then
+    elseif type(amount) == 'table' and assert(amount[1], 'missing x vector') then
         return amount[1], assert(amount[2], 'missing y vector')
     else
         error('amount is neither a vector or number', 2)
     end
 end
 
---- Shrinks the size of an area by the given amount.
+--- Return a non zero sized area by expanding if needed
+-- @tparam Concepts.BoundingBox area the area to check
+-- @tparam number|Concepts.Vector amount the amount to expand
+-- @treturn Concepts.BoundingBox the area
+function Area.non_zero(area, amount)
+    area = Area.new(area)
+    amount = amount or .01
+
+    return Area.size(area) == 0 and Area.expand(area, amount) or area
+end
+
+--- Shrinks the area by the given amount.
+-- The area shrinks inwards from top-left towards the bottom-right, and from bottom-right towards the top-left.
 -- @tparam Concepts.BoundingBox area the area to shrink
--- @tparam number|Concepts.Vector amount the amount to shrink each edge of the area inwards by
--- @treturn Concepts.BoundingBox the new shrunken area
+-- @tparam number|Concepts.Vector amount the amount to shrink
+-- @treturn Concepts.BoundingBox the area reduced by amount
 function Area.shrink(area, amount)
     area = Area.new(area)
     local x, y = validate_vector(amount)
@@ -132,7 +105,7 @@ end
 --- Expands the size of an area by the given amount.
 -- @tparam Concepts.BoundingBox area the area
 -- @tparam number|Concepts.Vector amount to expand each edge of the area outwards by
--- @treturn Concepts.BoundingBox the new expanded area
+-- @treturn Concepts.BoundingBox the area expanded by amount
 -- @see Area.shrink
 function Area.expand(area, amount)
     area = Area.new(area)
@@ -192,22 +165,10 @@ function Area.rotate(area)
     end
 end
 
---- Calculates the center of the area and returns the position.
--- @tparam Concepts.BoundingBox area the area
--- @treturn Concepts.Position the center of the area
-function Area.center(area)
-    area = Area.new(area)
-
-    local dist_x = area.right_bottom.x - area.left_top.x
-    local dist_y = area.right_bottom.y - area.left_top.y
-
-    return Position.new{area.left_top.x + (dist_x / 2), area.left_top.y + (dist_y / 2)}
-end
-
---- Offsets the area by the {x, y} values.
+--- Offsets the area by the `{x, y}` values.
 -- @tparam Concepts.BoundingBox area the area to offset
 -- @tparam Concepts.Position pos the position to which the area will offset
--- @treturn Concepts.BoundingBox new area offset by the position
+-- @treturn Concepts.BoundingBox the area offset by the position
 function Area.offset(area, pos)
     area = Area.new(area)
     pos = Position.new(pos)
@@ -222,7 +183,7 @@ end
 -- @tparam Concepts.BoundingBox area the area to translate
 -- @tparam defines.direction direction the direction of translation
 -- @tparam number distance the distance of the translation
--- @treturn Concepts.BoundingBox a new translated area
+-- @treturn Concepts.BoundingBox the area translated
 function Area.translate(area, direction, distance)
     area = Area.new(area)
     fail_if_missing(direction, 'missing direction argument')
@@ -233,9 +194,14 @@ function Area.translate(area, direction, distance)
     return area
 end
 
---- Converts an area to the integer representation, by taking the floor of the left\_top and the ceiling of the right\_bottom.
+--- Rounds down the xy-values in `area.left_top` and rounds up the xy-values in `area.right_bottom`.
+-- @usage
+-- local position1 = {x = 1.5, y = 1.5}
+-- local position2 = {x = 1.5, y = 1.5}
+-- local area = {left_top = position1, right_bottom = position2}
+-- Area.round_to_integer(area) --> {left_top = {x = 1, y = 1}, right_bottom = {x = 2, y = 2}}
 -- @tparam Concepts.BoundingBox area the area to round
--- @treturn int the rounded integer representation
+-- @treturn Concepts.BoundingBox the area with rounded positions
 function Area.round_to_integer(area)
     area = Area.new(area)
 
@@ -244,10 +210,165 @@ function Area.round_to_integer(area)
     return area
 end
 
+--- Normalizes the given area.
+-- <ul>
+-- <li>Swaps the values between `right_bottom.x` & `left_top.x` **IF** `right_bottom.x` < `left_top.x`
+-- <li>Swaps the values between `right_bottom.y` & `left_top.y` **IF** `right_bottom.y` < `left_top.y`
+-- </ul>
+-- Essentially, the normalization process constructs a new area out of the swapped coordinates.
+-- @tparam Concepts.BoundingBox area the area to normalize
+-- @treturn Concepts.BoundingBox the normalized area
+function Area.normalize(area)
+    area = Area.new(area)
+
+    local left_top = area.left_top
+    local right_bottom = area.right_bottom
+
+    if right_bottom.x < left_top.x then
+        local x = left_top.x
+        left_top.x = right_bottom.x
+        right_bottom.x = x
+    end
+
+    if right_bottom.y < left_top.y then
+        local y = left_top.y
+        left_top.y = right_bottom.y
+        right_bottom.y = y
+    end
+
+    return area
+end
+
+--- Gets the center positions of the tiles where the given area's two positions reside.
+-- @tparam Concepts.BoundingBox area the area to examine
+-- @treturn Concepts.BoundingBox the area with its two positions at the center of the tiles in which they reside
+function Area.tile_center_points(area)
+    area = Area.new(area)
+
+    area.left_top = Position.center(area.left_top)
+    area.right_bottom = Position.center(area.right_bottom)
+    return area
+end
+
+--- Calculates the center of the area and returns the position.
+-- @tparam Concepts.BoundingBox area the area
+-- @treturn Concepts.Position the center of the area
+function Area.center(area)
+    area = Area.new(area)
+
+    local dist_x = area.right_bottom.x - area.left_top.x
+    local dist_y = area.right_bottom.y - area.left_top.y
+
+    return Position.new{area.left_top.x + (dist_x / 2), area.left_top.y + (dist_y / 2)}
+end
+
+--- Returns true if two areas are the same.
+-- @tparam Concepts.BoundingBox area1
+-- @tparam Concepts.BoundingBox area2
+-- @treturn boolean true if areas are the same
+function Area.compare(area1, area2)
+    if not area1 or not area2 then return false end
+    area1 = Area.new(area1)
+    area2 = Area.new(area2)
+
+    local orientation = (area1.orientation or 0) == (area2.orientation or 0)
+
+    return orientation and area1.left_top == area2.left_top and area1.right_bottom == area2.right_bottom
+end
+
+--- Gets the properties of the given area.
+-- This function returns a total of four values that represent the properties of the given area.
+-- @tparam Concepts.BoundingBox area the area from which to get the size
+-- @treturn number the size of the area &mdash; (width &times; height)
+-- @treturn number the width of the area
+-- @treturn number the height of the area
+-- @treturn number the perimeter of the area &mdash; (2 &times; (width + height))
+function Area.size(area)
+    area = Area.new(area)
+
+    local left_top = area.left_top
+    local right_bottom = area.right_bottom
+
+    local width = math.abs(left_top.x - right_bottom.x)
+    local height = math.abs(left_top.y - right_bottom.y)
+    local area_size = width * height
+    local perimeter = width + width + height + height
+    return area_size, width, height, perimeter
+end
+
+--- Compares the size of two areas.
+-- note: The shame of either area is not taking into consideration, see @{Area.compare}
+-- @tparam Concepts.BoundingBox area1
+-- @tparam Concepts.BoundingBox area2
+-- @treturn boolean is area1 the same size as area2
+function Area.equals(area1, area2)
+    if not area1 or not area2 then return false end
+    area1 = Area.new(area1)
+    area2 = Area.new(area2)
+
+    return Area.size(area1) == Area.size(area2)
+end
+
+--- Is area1 smaller in size than area2
+-- @tparam Concepts.BoundingBox area1
+-- @tparam Concepts.BoundingBox area2
+-- @treturn boolean is area1 less than area2 in size
+function Area.less_than(area1, area2)
+    if not area1 or not area2 then return false end
+    area1 = Area.new(area1)
+    area2 = Area.new(area2)
+
+    return Area.size(area1) < Area.size(area2)
+end
+
+--- Is area1 smaller in size than area2
+-- @tparam Concepts.BoundingBox area1
+-- @tparam Concepts.BoundingBox area2
+-- @treturn boolean is area1 less than or equal to area2 in size
+-- @local
+function Area.less_than_eq(area1, area2)
+    if not area1 or not area2 then return false end
+    area1 = Area.new(area1)
+    area2 = Area.new(area2)
+
+    return Area.size(area1) <= Area.size(area2)
+end
+
+--- Tests if a position {x, y} is located in an area (including the border).
+-- @tparam Concepts.BoundingBox area the search area
+-- @tparam Concepts.Position pos the position to check
+-- @treturn boolean true if the position is located in the area
+function Area.inside(area, pos)
+    area = Area.new(area)
+    pos = Position.new(pos)
+
+    local left_top = area.left_top
+    local right_bottom = area.right_bottom
+    return pos.x >= left_top.x and pos.y >= left_top.y and pos.x <= right_bottom.x and pos.y <= right_bottom.y
+end
+
+--- Converts an area to a string.
+-- @tparam Concepts.BoundingBox area the area to convert
+-- @treturn string the string representation of the area
+function Area.tostring(area)
+    area = Area.new(area)
+
+    --local left_top = 'left_top = '..Position.tostring(area.left_top)
+    --local right_bottom = 'right_bottom = '..Position.tostring(area.right_bottom)
+    --local left_top = 'left_top = '..area.left_top:tostring()
+    --local right_bottom = 'right_bottom = '..area.right_bottom:tostring()
+    local left_top = 'left_top = '..area.left_top
+    local right_bottom = 'right_bottom = '..area.right_bottom
+
+    local orientation = area.orientation and ', '..area.orientation or ''
+
+    return '{'..left_top..', '..right_bottom..orientation..'}'
+end
+
 --- Iterates an area.
 -- @usage
 -- for x,y in Area.iterate({{0, -5}, {3, -3}}) do
---     ...
+-- ...
 -- end
 -- @tparam Concepts.BoundingBox area the area to iterate
 -- @treturn function an iterator
@@ -268,10 +389,10 @@ function Area.iterate(area)
     return iterator.iterate, area, 0
 end
 
---- Iterates an area in a spiral as depicted below, from innermost to the outermost location.
+--- Iterates the given area in a spiral as depicted below, from innermost to the outermost location.
 -- <p>![](http://i.imgur.com/EwfO0Es.png)
 -- @usage for x, y in Area.spiral_iterate({{-2, -1}, {2, 1}}) do
---   print('(' .. x .. ', ' .. y .. ')')
+-- print('(' .. x .. ', ' .. y .. ')')
 -- end
 -- prints: (0, 0) (1, 0) (1, 1) (0, 1) (-1, 1) (-1, 0) (-1, -1) (0, -1) (1, -1) (2, -1) (2, 0) (2, 1) (-2, 1) (-2, 0) (-2, -1)
 -- @tparam Concepts.BoundingBox area the area on which to perform a spiral iteration
@@ -314,90 +435,52 @@ function Area.spiral_iterate(area)
     return iterator.iterate, area, 0
 end
 
---- Creates a new area, a modified copy of the original, such that left and right x, up and down y are normalized, where left.x < right.x, left.y < right.y order.
--- @tparam Concepts.BoundingBox area the area to adjust
--- @treturn Concepts.BoundingBox a normalized area
-function Area.normalize(area)
+function Area.shrink_to_surface_size(area, surface)
     area = Area.new(area)
-
-    local left_top = Position.copy(area.left_top)
-    local right_bottom = Position.copy(area.right_bottom)
-
-    if right_bottom.x < left_top.x then
-        local x = left_top.x
-        left_top.x = right_bottom.x
-        right_bottom.x = x
+    local w, h = surface.map_gen_settings.width, surface.map_gen_settings.height
+    if math.abs(area.left_top.x) > w / 2 then
+        area.left_top.x = -(w / 2)
+        area.right_bottom.x = (w / 2)
     end
-    if right_bottom.y < left_top.y then
-        local y = left_top.y
-        left_top.y = right_bottom.y
-        right_bottom.y = y
+    if math.abs(area.left_top.y) > w / 2 then
+        area.left_top.y = -(h / 2)
+        area.right_bottom.y = (h / 2)
     end
-
-    return Area.construct(left_top.x, left_top.y, right_bottom.x, right_bottom.y)
-end
-
---- Converts the given area's two BoundingBox positions to the center positions of the tiles in which they reside.
--- @tparam Concepts.BoundingBox area the area to convert
--- @treturn Concepts.BoundingBox an area where its two BoundingBox positions are at the center of the tiles in which they reside
-function Area.tile_center_points(area)
-    area = Area.new(area)
-
-    area.left_top = Position.center(area.left_top)
-    area.right_bottom = Position.center(area.right_bottom)
     return area
 end
 
---- Converts an area to a string.
--- @tparam Concepts.BoundingBox area the area to convert
--- @treturn string the string representation of the area
-function Area.tostring(area)
-    area = Area.new(area)
+-------------------------------------------------------------------------------
+--[[Entity Helpers]]--
+-------------------------------------------------------------------------------
 
-    local left_top = 'left_top = '..Position.tostring(area.left_top)
-    local right_bottom = 'right_bottom = '..Position.tostring(area.right_bottom)
-    return '{'..left_top..', '..right_bottom ..'}'
+--- Set the metatable on a stored area without returning a new area. Usefull for restoring
+-- metatables to saved areas in global
+-- @tparam Concepts.BoundingBox area
+-- @treturn area with metatable set
+function Area.setmetatable(area)
+    return Area._setmetatable(area, Area._mt)
 end
 
-
-local function to_bounding_box_area(entity, box)
-    fail_if_missing(entity, "missing entity argument")
-
-    local pos = entity.position
-    local bb = entity.prototype[box]
-    if entity.direction and (entity.direction == defines.direction.west or entity.direction == defines.direction.east) then
-        --Let area.rotate determine if the box is rotatable, no point in duplicated code for it.
-        return Area.rotate(Area.offset(bb, pos))
-    end
-    return Area.offset(bb, pos)
-end
-
---- Converts an entity and its @{LuaEntityPrototype.collision_box|collision_box} to the area around it.
--- @tparam LuaEntity entity the entity to convert to an area
--- @treturn Concepts.BoundingBox
-function Area.to_collision_area(entity)
-    return to_bounding_box_area(entity, "collision_box")
-end
-
---- Converts an entity and its @{LuaEntityPrototype.selection_box|selection_box} to the area around it.
--- @tparam LuaEntity entity to convert to an area
--- @treturn Concepts.BoundingBox
-function Area.to_selection_area(entity)
-    return to_bounding_box_area(entity, "selection_box")
-end
-
+--- Area tables are returned with these Metamethods attached.
+-- @table Metamethods
 Area._mt = {
-    __index = Area,
-    __newindex = function() end,
-    __add = Area.expand,
-    __sub = Area.shrink,
-    __tostring = Area.tostring,
-    __eq = Area.equals,
+    __index = Area, -- If key is not found, see if there is one availble in the Area module.
+    __add = Area.expand, -- Will expand the area by the number or vector on the RHS.
+    __sub = Area.shrink, -- Will shrink the area by the number or vector on the RHS.
+    __tostring = Area.tostring, -- Will print a string representation of the area.
+    __eq = Area.equals, -- Is the size of area1 the same as area2.
+    __lt = Area.less_than, --is the size of area1 less than area2.
+    __len = Area.size, -- The size of the area.
+    __concat = Area._concat, -- calls tostring on both sides of concact.
+    __call = Area.copy -- Return a new copy
 }
 
-local _return_mt = {
-    __newindex = function() error("Attempt to mutatate read-only Area Module") end,
-    __metatable = true
-}
+local function _call(_, ...)
+    if type((...)) == "table" then
+        return Area.new((...))
+    else
+        return Area.construct(...)
+    end
+end
 
-return setmetatable(Area, _return_mt)
+return Area:_protect(_call)

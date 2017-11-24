@@ -2,11 +2,11 @@
 -- Taken from ***Programming in Lua*** [Queues and Double Queues](http://www.lua.org/pil/11.4.html)
 -- and modified to not allow nil values, and returns nil if @{pop_first} or @{pop_last} is used when the queue is empty.
 -- @module Queue
--- @usage local Queue = require('stdlib/queue')
+-- @usage local Queue = require('stdlib/queue/queue')
 
-local fail_if_missing = require 'stdlib/core'['fail_if_missing']
-
-Queue = {} --luacheck: allow defined top
+Queue = {_module_name = "Queue"} --luacheck: allow defined top
+setmetatable(Queue, {__index = require('stdlib/core')})
+local fail_if_missing = Queue.fail_if_missing
 
 --- Constructs a new Queue object.
 -- @return (<span class="types">@{Queue}</span>) a new, empty queue
@@ -55,7 +55,7 @@ function Queue.push_last(queue, value)
     return queue
 end
 
---- Retrieve the element at the front of the queue.
+--- Retrieve the element at the front of the queue and remove it from the queue.
 -- @param queue (<span class="types">@{Queue}</span>) the queue to retrieve the element from
 -- @treturn Mixed value the element at the front of the queue
 function Queue.pop_first(queue)
@@ -69,14 +69,14 @@ function Queue.pop_first(queue)
     return value
 end
 
---- Return the element at the front of the queue.
+--- Return the element at the front of the queue and remove it from the queue.
 -- @param queue (<span class="types">@{Queue}</span>) the queue to retrieve the element from
 -- @treturn Mixed the element at the front of the queue
 function Queue.peek_first (queue)
     return queue[queue.first]
 end
 
---- Retrieve the element at the back of the queue.
+--- Retrieve the element at the back of the queue and remove it from the queue.
 -- @param queue (<span class="types">@{Queue}</span>) the queue to retrieve the element from
 -- @treturn Mixed the element at the back of the queue
 function Queue.pop_last(queue)
@@ -98,26 +98,17 @@ function Queue.peek_last (queue)
     return queue[queue.last]
 end
 
---- Push a new element to the end of the queue, shortcut for @{push_last}.
--- @function push
--- @param queue (<span class="types">@{Queue}</span>) the queue to push an element to
--- @tparam Mixed value the element to push
--- @see Queue.push_last
+--- Shortcut for @{Queue.push_last}
+-- @function Queue.push
 Queue.push = Queue.push_last
 
---- Pop an element from the head of the queue, shortcut for @{pop_first}.
--- @function pop
--- @param queue (<span class="types">@{Queue}</span>) the queue to retrieve the element from
--- @treturn Mixed the element at the front of the queue
--- @see Queue.pop_first
+--- Shortcut for @{Queue.pop_first}
+-- @function Queue.pop
 Queue.pop = Queue.pop_first
 
---- Peek into the element at the head of the queue, shortcut for @{peek_first}.
--- @function peek
--- @param queue (<span class="types">@{Queue}</span>) the queue to peek into
--- @treturn Mixed the element at the front of the queue
--- @see Queue.peek_first
-Queue.peek = Queue.peek_fist
+--- Shortcut for @{Queue.peek_first}
+-- @function Queue.peek
+Queue.peek = Queue.peek_first
 
 --- Returns true if the given queue is empty.
 -- @param queue (<span class="types">@{Queue}</span>) the queue to check
@@ -139,13 +130,7 @@ end
 
 Queue._mt = {
     __index = Queue,
-    __len = function(t) return Queue.count(t) end,
-    --TODO custom __ipairs metatable
+    __len = Queue.count,
 }
 
-local _return_mt = {
-    __newindex = function() error("Attempt to mutatate read-only Queue Module") end,
-    __metatable = true
-}
-
-return setmetatable(Queue, _return_mt)
+return Queue:_protect()

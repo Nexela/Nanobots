@@ -1,13 +1,10 @@
-local Prototype = require("stdlib/data/prototype")
+local Data = require("stdlib/data/data")
 local sound_creators = {
     type = "explosion",
     name = "nano-sound-build-tiles",
     flags = {"not-on-map"},
     rotate = false,
-    animations =
-    {
-        Prototype.empty_animation
-    },
+    animations = Data.empty_animations(),
     sound =
     {
         aggregation =
@@ -42,10 +39,7 @@ local sound_deconstruct = {
     name = "nano-sound-deconstruct",
     flags = {"not-on-map"},
     rotate = false,
-    animations =
-    {
-        Prototype.empty_animation
-    },
+    animations = Data.empty_animations(),
     sound =
     {
         aggregation =
@@ -63,10 +57,7 @@ local sound_repair = {
     name = "nano-sound-repair",
     flags = {"not-on-map"},
     rotate = false,
-    animations =
-    {
-        Prototype.empty_animation
-    },
+    animations = Data.empty_animations(),
     sound =
     {
         aggregation =
@@ -84,10 +75,7 @@ local sound_termites = {
     name = "nano-sound-termite",
     rotate = false,
     flags = {"not-on-map"},
-    animations =
-    {
-        Prototype.empty_animation
-    },
+    animations = Data.empty_animations(),
     sound =
     {
         aggregation =

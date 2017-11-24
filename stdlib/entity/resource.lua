@@ -2,14 +2,14 @@
 -- @module Resource
 -- @usage local Resource = require('stdlib/entity/resource')
 
-local Surface = require 'stdlib/area/surface'
-local Area = require 'stdlib/area/area'
-local Tile = require 'stdlib/area/tile'
-local Queue = require 'stdlib/utils/queue'
-local fail_if_missing = require 'stdlib/core'['fail_if_missing']
-require 'stdlib/table'
+Resource = {_module_name = "Resource"} --luacheck: allow defined top
+setmetatable(Resource, {__index = require('stdlib/core')})
 
-Resource = {}--luacheck: allow defined top
+local fail_if_missing = Resource.fail_if_missing
+local Surface = require('stdlib/area/surface')
+local Area = require('stdlib/area/area')
+local Tile = require('stdlib/area/tile')
+local Queue = require('stdlib/queue/queue')
 
 --- Gets all resource entities at the specified position and surface.
 -- Adapted from *YARM/resmon.lua &rarr; find\_resource\_at*
