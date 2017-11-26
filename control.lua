@@ -487,7 +487,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                         end
                                     elseif ghost.name == "tile-ghost" then
                                         --Don't queue tile ghosts if entity ghost is on top of it.
-                                        if ghost.surface.count_entities_filtered {name = "entity-ghost", area = Area.to_collision_area(ghost), limit = 1} == 0 then
+                                        if ghost.surface.count_entities_filtered {name = "entity-ghost", area = Area(ghost.bounding_box):non_zero(), limit = 1} == 0 then
                                             local tile = ghost.surface.get_tile(ghost.position)
                                             if tile then
                                                 local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
