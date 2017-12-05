@@ -141,7 +141,7 @@ end
 
 local function find_network_and_cell(interface)
     local port = interface.surface.find_entities_filtered{name = "roboport-interface-main", area=interface.bounding_box}[1]
-    if port.valid then
+    if port and port.valid then
         local network = port.logistic_network
         local cell = table.find(port.logistic_cell.neighbours, function(v) return v.construction_radius > 0 end) or port.logistic_cell
         return network, cell
@@ -197,8 +197,8 @@ Event.register(defines.events.on_tick, execute_nano_queue)
 --[[Roboport Interface Scanner]]--
 -------------------------------------------------------------------------------
 local function kill_or_remove_interface_parts(event, destroy)
-    destroy = destroy or event.mod == "creative-mode"
     if event.entity.name == "roboport-interface-main" then
+        destroy = destroy or event.mod == "creative-mode"
         local interface = event.entity
         for _, entity in pairs(interface.surface.find_entities_filtered{area=interface.bounding_box, force=interface.force}) do
             if entity ~= interface and entity.name:find("^roboport%-interface") then
@@ -208,7 +208,7 @@ local function kill_or_remove_interface_parts(event, destroy)
     end
 end
 
-Event.register(defines.events.on_entity_died, function(event) kill_or_remove_interface_parts(event) end)
+Event.register(defines.events.on_entity_died, kill_or_remove_interface_parts)
 Event.register(Event.mined_events, function(event) kill_or_remove_interface_parts(event, true) end)
 
 --Build the interface, after built check the area around it for interface components to revive or create.

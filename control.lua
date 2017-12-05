@@ -3,7 +3,8 @@ require("stdlib/config/config")
 require("stdlib/event/event")
 require("stdlib/event/gui")
 
-defines.events.on_preplayer_mined_item = defines.events.on_pre_player_mined_item --luacheck: ignore defines
+--TODO remove in .16
+defines.events.on_pre_player_mined_item = defines.events.on_pre_player_mined_item or defines.events.on_preplayer_mined_item --luacheck: ignore
 
 MOD = {}
 MOD.name = "Nanobots"
@@ -26,7 +27,7 @@ local Position = require("stdlib/area/position")
 local Area = require("stdlib/area/area")
 
 Event.build_events = {defines.events.on_built_entity, defines.events.on_robot_built_entity}
-Event.mined_events = {defines.events.on_preplayer_mined_item, defines.events.on_robot_pre_mined}
+Event.mined_events = {defines.events.on_pre_player_mined_item, defines.events.on_robot_pre_mined}
 Event.reset_nano_queue = script.generate_event_name()
 
 if MOD.config.DEBUG then
