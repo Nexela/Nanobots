@@ -65,8 +65,7 @@ parameters ={
         },
     }
 }
-
---]]--
+--]]
 
 local function get_parameters(params)
     local parameters = {}
@@ -213,6 +212,7 @@ Event.register(Event.mined_events, function(event) kill_or_remove_interface_part
 
 --Build the interface, after built check the area around it for interface components to revive or create.
 local function build_roboport_interface(event)
+    game.print(serpent.line(event))
     if event.created_entity.name == "roboport-interface-main" then
         local interface = event.created_entity
         local cc, ra = {}, {}
@@ -222,9 +222,10 @@ local function build_roboport_interface(event)
                 if entity.name == "entity-ghost" then
                     if entity.ghost_name == "roboport-interface-cc" then
                         _, cc = entity.revive()
+                        local pos = Position(interface.position):translate(defines.direction.southeast, 0.5)
                         --Make sure the revived interface-cc is in the correct position. Blueprints can be rotated causing wonkiness
-                        if cc.valid and not Position.equals(interface.position, Position.offset(cc.position, -.5, -.5)) then
-                            cc.teleport(Position.offset(interface.position, .5, .5))
+                        if cc.valid then
+                            cc.teleport(pos)
                         end
                     elseif entity.ghost_name == "roboport-interface-scanner" then
                         _, ra = entity.revive()
@@ -238,11 +239,10 @@ local function build_roboport_interface(event)
         end
         --If neither CC or RA are valid at this point then let us create them.
         if not cc.valid then
-            local pos = {x = interface.position.x + 0.5, y = interface.position.y + 0.5}
+            local pos = Position(interface.position):translate(defines.direction.southeast, 0.5)
             cc = interface.surface.create_entity{name="roboport-interface-cc", position=pos, force=interface.force}
         end
         if not ra.valid then
-            --local pos = {x = interface.position.x - 0.5, y = interface.position.y + 0.5}
             local pos = interface.position
             ra = interface.surface.create_entity{name="roboport-interface-scanner", position=pos, force=interface.force}
         end
@@ -253,6 +253,9 @@ local function build_roboport_interface(event)
         cc.destructible = false
         ra.destructible = false
         --cc.rotatable = false
+    elseif event.created_entity.name == "roboport-interface-cc" and event.mod == "creative-mode" and event.revived then
+        local cc = event.created_entity
+        cc.die()
     end
 end
 Event.register(Event.build_events, build_roboport_interface)
@@ -261,10 +264,10 @@ local function on_sector_scanned(event)
     --if not cc build cc.
     if event.radar.name == "roboport-interface-scanner" then
         local entity = event.radar
-        local area = Area.offset(entity.bounding_box, {x=1, y=0})
-        local interface = entity.surface.find_entities_filtered{name="roboport-interface-cc", area = area, limit=1}
-        if interface[1] and interface[1].valid then
-            run_interface(interface[1])
+        local pos = Position(entity.position):translate(defines.direction.southeast, 0.5)
+        local interface = entity.surface.find_entities_filtered{name="roboport-interface-cc", position = pos, limit=1}[1]
+        if interface and interface.valid then
+            run_interface(interface)
         end
     end
 end
