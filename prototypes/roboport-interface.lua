@@ -60,22 +60,14 @@ ri_cc.icon = nil
 ri_cc.icons = {
     {icon = "__Nanobots__/graphics/icons/roboport-interface-cc.png"}
 }
---ri_cc.max_health = 0
 ri_cc.item_slot_count = 5
-ri_cc.flags = {"not-deconstructable", "player-creation"}
+ri_cc.flags = {"not-deconstructable", "player-creation", "placeable-off-grid"}
 ri_cc.collision_mask = {}
 ri_cc.minable = nil
-ri_cc.selection_box = {{-0.5, -0.5}, {0.5, 0.5}}
-ri_cc.collision_box = {{-0.4, -0.4}, {0.4, 0.4}}
+ri_cc.selection_box = {{0.0, 0.0}, {1, 1}}
+ri_cc.collision_box = {{-0.9, -0.9}, {0.9, 0.9}}
 for index, direction in pairs({"north", "east", "south", "west"}) do
-    ri_cc.sprites[direction] = {
-        filename = "__Nanobots__/graphics/entity/roboport-interface/roboport-interface-cc.png",
-        width = 100,
-        height = 100,
-        frame_count = 1,
-        scale = .50,
-        shift = {0.1, -0.15},
-    }
+    ri_cc.sprites[direction] = Data.empty_sprite()
     ri_cc.activity_led_sprites[direction] = {
         filename = "__base__/graphics/entity/combinator/activity-leds/combinator-led-constant-south.png",
         width = 11,
@@ -99,7 +91,7 @@ for index, direction in pairs({"north", "east", "south", "west"}) do
         }
     }
 end
-ri_cc.circuit_wire_max_distance = 7.5
+ri_cc.circuit_wire_max_distance = 9
 ri_cc.activity_led_light =
 {
     intensity = 0.8,
@@ -110,7 +102,7 @@ ri_cc.activity_led_light =
 --[[Radar]]--
 -------------------------------------------------------------------------------
 local ri_radar = Data.duplicate("radar", "radar", "roboport-interface-scanner", true)
-ri_radar.flags = {"not-deconstructable", "player-creation"}
+ri_radar.flags = {"not-deconstructable", "player-creation", "placeable-off-grid"}
 ri_radar.icon = "__Nanobots__/graphics/icons/roboport-interface.png"
 ri_radar.minable = nil
 ri_radar.collision_mask = {}

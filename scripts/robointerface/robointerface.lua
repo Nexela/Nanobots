@@ -1,7 +1,6 @@
 -------------------------------------------------------------------------------
 --[[robointerface]]
 -------------------------------------------------------------------------------
-local Area = require("stdlib/area/area")
 local Position = require("stdlib/area/position")
 local Queue = require("scripts/hash_queue")
 local queue
@@ -139,7 +138,7 @@ Queue.deconstruct_finished_miners = function(data)
 end
 
 local function find_network_and_cell(interface)
-    local port = interface.surface.find_entities_filtered{name = "roboport-interface-main", area=interface.bounding_box}[1]
+    local port = interface.surface.find_entities_filtered{name = "roboport-interface-main", position=interface.position}[1]
     if port and port.valid then
         local network = port.logistic_network
         local cell = table.find(port.logistic_cell.neighbours, function(v) return v.construction_radius > 0 end) or port.logistic_cell
@@ -199,34 +198,28 @@ local function kill_or_remove_interface_parts(event, destroy)
     if event.entity.name == "roboport-interface-main" then
         destroy = destroy or event.mod == "creative-mode"
         local interface = event.entity
-        for _, entity in pairs(interface.surface.find_entities_filtered{area=interface.bounding_box, force=interface.force}) do
+        for _, entity in pairs(interface.surface.find_entities_filtered{position = interface.position, force=interface.force}) do
             if entity ~= interface and entity.name:find("^roboport%-interface") then
                 _ = (destroy and entity.destroy()) or entity.die()
             end
         end
     end
 end
-
 Event.register(defines.events.on_entity_died, kill_or_remove_interface_parts)
 Event.register(Event.mined_events, function(event) kill_or_remove_interface_parts(event, true) end)
 
 --Build the interface, after built check the area around it for interface components to revive or create.
 local function build_roboport_interface(event)
-    game.print(serpent.line(event))
     if event.created_entity.name == "roboport-interface-main" then
         local interface = event.created_entity
+        local pos = Position(interface.position)
         local cc, ra = {}, {}
-        for _, entity in pairs(interface.surface.find_entities_filtered{area=interface.bounding_box, force=interface.force}) do
+        for _, entity in pairs(interface.surface.find_entities_filtered{position = pos, force=interface.force}) do
             if entity ~= interface then
                 --If we have ghosts either via blueprint or something killed them
                 if entity.name == "entity-ghost" then
                     if entity.ghost_name == "roboport-interface-cc" then
                         _, cc = entity.revive()
-                        local pos = Position(interface.position):translate(defines.direction.southeast, 0.5)
-                        --Make sure the revived interface-cc is in the correct position. Blueprints can be rotated causing wonkiness
-                        if cc.valid then
-                            cc.teleport(pos)
-                        end
                     elseif entity.ghost_name == "roboport-interface-scanner" then
                         _, ra = entity.revive()
                     end
@@ -239,33 +232,27 @@ local function build_roboport_interface(event)
         end
         --If neither CC or RA are valid at this point then let us create them.
         if not cc.valid then
-            local pos = Position(interface.position):translate(defines.direction.southeast, 0.5)
             cc = interface.surface.create_entity{name="roboport-interface-cc", position=pos, force=interface.force}
         end
         if not ra.valid then
-            local pos = interface.position
             ra = interface.surface.create_entity{name="roboport-interface-scanner", position=pos, force=interface.force}
         end
+
         --roboports start with a buffer of energy. Lets take that away!
         interface.energy = 0
         --Use the same backer name for the interface and radar
         ra.backer_name = interface.backer_name
+        cc.direction = defines.direction.north
         cc.destructible = false
         ra.destructible = false
-        --cc.rotatable = false
-    elseif event.created_entity.name == "roboport-interface-cc" and event.mod == "creative-mode" and event.revived then
-        local cc = event.created_entity
-        cc.die()
     end
 end
 Event.register(Event.build_events, build_roboport_interface)
 
 local function on_sector_scanned(event)
-    --if not cc build cc.
     if event.radar.name == "roboport-interface-scanner" then
         local entity = event.radar
-        local pos = Position(entity.position):translate(defines.direction.southeast, 0.5)
-        local interface = entity.surface.find_entities_filtered{name="roboport-interface-cc", position = pos, limit=1}[1]
+        local interface = entity.surface.find_entities_filtered{name="roboport-interface-cc", position = entity.position, limit=1}[1]
         if interface and interface.valid then
             run_interface(interface)
         end
