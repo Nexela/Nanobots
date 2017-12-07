@@ -115,7 +115,7 @@ local cloud_small_termites = {
                     action =
                     {
                         type = "area",
-                        perimeter = .75,
+                        radius = .75,
                         force="all",
                         entity_flags = {"placeable-neutral"},
                         action_delivery =

@@ -23,8 +23,9 @@ local item_ri = {
     type = "item",
     name = "roboport-interface",
     icons = {
-        {icon = "__Nanobots__/graphics/icons/roboport-interface.png"}
+        {icon = "__Nanobots__/graphics/icons/roboport-interface.png", icon_size = 32}
     },
+    icon_size = 32,
     flags = {"goes-to-quickbar"},
     subgroup = "logistic-network",
     order = "c[signal]-a[roboport]-interface",
@@ -36,8 +37,9 @@ local item_proxy = {
     type = "item",
     name = "roboport-interface-cc",
     icons = {
-        {icon = "__Nanobots__/graphics/icons/roboport-interface-cc.png"}
+        {icon = "__Nanobots__/graphics/icons/roboport-interface-cc.png", icon_size = 32}
     },
+    icon_size = 32,
     flags = {"hidden"},
     subgroup = "logistic-network",
     order = "c[signal]-a[roboport]-interface-cc",
@@ -70,7 +72,7 @@ ri_cc.collision_box = {{-0.9, -0.9}, {0.9, 0.9}}
 for index, direction in pairs({"north", "east", "south", "west"}) do
     ri_cc.sprites[direction] = Data.empty_sprite()
     ri_cc.activity_led_sprites[direction] = {
-        filename = "__base__/graphics/entity/combinator/activity-leds/combinator-led-constant-south.png",
+        filename = "__Nanobots__/graphics/entity/roboport-interface/combinator-led-constant-south.png",
         width = 11,
         height = 11,
         frame_count = 1,

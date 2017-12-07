@@ -6,6 +6,7 @@ local proxy = {
     type = "combat-robot",
     name = "nano-proxy-health",
     icon = "__core__/graphics/shoot.png",
+    icon_size = 32,
     selectable_in_game = false,
     max_health = 20,
     alert_when_damaged = false,

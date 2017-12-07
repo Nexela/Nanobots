@@ -218,7 +218,7 @@ local cloud_small_repair = {
                 action = {
                     {
                         type = "area",
-                        perimeter = 0.75,
+                        radius = 0.75,
                         force="ally",
                         entity_flags = {"player-creation"},
                         action_delivery =

@@ -75,7 +75,7 @@ local equipment_chip = {
             {
                 {
                     type = "area",
-                    perimeter = 30,
+                    radius = 30,
                     force = "enemy",
                     action_delivery = nil,
                 }
