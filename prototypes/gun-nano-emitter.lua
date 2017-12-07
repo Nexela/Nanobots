@@ -16,6 +16,7 @@ local item_nano_gun = {
     type = "gun",
     name = "gun-nano-emitter",
     icon = "__Nanobots__/graphics/icons/nano-gun.png",
+    icon_size = 32,
     flags = {"goes-to-main-inventory"},
     subgroup = "tool",
     order = "c[automated-construction]-g[gun-nano-emitter]",

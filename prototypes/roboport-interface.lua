@@ -60,6 +60,7 @@ ri_cc.icon = nil
 ri_cc.icons = {
     {icon = "__Nanobots__/graphics/icons/roboport-interface-cc.png"}
 }
+ri_cc.icon_size = 32
 ri_cc.item_slot_count = 5
 ri_cc.flags = {"not-deconstructable", "player-creation", "placeable-off-grid"}
 ri_cc.collision_mask = {}
@@ -104,6 +105,7 @@ ri_cc.activity_led_light =
 local ri_radar = Data.duplicate("radar", "radar", "roboport-interface-scanner", true)
 ri_radar.flags = {"not-deconstructable", "player-creation", "placeable-off-grid"}
 ri_radar.icon = "__Nanobots__/graphics/icons/roboport-interface.png"
+ri_radar.icon_size = 32
 ri_radar.minable = nil
 ri_radar.collision_mask = {}
 ri_radar.selection_box = {{-1, -0.0}, {0.0, 1}}
@@ -122,6 +124,7 @@ local ri_roboport = {
     type = "roboport",
     name = "roboport-interface-main",
     icon = "__Nanobots__/graphics/icons/roboport-interface.png",
+    icon_size = 32,
     flags = {"placeable-player", "player-creation"},
     minable = {hardness = 0.2, mining_time = 0.5, result = "roboport-interface"},
     max_health = 500,

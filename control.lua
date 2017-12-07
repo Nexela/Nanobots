@@ -603,12 +603,15 @@ local function execute_nano_queue(event)
 end
 Event.register(defines.events.on_tick, execute_nano_queue)
 
+Player.register_events()
+Force.register_events()
 Event.register(
     defines.events.on_player_created,
     function(event)
         global.players[event.player_index].ranges = {}
     end
 )
+
 Event.register(
     defines.events.on_runtime_mod_setting_changed,
     function()
@@ -622,8 +625,8 @@ Event.register(Event.core_events.configuration_changed, changes.on_configuration
 
 local function on_init()
     global._changes = changes.on_init(game.active_mods[MOD.name] or MOD.version)
-    Force.init() -- Redundant, but usefull for resetting
-    Player.init() -- Redundant, but usefull for resetting
+    Force.init()
+    Player.init()
     Player.add_data_all {
         ranges = {}
     }
