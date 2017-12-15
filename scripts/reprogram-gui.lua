@@ -22,7 +22,7 @@ local function draw_gui(player) -- return gui
         gui.add{type="label", name="nano_label", caption={"gui-nano-range.label-caption"}, tooltip={"tooltip-nano-range.label-caption"}, style="nano_label_style"}
         gui.add{type="textfield", name = "nano_text_box", text=0, style="nano_text_style"}
         --Up/Down buttons
-        local table = gui.add{type="table", name = "nano_table", colspan=1, style="nano_table_style"}
+        local table = gui.add{type="table", name = "nano_table", column_count=1, style="nano_table_style"}
         table.add{type="button", name="nano_btn_up", style="nano_btn_up"}
         table.add{type="button", name="nano_btn_dn", style="nano_btn_dn"}
         --Reset button
