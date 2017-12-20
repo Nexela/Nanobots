@@ -205,8 +205,8 @@ end
 function Area.round_to_integer(area)
     area = Area.new(area)
 
-    area.left_top = {x = math.floor(area.left_top.x), y = math.floor(area.left_top.y)}
-    area.right_bottom = {x = math.ceil(area.right_bottom.x), y = math.ceil(area.right_bottom.y)}
+    area.left_top = Position{x = math.floor(area.left_top.x), y = math.floor(area.left_top.y)}
+    area.right_bottom = Position{x = math.ceil(area.right_bottom.x), y = math.ceil(area.right_bottom.y)}
     return area
 end
 
@@ -448,10 +448,6 @@ function Area.shrink_to_surface_size(area, surface)
     end
     return area
 end
-
--------------------------------------------------------------------------------
---[[Entity Helpers]]--
--------------------------------------------------------------------------------
 
 --- Set the metatable on a stored area without returning a new area. Usefull for restoring
 -- metatables to saved areas in global
