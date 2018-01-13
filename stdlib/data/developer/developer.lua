@@ -2,9 +2,8 @@
 -- @script Developer
 
 local Developer = {}
-setmetatable(Developer, {__index = require("stdlib/data/core")})
-
 local Data = require("stdlib/data/data")
+setmetatable(Developer, {__index = Data})
 
 local function make_no_controls()
     local controls = {}
@@ -23,7 +22,7 @@ end
 function Developer.make_test_entities(name)
     if not data.raw["simple-entity"]["debug-chunk-marker"] then
         if not name then error("developer chunk markers need mod name") end
-        local markers = {
+        Data {
             type = "simple-entity",
             name = "debug-chunk-marker",
             localised_name = "Debug Chunk Markers",
@@ -57,7 +56,6 @@ function Developer.make_test_entities(name)
                 }
             }
         }
-        Data:extend{markers}
     end
 
     if not data.raw["electric-energy-interface"]["debug-energy-interface"] then
@@ -73,7 +71,7 @@ function Developer.make_test_entities(name)
         power.vehicle_impact_sound = nil
         power.working_sound = nil
 
-        Data:extend{power}
+        data:extend{power}
     end
 
     if not data.raw["electric-pole"]["debug-substation"] then
@@ -92,7 +90,7 @@ function Developer.make_test_entities(name)
         pole.vehicle_impact_sound = nil
         pole.working_sound = nil
 
-        Data:extend{pole}
+        data:extend{pole}
     end
 
     data.raw.tile["lab-dark-1"].map_color = {r=100, g=100, b=100}
