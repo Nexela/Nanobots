@@ -4,9 +4,10 @@
 -- @module Queue
 -- @usage local Queue = require('stdlib/queue/queue')
 
-Queue = {_module_name = "Queue"} --luacheck: allow defined top
+local Queue = {_module_name = 'Queue'}
 setmetatable(Queue, {__index = require('stdlib/core')})
-local fail_if_missing = Queue.fail_if_missing
+
+local fail_if_not = Queue.fail_if_not
 
 --- Constructs a new Queue object.
 -- @return (<span class="types">@{Queue}</span>) a new, empty queue
@@ -23,7 +24,9 @@ end
 -- global.myqueue2 = Queue.new()
 -- script.on_load(function() Queue.load(myqueue1, myqueue2))
 function Queue.load(...)
-    if not ... then return end
+    if not ... then
+        return
+    end
     for _, queue in pairs({...}) do
         if queue.first then
             setmetatable(queue, Queue._mt)
@@ -35,7 +38,7 @@ end
 -- @param queue (<span class="types">@{Queue}</span>) the queue to push an element to
 -- @tparam Mixed value the element to push
 function Queue.push_first(queue, value)
-    fail_if_missing(value)
+    fail_if_not(value)
 
     local first = queue.first - 1
     queue.first = first
@@ -47,7 +50,7 @@ end
 -- @param queue (<span class="types">@{Queue}</span>) the queue to push an element to
 -- @tparam Mixed value the element to push
 function Queue.push_last(queue, value)
-    fail_if_missing(value)
+    fail_if_not(value)
 
     local last = queue.last + 1
     queue.last = last
@@ -72,7 +75,7 @@ end
 --- Return the element at the front of the queue and remove it from the queue.
 -- @param queue (<span class="types">@{Queue}</span>) the queue to retrieve the element from
 -- @treturn Mixed the element at the front of the queue
-function Queue.peek_first (queue)
+function Queue.peek_first(queue)
     return queue[queue.first]
 end
 
@@ -94,7 +97,7 @@ end
 --- Return the element at the back of the queue.
 -- @param queue (<span class="types">@{Queue}</span>) the queue to retrieve the element from
 -- @treturn Mixed the element at the back of the queue
-function Queue.peek_last (queue)
+function Queue.peek_last(queue)
     return queue[queue.last]
 end
 
@@ -130,7 +133,7 @@ end
 
 Queue._mt = {
     __index = Queue,
-    __len = Queue.count,
+    __len = Queue.count
 }
 
 return Queue:_protect()

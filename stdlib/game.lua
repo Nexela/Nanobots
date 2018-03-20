@@ -2,19 +2,14 @@
 -- @module Game
 -- @usage local Game = require('stdlib/game')
 
-Game = { --luacheck: allow defined top
-    _module_name = "Game",
-    VALID_FILTER = function(v)
-        return v and v.valid
-    end,
-}
+local Game = {_module_name = 'Game'}
 setmetatable(Game, {__index = require('stdlib/core')})
 
 --- Return a valid player object from event, index, string, or userdata
 -- @tparam string|number|LuaPlayer|event mixed
 -- @treturn LuaPlayer a valid player or nil
 function Game.get_player(mixed)
-    if type(mixed) == "table" then
+    if type(mixed) == 'table' then
         if mixed.__self then
             return mixed and mixed.valid and mixed
         elseif mixed.player_index then
@@ -31,13 +26,13 @@ end
 -- @tparam string|LuaForce|event mixed
 -- @treturn LuaForce a valid force or nil
 function Game.get_force(mixed)
-    if type(mixed) == "table" then
+    if type(mixed) == 'table' then
         if mixed.__self then
             return mixed and mixed.valid and mixed
         elseif mixed.force then
             return Game.get_force(mixed.force)
         end
-    elseif type(mixed) == "string" then
+    elseif type(mixed) == 'string' then
         local force = game.forces[mixed]
         return (force and force.valid) and force
     end

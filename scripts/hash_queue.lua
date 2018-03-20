@@ -30,7 +30,7 @@ end
 function Queue.count(t)
     local count = 0
     for index in pairs(t) do
-        if type(index) == "number" then
+        if type(index) == 'number' then
             count = count + 1
         end
     end
@@ -91,7 +91,9 @@ end
 
 Queue.mt = {__index = Queue, __call = nil}
 local mt = {
-    __call = function(_, ...) return Queue.new(...) end
+    __call = function(_, ...)
+        return Queue.new(...)
+    end
 }
 
 --[[
@@ -113,5 +115,4 @@ queue:execute({tick = 25})
 print(queue:count())
 print(serpent.block(queue, {comment=false}))
 --]]
-
 return setmetatable(Queue, mt)

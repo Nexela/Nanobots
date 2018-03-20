@@ -2,18 +2,18 @@
 -- @classmod Category
 
 local Category = {
-    _class = "Category"
+    _class = 'category'
 }
-setmetatable(Category, {__index = require("stdlib/data/data")})
+setmetatable(Category, {__index = require('stdlib/data/data')})
 
-local category_type_map = { --luacheck: ignore category_type_map
-    ["ammo-category"] = true,
-    ["equipment-category"] = true,
-    ["fuel-category"] = true,
-    ["recipe-category"] = true,
-    ["module-category"] = true,
-    ["rail-category"] = true,
-    ["resource-category"] = true,
+Category.category_types = {
+    ['ammo-category'] = true,
+    ['equipment-category'] = true,
+    ['fuel-category'] = true,
+    ['recipe-category'] = true,
+    ['module-category'] = true,
+    ['rail-category'] = true,
+    ['resource-category'] = true
 }
 
 function Category:_get(category_name, category_type)
@@ -34,7 +34,7 @@ function Category:remove()
 end
 
 function Category:replace(a, b)
-    if self:valid("category") then
+    if self:valid('category') then
         self:remove(a)
         self:add(b)
     end
@@ -42,7 +42,6 @@ function Category:replace(a, b)
 end
 
 Category._mt = {
-    type = "category",
     __index = Category,
     __call = Category._get,
     __tostring = Category.tostring

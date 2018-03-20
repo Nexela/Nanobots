@@ -6,10 +6,12 @@
 -- @see Concepts.Position
 -- @see defines.direction
 
-Position = {_module_name = "Position"} --luacheck: allow defined top
+local Position = {
+    _module_name = 'Position'
+}
 setmetatable(Position, {__index = require('stdlib/core')})
 
-local fail_if_missing = Position.fail_if_missing
+local Is = require('stdlib/utils/is')
 
 --- By default position tables are mutated in place set this to true to make the tables immutable.
 Position.immutable = false
@@ -25,14 +27,15 @@ Position.epsilon = 1.19e-07
 -- @tparam[opt=false] boolean new_copy return a new copy
 -- @treturn Concepts.Position itself or a new correctly formated position with metatable
 function Position.new(pos, new_copy)
-    fail_if_missing(pos, 'missing position argument')
+    Is.Assert.Table(pos, 'missing position argument')
 
-    if not (new_copy or Position.immutable) and getmetatable(pos) == Position._mt then
+    local copy = new_copy or Position.immutable
+    if not copy and getmetatable(pos) == Position._mt then
         return pos
     end
 
-    local new_pos = { x = pos.x or pos[1], y = pos.y or pos[2] }
-    return setmetatable(new_pos, Position._mt)
+    local new = {x = pos.x or pos[1], y = pos.y or pos[2]}
+    return setmetatable(new, Position._mt)
 end
 
 --- Creates a table representing the position from x and y.
@@ -43,11 +46,11 @@ function Position.construct(...)
     local args = {...}
 
     --self was passed as first argument
-    local t = (type(args[1]) == "table" and 1) or 0
+    local t = (type(args[1]) == 'table' and 1) or 0
 
     local x = args[1 + t] or 0
     local y = args[2 + t] or 0
-    return Position.new({ x = x, y = y })
+    return Position.new({x = x, y = y})
 end
 
 --- Creates a position that is a copy of the given position.
@@ -55,6 +58,14 @@ end
 -- @treturn Concepts.Position a new position with values identical to the given position
 function Position.copy(pos)
     return Position.new(pos, true)
+end
+
+--- Loads the metatable into the passed position without creating a new one.
+-- @tparam Concepts.Position pos the position to load the metatable onto
+-- @treturn Concepts.Position the position with metatable attached
+function Position.load(pos)
+    Is.Assert.Table(pos, 'position missing')
+    return setmetatable(pos, Position._mt)
 end
 
 --- Converts a position to a string.
@@ -92,7 +103,9 @@ end
 -- @tparam Concepts.Position pos2 the second position
 -- @treturn boolean true if positions are equal
 function Position.equals(pos1, pos2)
-    if not pos1 or not pos2 then return false end
+    if not pos1 or not pos2 then
+        return false
+    end
     pos1 = Position.new(pos1)
     pos2 = Position.new(pos2)
 
@@ -121,8 +134,8 @@ end
 -- @tparam number y the amount to offset the position on the y-axis
 -- @treturn Concepts.Position a new position, offset by the x,y coordinates
 function Position.offset(pos, x, y)
-    fail_if_missing(x, 'missing x-coordinate value')
-    fail_if_missing(y, 'missing y-coordinate value')
+    Is.Assert.Number(x, 'missing x-coordinate value')
+    Is.Assert.Number(y, 'missing y-coordinate value')
     pos = Position.new(pos)
 
     pos.x = pos.x + x
@@ -136,7 +149,7 @@ end
 -- @tparam number distance distance of the translation
 -- @treturn Concepts.Position a new translated position
 function Position.translate(pos, direction, distance)
-    fail_if_missing(direction, 'missing direction argument')
+    Is.Assert.Number(direction, 'missing direction argument')
     distance = distance or 1
     pos = Position.new(pos)
 
@@ -174,13 +187,13 @@ end
 -- @treturn Concepts.BoundingBox the area
 function Position.expand_to_area(pos, radius)
     pos = Position.new(pos)
-    fail_if_missing(radius, 'missing radius argument')
-    local Area = require("stdlib/area/area")
+    Is.Assert.Number(radius, 'missing radius argument')
+    local Area = require('stdlib/area/area')
 
     local left_top = Position.new({pos.x - radius, pos.y - radius})
     local right_bottom = Position.new({pos.x + radius, pos.y + radius})
-    --some way to return Area.new?
-    return Area({ left_top = left_top, right_bottom = right_bottom })
+
+    return Area({left_top = left_top, right_bottom = right_bottom})
 end
 
 --- Calculates the Euclidean distance squared between two positions, useful when sqrt is not needed.
@@ -279,16 +292,19 @@ function Position.center(pos)
     return pos
 end
 
-local opposites = (defines and defines.direction) and {
-    [defines.direction.north] = defines.direction.south,
-    [defines.direction.south] = defines.direction.north,
-    [defines.direction.east] = defines.direction.west,
-    [defines.direction.west] = defines.direction.east,
-    [defines.direction.northeast] = defines.direction.southwest,
-    [defines.direction.southwest] = defines.direction.northeast,
-    [defines.direction.northwest] = defines.direction.southeast,
-    [defines.direction.southeast] = defines.direction.northwest,
-} or {[0]=4, [1]=5, [2]=6, [3]=7, [4]=0, [5]=1, [6]=2, [7]=3}
+local opposites =
+    (defines and defines.direction) and
+    {
+        [defines.direction.north] = defines.direction.south,
+        [defines.direction.south] = defines.direction.north,
+        [defines.direction.east] = defines.direction.west,
+        [defines.direction.west] = defines.direction.east,
+        [defines.direction.northeast] = defines.direction.southwest,
+        [defines.direction.southwest] = defines.direction.northeast,
+        [defines.direction.northwest] = defines.direction.southeast,
+        [defines.direction.southeast] = defines.direction.northwest
+    } or
+    {[0] = 4, [1] = 5, [2] = 6, [3] = 7, [4] = 0, [5] = 1, [6] = 2, [7] = 3}
 
 --- Returns the opposite direction &mdash; adapted from Factorio util.lua.
 -- @release 0.8.1
@@ -305,18 +321,10 @@ end
 -- @tparam[opt=false] boolean eight_way true to get the next direction in 8-way (note: not many prototypes support 8-way)
 -- @treturn defines.direction the next direction
 function Position.next_direction(direction, reverse, eight_way)
-    fail_if_missing(direction, 'missing starting direction')
+    Is.Assert.Number(direction, 'missing starting direction')
 
     local next_dir = direction + (eight_way and ((reverse and -1) or 1) or ((reverse and -2) or 2))
-    return (next_dir > 7 and next_dir-next_dir) or (reverse and next_dir < 0 and 8 + next_dir) or next_dir
-end
-
---- Set the metatable on a stored area without returning a new area. Usefull for restoring
--- metatables to saved areas in global
--- @tparam Concepts.Position position
--- @treturn position with metatable set
-function Position.setmetatable(position)
-    return Position._setmetatable(position, Position._mt)
+    return (next_dir > 7 and next_dir - next_dir) or (reverse and next_dir < 0 and 8 + next_dir) or next_dir
 end
 
 --- Position tables are returned with these metamethods attached
@@ -333,12 +341,13 @@ Position._mt = {
     __call = Position.copy
 }
 
-local function _call(_, ...)
-    if type((...)) == "table" then
-        return Position.new((...))
+local function __call(_, ...)
+    if type((...)) == 'table' then
+        return Position.new(...)
     else
         return Position.construct(...)
     end
 end
+Position:_protect(__call)
 
-return Position:_protect(_call)
+return Position
