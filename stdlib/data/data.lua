@@ -5,18 +5,28 @@ if _G.remote and _G.script then
     error('Data Modules can only be required in the data stage', 2)
 end
 
+local Core = require('stdlib/core')
+local table = require('stdlib/utils/table')
+local Is = require('stdlib/utils/is')
+local Inspect = require('stdlib/utils/vendor/inspect')
+
 local Data = {
-    _class = 'data',
+    _class = 'Data',
     Sprites = require('stdlib/data/modules/sprites'),
     Pipes = require('stdlib/data/modules/pipes'),
     Util = require('stdlib/data/modules/util'),
     _default_options = {
-        ['silent'] = false,
-        ['fail'] = false,
-        ['verbose'] = false
-    }
+        ['silent'] = false, -- Don't log if not present
+        ['fail'] = false, -- Error instead of logging
+        ['verbose'] = false, -- Extra logging info
+        ['extend'] = true, -- Don't Extend the data
+        ['skip_string_validity'] = false, -- Skip checking for valid data
+        ['items_and_fluids'] = true -- consider fluids valid for Item checks
+    },
+    __call = Core.__call
 }
-setmetatable(Data, {__index = require('stdlib/core')})
+Data.__index = Data
+setmetatable(Data, Core)
 
 local item_and_fluid_types = {
     'item',
@@ -66,23 +76,52 @@ end
 --[Classes]--------------------------------------------------------------------
 
 --- Is this a valid object
--- @tparam[opt] string class if present is the object a member of the class
+-- @tparam[opt] string type if present is the object this type
 -- @treturn self
-function Data:valid(class)
-    if class then
-        return self._valid == class or false
+function Data:valid(type)
+    if type then
+        return self._valid == type or false
     else
         return self._valid and true or false
     end
 end
 
---- Invalidates the object.
--- @tparam boolean should_continue if false then invalidate the object
--- @treturn self
-function Data:continue(should_continue)
-    if not should_continue then
-        self._valid = false
+function Data:class(class)
+    if class then
+        return self._class == class or false
+    else
+        return self._class and true or false
     end
+end
+
+function Data:log(tbl)
+    local no_meta = function(item, path)
+        if path[#path] ~= Inspect.METATABLE then
+            return item
+        end
+    end
+    log(Inspect(tbl and tbl or self, {process = no_meta}))
+    return self
+end
+
+function Data:error(msg)
+    error(msg or 'Forced Error')
+    return self
+end
+
+--- Changes the validity of the object.
+-- @tparam boolean bool
+-- @treturn self
+function Data:continue(bool)
+    self._valid = bool and self.type or false
+    return self
+end
+
+--- Changes the validity of the object if the passed function is true.
+-- @tparam function func the function to test, self is passed as the first paramater
+-- @treturn self
+function Data:continue_if(func, ...)
+    self._valid = self.type and func(self, ...) or false
     return self
 end
 
@@ -91,7 +130,7 @@ end
 -- @treturn self
 function Data:extend(force)
     if self and ((self.name and self.type) or self:valid()) then
-        if not self._extended or force then
+        if not self._extended or not self._skip_extend or force then
             local t = data.raw[self.type]
             if t == nil then
                 t = {}
@@ -110,11 +149,11 @@ end
 -- @tparam string mining_result
 -- @treturn self
 function Data:copy(new_name, mining_result)
-    self.fail_if_not(new_name, 'New name is required')
+    Is.Assert.String(new_name, 'New name is required')
     if self:valid() then
         mining_result = mining_result or new_name
         --local from = self.name
-        local copy = table.deepcopy(self)
+        local copy = table.deep_copy(self)
         copy.name = new_name
 
         -- For Entities
@@ -132,11 +171,13 @@ function Data:copy(new_name, mining_result)
 
         -- For recipes, should also to check results!!
         if copy.type == 'recipe' then
-            if copy.normal then
+            if copy.normal and copy.normal.result then
                 copy.normal.result = new_name
                 copy.expensive.result = new_name
             else
-                copy.result = new_name
+                if copy.result then
+                    copy.result = new_name
+                end
             end
         end
 
@@ -146,24 +187,11 @@ function Data:copy(new_name, mining_result)
     end
 end
 
-function Data:execute(func, ...)
-    if self:valid() then
-        func(self, ...)
+--(( Flags ))--
+function Data:Flags()
+    if self:valid() and self.flags then
+        return setmetatable(self.flags, require('stdlib/utils/classes/string_array'))
     end
-    return self
-end
-
-function Data:Flags(has_flag_string)
-    if self:valid() then
-        if self.flags then
-            setmetatable(self.flags, Data._classes.string_array_mt)
-            if has_flag_string then
-                return self.flags:has(has_flag_string)
-            end
-            return self.flags
-        end
-    end
-    return self
 end
 
 function Data:add_flag(flag)
@@ -177,28 +205,101 @@ function Data:remove_flag(flag)
 end
 
 function Data:has_flag(flag)
-    return self:Flags(flag)
+    return self:Flags():has(flag)
 end
+--)) Flags ((--
+
+--- Run a function if the object is valid.
+-- The object and any additional paramaters are passed to the function.
+-- @tparam function func then function to run.
+-- @treturn self
+function Data:run_function(func, ...)
+    if self:valid() then
+        func(self, ...)
+    end
+    return self
+end
+Data.execute = Data.run_function
+
+--- Run a function on a valid object and return its results.
+-- @tparam function func the function to run. self is passed as the first paramter
+-- @treturn boolean if the object was valid
+-- @treturn the results from the passed function
+function Data:get_function_results(func, ...)
+    if self:valid() then
+        return true, func(self, ...)
+    end
+end
+
+--- Add or change a field.
+-- @tparam string field the field to change.
+-- @tparam mixed value the value to set on the field.
+-- @treturn self
+function Data:set_field(field, value)
+    if self:valid() then
+        rawset(self, field, value)
+    end
+    return self
+end
+Data.set = Data.set_field
 
 --- Iterate a dictionary table and set fields on the object. Existing fields are overwritten.
 -- @tparam table tab dictionary table of fields to set.
 -- @treturn self
 function Data:set_fields(tab)
     if self:valid() then
-        for k, v in pairs(tab) do
-            rawset(self, k, v)
+        for field, value in pairs(tab) do
+            rawset(self, field, value)
         end
     end
     return self
 end
 
---- Iterate a string array and set to nil.
--- @tparam table tab string array of fields to remove.
--- @treturn self
-function Data:remove_fields(tab)
+--- Get a field.
+-- @tparam string field
+-- @treturn nil|mixed the value of the field
+function Data:get_field(field)
     if self:valid() then
-        for _, k in pairs(tab) do
-            rawset(self, k, nil)
+        return rawget(self, field)
+    end
+end
+
+--- Iterate an array of fields and return the values as paramaters
+-- @tparam array arr
+-- @tparam boolean as_dictionary Return the results as a dictionary table instead of parameters
+-- @treturn mixed the parameters
+-- @usage local icon, name = Data('stone-furnace', 'furnace'):get_fields({icon, name})
+function Data:get_fields(arr, as_dictionary)
+    if self:valid() then
+        local values = {}
+        for _, name in pairs(arr) do
+            if as_dictionary then
+                values[name] = rawget(self, name)
+            else
+                values[#values + 1] = rawget(self, name)
+            end
+        end
+        return as_dictionary and values or table.unpack(values)
+    end
+end
+
+--- Remove an indiviual field from the the object
+-- @tparam string field The field to remove
+-- @treturn self
+function Data:remove_field(field)
+    if self:valid() then
+        rawset(self, field, nil)
+    end
+    return self
+end
+
+--- Iterate a string array and set to nil.
+-- @tparam table arr string array of fields to remove.
+-- @treturn self
+function Data:remove_fields(arr)
+    if self:valid() then
+        for _, field in pairs(arr) do
+            rawset(self, field, nil)
         end
     end
     return self
@@ -259,10 +360,52 @@ function Data:get_icon()
     end
 end
 
+function Data:make_icons(...)
+    if self:valid() then
+        if not self.icons then
+            if self.icon then
+                self.icons = {{icon = self.icon, icon_size = self.icon_size}}
+                self.icon = nil
+            else
+                self.icons = {}
+            end
+        end
+        for _, icon in pairs({...}) do
+            self.icons[#self.icons + 1] = table.deepcopy(icon)
+        end
+    end
+    return self
+end
+
+function Data:set_icon_at(index, values)
+    if self:valid() then
+        if self.icons then
+            for k, v in pairs(values or {}) do
+                self.icons[index].k = v
+            end
+        end
+    end
+    return self
+end
+
 --- Get the objects name.
 -- @treturn string the objects name
 function Data:tostring()
     return self.name and self.type and self.name or ''
+end
+
+function Data:pairs(data_type)
+    local t = data.raw[data_type or self._type or self._class] or {}
+    local index, val
+
+    local function _next()
+        index, val = next(t, index)
+        if index then
+            return index, self(val)
+        end
+    end
+
+    return _next, index, val
 end
 
 --- Returns a valid thing object reference. This is the main getter
@@ -271,16 +414,20 @@ end
 -- @tparam[opt] table opts options to pass
 -- @treturn Object
 function Data:get(object, object_type, opts)
-    self.fail_if_not(object, 'object name string or table is required')
+    Is.Assert(object, 'object string or table is required')
 
     local new
     if type(object) == 'table' then
-        self.fail_if_not(object.type and object.name, 'Name and Type are required')
+        Is.Assert(object.type and object.name, 'Name and Type are required')
         new = object
-        new._extended = data.raw[object.type] and data.raw[object.type][object.name] == object
+        local existing = data.raw[object.type] and data.raw[object.type][object.name]
+        new._extended = existing == object
+        if existing and not new._extended then
+            log('NOTICE: Overwriting ' .. object.type .. '/' .. object.name)
+        end
     elseif type(object) == 'string' then
         --Get type from object_type, or fluid or item_and_fluid_types
-        local types = (object_type and {object_type}) or (self._class == 'item' and item_and_fluid_types)
+        local types = (object_type and {object_type}) or (self._class == 'Item' and item_and_fluid_types)
         if types then
             for _, type in pairs(types) do
                 new = data.raw[type] and data.raw[type][object]
@@ -295,32 +442,29 @@ function Data:get(object, object_type, opts)
     end
 
     if new then
-        new._valid = self._class or 'data'
-        new._opt = opts
-        return setmetatable(new, self._mt):extend()
+        new._valid = new.type -- can change
+        new._options = opts
+        setmetatable(new, self._mt)
+        new:Flags()
+        return new:extend()
     else
+        local trace = traceback()
         local msg = (self._class and self._class or '') .. (self.name and '/' .. self.name or '') .. ' '
-        msg = msg .. (object_type and (object_type .. '/') or ' ') .. tostring(object) .. ' does not exist.'
-        log(msg)
+        msg = msg .. (object_type and (object_type .. '/') or '') .. tostring(object) .. ' does not exist.'
+
+        trace = trace:gsub('stack traceback:\n', ''):gsub('.*%(%.%.%.tail calls%.%.%.%)\n', ''):gsub(' in main chunk.*$', '')
+        trace = trace:gsub('%_%_.*%_%_%/stdlib/data.*\n', ''):gsub('\n', '->'):gsub('\t', '')
+        trace = msg .. '  [' .. trace .. ']'
+        log(trace)
     end
     return self
 end
-Data:set_caller(Data.get)
+Data._caller = Data.get
 
 Data._mt = {
     __index = Data,
-    __call = Data.get,
+    __call = Data._caller,
     __tostring = Data.tostring
 }
 
 return Data
-
--- render layers
--- "tile-transition", "resource", "decorative", "remnants", "floor", "transport-belt-endings", "corpse",
--- "floor-mechanics", "item", "lower-object", "object", "higher-object-above", "higher-object-under",
--- "wires", "lower-radius-visualization", "radius-visualization", "entity-info-icon", "explosion",
--- "projectile", "smoke", "air-object", "air-entity-info-con", "light-effect", "selection-box", "arrow", "cursor"
-
--- collision masks
--- "ground-tile", "water-tile", "resource-layer", "floor-layer", "item-layer",
--- "object-layer", "player-layer", "ghost-layer", "doodad-layer", "not-colliding-with-itself"

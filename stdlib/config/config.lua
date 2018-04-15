@@ -9,8 +9,8 @@
 -- @tfield function delete
 -- @tfield function is_set
 -- @table Config
-local M = {_module_name = 'Config'}
-setmetatable(M, {__index = require('stdlib/core')})
+local M = {_module = 'Config'}
+setmetatable(M, require('stdlib/core'))
 
 -----------------------------------------------------------------------
 --Setup repeated code for use in sub functions here

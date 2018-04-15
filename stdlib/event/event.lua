@@ -13,12 +13,18 @@
 -- @module Event
 -- @usage local Event = require('stdlib/event/event')
 
+
+local Table = require('stdlib/utils/table')
+
 --Holds the event registry
 local event_registry = {}
 
 local Event = {
-    _module_name = 'Event',
+    _module = 'Event',
     core_events = {
+        on_init = 'on_init',
+        on_load = 'on_load',
+        on_configuration_changed = 'on_configuration_changed',
         init = 'on_init',
         load = 'on_load',
         configuration_changed = 'on_configuration_changed',
@@ -26,12 +32,15 @@ local Event = {
     },
     custom_events = {}, -- Holds custom event ids
     protected_mode = false,
+    inspect_event = false,
     force_crc = false,
-    stop_processing = {} -- just has to be unique
+    stop_processing = {}, -- just has to be unique
+    event_names = Table.invert(defines.events)
 }
-setmetatable(Event, {__index = require('stdlib/core')})
+setmetatable(Event, require('stdlib/core'))
 
 local Is = require('stdlib/utils/is')
+local inspect = require('stdlib/utils/vendor/inspect')
 
 local bootstrap_register = {
     on_init = function()
@@ -48,6 +57,10 @@ local bootstrap_register = {
 
 local function valid_id(id)
     return (Is.Number(id) or Is.String(id)), 'Invalid Event Id, Must be string/int/defines.events, Passed in: ' .. type(id)
+end
+
+local function valid_event_id(id)
+    return (tonumber(id) and id >= 0) or (Is.String(id) and not bootstrap_register[id])
 end
 
 --- Registers a handler for the given events.
@@ -226,6 +239,10 @@ end
 -- caught and logged to stdout but event processing proceeds thereafter; errors are suppressed.
 local function run_protected(registered, event)
     local success, err
+
+    if Event.inspect_event or event.inspect_event then --luacheck: ignore (TODO)
+    end
+
     if registered.matcher then
         success, err = pcall(registered.matcher, event, registered.pattern)
         if success and err then
@@ -278,9 +295,10 @@ function Event.dispatch(event)
     Is.Assert.Table(event, 'missing event table')
     --get the registered handlers from name, input_name, or nth_tick in that priority.
     local registry
-    if event.name then
+
+    if event.name and event_registry[event.name] then
         registry = event_registry[event.name]
-    elseif event.input_name then
+    elseif event.input_name and event_registry[event.input_name] then
         registry = event_registry[event.input_name]
     elseif event.nth_tick then
         registry = event_registry[-event.nth_tick]
@@ -347,21 +365,21 @@ function Event.raise_event(...)
     script.raise_event(...)
 end
 
-function Event.get_event_handlers(event_id)
+function Event.get_event_handler(event_id)
     Is.Assert(valid_id(event_id))
     return {
-        script = (tonumber(event_id) or 0 >= 0 or Is.String(event_id)) and script.get_event_handler(event_id),
+        script = bootstrap_register(event_id) or (valid_event_id(event_id) and script.get_event_handler(event_id)),
         handlers = event_registry[event_id]
     }
 end
 
---- Retrieve a copy of the the event_registry
+--- Retrieve the event_registry
 -- @treturn table event_registry
 function Event.get_registry()
-    return table.deepcopy(event_registry)
+    return event_registry
 end
 
-function Event.dump(reg_type)
+function Event.counts(reg_type)
     local init, config, load, events, nth = 0, 0, 0, 0, 0
     for id, registry in pairs(event_registry) do
         if tonumber(id) then
@@ -371,11 +389,11 @@ function Event.dump(reg_type)
                 events = events + #registry
             end
         else
-            if id == "on_init" then
+            if id == 'on_init' then
                 init = init + #registry
-            elseif id == "on_configuration_changed" then
+            elseif id == 'on_configuration_changed' then
                 config = config + #registry
-            elseif id == "load" then
+            elseif id == 'load' then
                 load = load + #registry
             else
                 events = events + #registry
@@ -392,6 +410,28 @@ function Event.dump(reg_type)
         all = init + config + load + events + nth
     }
     return reg_type and all[reg_type] or all
+end
+
+function Event.dump_data()
+    local log_file = function(name)
+        return script.mod_name .. '/Events/' .. (name or '_') .. '.lua'
+    end
+
+    local _options = function(name)
+        return {comment = false, sparse = true, compact = true, indent = '  ', nocode = true, name = name or nil, metatostring = false}
+    end
+
+    Event._counts_total = Event.counts()
+    game.write_file(log_file('registry'), inspect(event_registry))
+    game.write_file(log_file('Event'), inspect(Event))
+
+    local t = {}
+    for event in pairs(event_registry) do
+        if valid_event_id(event) then
+            t[event] = script.get_event_handler(event)
+        end
+    end
+    game.write_file(log_file('registered_events'), inspect(t))
 end
 
 --- Filters events related to entity_type.

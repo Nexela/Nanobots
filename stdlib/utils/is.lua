@@ -48,64 +48,44 @@ Is.Assert.Not = {}
 
 local M = {}
 
+require('stdlib/utils/math')
 local type = type
-local abs = math.abs
+local floor = math.floor
+local huge = math.huge
 
---- Returns true if the passed variable is a table.
+--- Returns the var if the passed variable is a table.
 -- @tparam mixed var The variable to check
--- @treturn boolean
+-- @treturn mixed
 function M.Table(var)
-    return type(var) == 'table'
+    return type(var) == 'table' and var
 end
+M.table = M.Table
 
---- Returns true if the passed variable is a string.
+--- Returns the var if the passed variable is a string.
 -- @tparam mixed var The variable to check
--- @treturn boolean
+-- @treturn mixed
 function M.String(var)
-    return type(var) == 'string'
+    return type(var) == 'string' and var
 end
+M.string = M.String
 
---- Returns true if the passed variable is a number.
+--- Returns the var if the passed variable is a number.
 -- @tparam mixed var The variable to check
--- @treturn boolean
+-- @treturn mixed
 function M.Number(var)
-    return type(var) == 'number'
+    return type(var) == 'number' and var
 end
+M.number = M.Number
 
---- Returns true if the passed variable is a boolean.
--- @tparam mixed var The variable to check
--- @treturn boolean
-function M.Boolean(var)
-    return type(var) == 'boolean'
+function M.Thread(var)
+    return type(var) == 'thread' and var
 end
+M.thread = M.Thread
 
---- Returns true if the passed variable is true
--- @tparam mixed var The variable to check
--- @treturn boolean
-function M.True(var)
-    return var == true
+function M.Userdata(var)
+    return type(var) == 'userdata' and var
 end
-
---- Returns true if the passed variable is not nil or false.
--- @tparam mixed var The variable to check
--- @treturn boolean
-function M.Truthy(var)
-    return var and true or false
-end
-
---- Returns true if the passed variable is false.
--- @tparam mixed var The variable to check
--- @treturn boolean
-function M.False(var)
-    return var == false
-end
-
---- Returns true if the passed variable is false or nil.
--- @tparam mixed var The variable to check
--- @treturn boolean
-function M.Falsy(var)
-    return not var
-end
+M.userdata = M.Userdata
 
 --- Returns true if the passed variable is nil.
 -- @tparam mixed var The variable to check
@@ -113,6 +93,47 @@ end
 function M.Nil(var)
     return type(var) == 'nil'
 end
+M.is_nil = M.Nil
+
+--- Returns true if the passed variable is a boolean.
+-- @tparam mixed var The variable to check
+-- @treturn boolean
+function M.Boolean(var)
+    return type(var) == 'boolean'
+end
+M.boolean = M.boolean
+
+--- Returns true if the passed variable is true
+-- @tparam mixed var The variable to check
+-- @treturn boolean
+function M.True(var)
+    return var == true
+end
+M.is_true = M.True
+
+--- Returns the var if the passed variable is not nil or false.
+-- @tparam mixed var The variable to check
+-- @treturn mixed
+function M.Truthy(var)
+    return var or false
+end
+M.truthy = M.Truthy
+
+--- Returns true if the passed variable is false.
+-- @tparam mixed var The variable to check
+-- @treturn boolean
+function M.False(var)
+    return var == false
+end
+M.is_false = M.False
+
+--- Returns true if the passed variable is false or nil.
+-- @tparam mixed var The variable to check
+-- @treturn boolean
+function M.Falsy(var)
+    return not var
+end
+M.falsy = M.Falsy
 
 --- Returns true if the passed variable is nil, an empty table, or an empty string.
 -- @tparam mixed var The variable to check
@@ -125,22 +146,131 @@ function M.Empty(var)
     end
     return M.Nil(var)
 end
+M.empty = M.Empty
 
+function M.None(var)
+    return M.Empty(var) or M.False(var) or var == 0 or var ~= var
+end
+M.none = M.None
+
+
+--- Returns the passed var if it is a positive number.
+-- @tparam mixed var The variable to check
+-- @treturn mixed
 function M.Positive(var)
-    return M.Number(var) and var == abs(var) or false
+    return M.Number(var) and var >= 0 and var
 end
+M.positive = M.Positive
 
+--- Returns the passed var if it is a positive number.
+-- @tparam mixed var The variable to check
+-- @treturn mixed
 function M.Negative(var)
-    return M.Number(var) and var < 0 or false
+    return M.Number(var) and var < 0 and var
 end
+M.negative = M.Negative
 
+function M.NaN(arg)
+    return arg ~= arg
+end
+M.nan = M.NaN
+
+function M.Finite(var)
+    return M.Number(var) and (var < huge and var > -huge) and var
+end
+M.finite = M.Finite
+
+function M.Int(var)
+    return M.Finite(var) and rawequal(floor(var), var) and var
+end
+M.int = M.Int
+
+function M.Int8(var)
+    return M.Int(var) and var >= -128 and var <= 127 and var
+end
+M.int8 = M.Int8
+
+function M.Int16(var)
+    return M.Int(var) and var >= -32768 and var <= 32767 and var
+end
+M.int16 = M.Int16
+
+function M.Int32(var)
+    return M.Int(var) and var >= -2147483648 and var <= 2147483647 and var
+end
+M.int32 = M.Int32
+
+function M.Unsigned(var)
+    return Is.Number(var) and (var < huge and var >= 0) and var
+end
+M.unsigned = M.Unsigned
+
+function M.UInt(var)
+    return M.Unsigned(var) and rawequal(floor(var), var) and var
+end
+M.uint = M.UInt
+
+function M.UInt8(var)
+    return M.UInt(var) and var <= 255 and var
+end
+M.uint8 = M.UInt8
+
+function M.UInt16(var)
+    return M.UInt(var) and var <= 65535 and var
+end
+M.uint16 = M.UInt16
+
+function M.UInt32(var)
+    return M.UInt(var) and var <= 4294967295 and var
+end
+M.uint32 = M.UInt32
+
+function M.Float(var)
+    return M.number(var) and var >= 0 and var < 1 and var
+end
+M.float = M.Float
+
+--- Returns the passed var if it is a full position.
+-- @tparam mixed var The variable to check
+-- @treturn mixed
 function M.Position(var)
-    return M.Table(var) and ((var.x and var.y) or (var[1] and var[2])) or false
+    return M.Table(var) and (var.x and var.y) and var
 end
+M.position = M.Position
 
+--- Returns the passed var if it is a full area.
+-- @tparam mixed var The variable to check
+-- @treturn mixed
 function M.Area(var)
-    return M.Table(var) and ((var.left_top and var.right_bottom) or (var[1] and var[1][1] and var[2] and var[2][1])) or false
+    return M.Table(var) and (M.Position(var.left_top) and M.Position(var.right_bottom)) and var
 end
+M.area = M.Area
+
+--- Returns the passed var if it is a simple position/vector.
+-- @tparam mixed var The variable to check
+-- @treturn mixed
+function M.Vector(var)
+    return M.Table(var) and (M.Number(var[1]) and M.Number(var[2])) and var
+end
+M.vector = M.Vector
+
+--- Returns the passed var if it is a simple area/boundingbox.
+-- @tparam mixed var The variable to check
+-- @treturn mixed
+function M.BoundingBox(var)
+    return M.Table(var) and (M.Vector(var[1]) and M.Vector(var[2]))
+end
+M.boundingbox = M.BoundingBox
+M.bounding_box = M.BoundingBox
+M.Bounding_Box = M.BoundingBox
+
+--- Returns the hex value of the passed var if it is hexadecimal.
+-- @tparam mixed var The variable to check
+-- @treturn mixed
+function M.Hex(var)
+    return M.String(var) and var:match('%x%x%x%x%x%x$')
+end
+M.hex = M.Hex
 
 --- Returns true if the passed variable is a single alphbetical word.
 -- Does not allow any special chars
@@ -149,6 +279,7 @@ end
 function M.StrictWord(var)
     return M.String(var) and var:find('^[%a]+$') == 1
 end
+M.strict_word = M.StrictWord
 
 --- Returns true if the passed variable is a single alphbetical word.
 -- Allows _ and - as part of the word
@@ -166,20 +297,25 @@ M.Word = M.AlphabetWord
 function M.AlphanumWord(var)
     return M.String(var) and var:find('^%a+[%w%_%-]*$') == 1
 end
-
---- Is this factorio object valid
--- @tparam LuaObject var The variable to check
--- @treturn boolean true if this is a valid LuaObject
-function M.Valid(var)
-    return M.Table(var) and var.valid
-end
+M.Alpha = M.AlphanumWord
+M.alpha = M.AlphanumWord
+M.alphanumword = M.AlphanumWord
 
 --- Is this a factorio object
 -- @tparam LuaObject var The variable to check
--- @treturn boolean true if this is an LuaObject
+-- @treturn mixed the var if this is an LuaObject
 function M.Object(var)
-    return M.Table(var) and var.__self
+    return M.Table(var) and var.__self and var
 end
+M.object = M.Object
+
+--- Is this factorio object valid
+-- @tparam LuaObject var The variable to check
+-- @treturn mixed the var if this is a valid LuaObject
+function M.Valid(var)
+    return M.Object(var) and var.valid and var
+end
+M.valid = M.Valid
 
 --- Returns true if the passed variable is a callable function.
 -- @tparam mixed var The variable to check
@@ -187,15 +323,17 @@ end
 function M.Callable(var)
     return type(var) == 'function' or type((getmetatable(var) or {}).__call) == 'function'
 end
+M.callable = M.Callable
 M.Function = M.Callable
+M.is_function = M.Callable
 
 setmetatable(
     Is,
     {
         __index = function(_, k)
             return M[k] and function(_assert)
-                return M[k](_assert)
-            end or nil
+                    return M[k](_assert)
+                end or nil
         end,
         __call = function(_, ...)
             return (...)
@@ -208,14 +346,15 @@ setmetatable(
     {
         __index = function(_, k)
             return M[k] and function(_assert)
-                return not M[k](_assert)
-            end or nil
+                    return not M[k](_assert)
+                end or nil
         end,
         __call = function(_, ...)
             return not (...)
         end
     }
 )
+Is.is_not = Is.Not
 
 -- convenience function for un-lambda-ing deferred error messages
 local function safeinvoke(f)
@@ -237,43 +376,33 @@ setmetatable(
     {
         __index = function(_, k)
             return M[k] and function(_assert, _message, _level)
-                _level = tonumber(_level) or 3
-                return M[k](_assert) or error(
-                    type(_message) == 'function' and safeinvoke(_message) or _message,
-                    _level
-                )
-            end or nil
+                    _level = tonumber(_level) or 3
+                    return M[k](_assert) or error(type(_message) == 'function' and safeinvoke(_message) or _message or 'assertion failed', _level)
+                end or nil
         end,
         __call = function(_, ...)
             local param = {...}
-            return param[1] or error(
-                type(param[2]) == 'function' and safeinvoke(param[2]) or param[2],
-                tonumber(param[3]) or 3
-            )
+            return param[1] or error(type(param[2]) == 'function' and safeinvoke(param[2]) or param[2] or 'assertion failed', tonumber(param[3]) or 3)
         end
     }
 )
+Is.assert = Is.Assert
 
 setmetatable(
     Is.Assert.Not,
     {
         __index = function(_, k)
             return M[k] and function(_assert, _message, _level)
-                _level = tonumber(_level) or 3
-                return not M[k](_assert) or error(
-                    type(_message) == 'function' and safeinvoke(_message) or _message,
-                    _level
-                )
-            end or nil
+                    _level = tonumber(_level) or 3
+                    return not M[k](_assert) or error(type(_message) == 'function' and safeinvoke(_message) or _message or 'assertion failed', _level)
+                end or nil
         end,
         __call = function(_, ...)
             local param = {...}
-            return not param[1] or error(
-                type(param[2]) == 'function' and safeinvoke(param[2]) or param[2],
-                tonumber(param[3]) or 3
-            )
+            return not param[1] or error(type(param[2]) == 'function' and safeinvoke(param[2]) or param[2] or 'assertion failed', tonumber(param[3]) or 3)
         end
     }
 )
+Is.assert.is_not = Is.Assert.Not
 
 return Is

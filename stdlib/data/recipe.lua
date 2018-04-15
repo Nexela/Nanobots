@@ -2,21 +2,65 @@
 -- @classmod Recipe
 
 local Recipe = {
-    _class = 'recipe',
+    _class = 'Recipe',
     _ingredients_mt = require('stdlib/data/modules/ingredients'),
     _results_mt = require('stdlib/data/modules/results')
 }
-setmetatable(Recipe, {__index = require('stdlib/data/data')})
+setmetatable(Recipe, require('stdlib/data/data'))
 
+local Is = require('stdlib/utils/is')
 local Item = require('stdlib/data/item')
 
-function Recipe:_get(recipe)
+--TODO
+--[[
+    Recipe:replace_ingredients --swap whole ingredients
+    Recipe:replace_results --swap whole results
+
+    Finish Recipe:xxx_result stuff
+]]
+
+function Recipe:_caller(recipe)
     local new = self:get(recipe, 'recipe')
+    --[[prototype
+        type, name
+        localised_name[opt]
+        localised_description[opt]
+        subgroup, order (needed when no main product)
+    --]]
+    --[[recipe
+        category
+        icon/icons (or has main_product)
+        crafting_machine_tint = {
+            primary, secondary, tertiary
+        }
+        normal/expensive = {
+            ingredients
+            results, result, result_count[opt=1] (result ignored if results present) at least 1 result
+            main_product
+            energy_required > 0.001
+            emissions_multiplier
+            requester_paste_multiplier
+            overload_multiplier
+            enabled <boolean>
+            hidden <boolean>
+            hide_from_stats <boolean>
+            allow_decomposition <boolean>
+            allow_as_intermediate <boolean>
+            allow_intermediates <boolean>
+            always_show_made_in <boolean>
+            show_amount_in_title <boolean>
+            always_show_products <boolean>
+        }
+    --]]
+    -- Convert the recipe to difficult format
+
+    -- Convert the ingredients to full format
     --new:Ingredients()
+
+    -- Convert the results to full format
     --new:Results()
     return new
 end
-Recipe:set_caller(Recipe._get)
 
 function Recipe:Results(get_expensive)
     if self:valid('recipe') then
@@ -143,7 +187,8 @@ local function format(ingredient, result_count)
     return object
 end
 
--- get items for difficulties
+-- Format items for difficulties
+-- If expensive is a boolean then return a copy of normal for expensive
 local function get_difficulties(normal, expensive)
     return format(normal), format((expensive == true and table.deepcopy(normal)) or expensive)
 end
@@ -227,7 +272,7 @@ end
 -- @tparam string|ingredient normal
 -- @tparam[opt] string|ingredient|boolean expensive
 function Recipe:replace_ingredient(replace, normal, expensive)
-    self.fail_if_not(replace, 'Missing recipe to replace')
+    Is.Assert(replace, 'Missing recipe to replace')
     if self:valid() then
         local n_string = type(normal) == 'string'
         local e_string = type(expensive == true and normal or expensive) == 'string'
@@ -242,6 +287,23 @@ function Recipe:replace_ingredient(replace, normal, expensive)
             end
         elseif normal then
             replace_ingredient(self.ingredients, replace, normal, n_string)
+        end
+    end
+    return self
+end
+
+-- Currently does no checking
+function Recipe:clear_ingredients()
+    if self:valid() then
+        if self.normal then
+            if self.normal.ingredients then
+                self.normal.ingredients = {}
+            end
+            if self.expensive.ingredients then
+                self.expensive.ingredients = {}
+            end
+        elseif self.ingredients then
+            self.ingredients = {}
         end
     end
     return self
@@ -303,6 +365,7 @@ function Recipe:change_category(category_name)
     end
     return self
 end
+Recipe.set_category = Recipe.change_category
 
 --- Add to technology as a recipe unlock.
 -- @tparam string tech_name Name of the technology to add the unlock too
@@ -310,7 +373,7 @@ end
 function Recipe:add_unlock(tech_name)
     if self:valid() then
         local Tech = require('stdlib/data/technology')
-        Tech.add_effect(self, tech_name)
+        Tech.add_effect(self, tech_name) --self is passed as a valid recipe
     end
     return self
 end
@@ -492,7 +555,7 @@ Recipe.rem_ing = Recipe.remove_ingredient
 
 Recipe._mt = {
     __index = Recipe,
-    __call = Recipe._get,
+    __call = Recipe._caller,
     __tostring = Recipe.tostring
 }
 

@@ -10,11 +10,11 @@
 local Event = require('stdlib/event/event')
 
 local Force = {
-    _module_name = 'Force'
+    _module = 'Force'
 }
-setmetatable(Force, {__index = require('stdlib/core')})
+setmetatable(Force, require('stdlib/core'))
 
-local fail_if_not = Force.fail_if_not
+local Is = require('stdlib/utils/is')
 local Game = require('stdlib/game')
 
 -- return new default force object
@@ -23,11 +23,11 @@ local function new(force_name)
         index = force_name,
         name = force_name
     }
-    if Event._new_force_data then
-        if type(Event._new_force_data) == 'table' then
-            table.merge(fdata, table.deepcopy(Event._new_force_data))
-        elseif type(Event._new_force_data) == 'function' then
-            local new_data = Event._new_force_data(force_name)
+    if Force._new_force_data then
+        if type(Force._new_force_data) == 'table' then
+            table.merge(fdata, table.deepcopy(Force._new_force_data))
+        elseif type(Force._new_force_data) == 'function' then
+            local new_data = Force._new_force_data(force_name)
             if type(new_data) == 'table' then
                 table.merge(fdata, new_data)
             else
@@ -42,7 +42,7 @@ local function new(force_name)
 end
 
 function Force.additional_data(func_or_table)
-    Event._new_force_data = func_or_table
+    Force._new_force_data = func_or_table
     return Force
 end
 
@@ -57,7 +57,7 @@ end
 -- -- Returns data for the force named "player" from either a string or LuaForce object
 function Force.get(force)
     force = Game.get_force(force)
-    fail_if_not(force, 'force is missing')
+    Is.Assert(force, 'force is missing')
     return game.forces[force.name], global.forces[force.name] or Force.init(force.name)
 end
 
@@ -108,10 +108,10 @@ function Force.register_init()
     return Force
 end
 
-function Force.register_events(skip_init)
+function Force.register_events(do_on_init)
     Event.register(defines.events.on_force_created, Force.init)
     Event.register(defines.events.on_forces_merging, Force.merge)
-    if not skip_init then
+    if do_on_init then
         Force.register_init()
     end
     return Force

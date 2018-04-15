@@ -2,12 +2,14 @@
 -- @module Util
 
 local Util = {
-    _module_name = 'Util'
+    _module = 'Util'
 }
-setmetatable(Util, {__index = require('stdlib/core')})
+setmetatable(Util, require('stdlib/core'))
+
+local Is = require('stdlib/utils/is')
 
 function Util.extend(proto_array)
-    Util.fail_if_not(Util.Is.Table(proto_array), 'Missing table or array to extend')
+    Is.Assert.Table(proto_array, 'Missing table or array to extend')
     data:extend(#proto_array > 0 and proto_array or {proto_array})
 end
 

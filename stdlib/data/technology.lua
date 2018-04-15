@@ -2,14 +2,15 @@
 -- @classmod Technology
 
 local Technology = {
-    _class = 'technology'
+    _class = 'Technology'
 }
-setmetatable(Technology, {__index = require('stdlib/data/data')})
+setmetatable(Technology, require('stdlib/data/data'))
 
-function Technology:_get(tech)
+local Is = require('stdlib/utils/is')
+
+function Technology:_caller(tech)
     return self:get(tech, 'technology')
 end
-Technology:set_caller(Technology._get)
 
 --[[
 type = "technology",
@@ -49,7 +50,7 @@ order = "e-a-a"
 -- end
 
 function Technology:add_effect(effect, unlock_type)
-    self.fail_if_not(effect)
+    Is.Assert(effect)
 
     --todo fix for non recipe types
     local add_unlock =
@@ -136,13 +137,11 @@ end
 
 function Technology:remove_pack(pack)
     if self:valid('technology') then
-        local ing = self.unit.ingredients
-        if ing then
-            for i = #ing, 1, -1 do
-                if ing[i][1] == pack then
-                    ing[i] = nil
-                    break
-                end
+        local ings = self.unit.ingredients
+        for i, ing in pairs(ings or {}) do
+            if ing[1] == pack then
+                table.remove(ings, i)
+                break
             end
         end
     end
@@ -151,14 +150,12 @@ end
 
 function Technology:replace_pack(old_pack, new_pack, count)
     if self:valid('technology') then
-        local ing = self.unit.ingredients
-        if ing then
-            for i = #ing, 1, -1 do
-                if ing[i][1] == old_pack then
-                    ing[i][1] = new_pack
-                    ing[i][2] = count or ing[i][2] or 1
-                    break
-                end
+        local ings = self.unit.ingredients
+        for i, ing in pairs(ings or {}) do
+            if ing[1] == old_pack then
+                ing[1] = new_pack
+                ing[2] = count or ing[2] or 1
+                break
             end
         end
     end
@@ -197,7 +194,8 @@ end
 
 Technology._mt = {
     __index = Technology,
-    __call = Technology._get
+    __call = Technology._caller,
+    __tostring = Technology.tostring
 }
 
 return Technology
