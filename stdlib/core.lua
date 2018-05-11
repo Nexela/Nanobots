@@ -35,8 +35,11 @@ local Core = {
         return tostring(lhs):gsub('(%w+)%: %x+', '%1: (ADDR)') .. tostring(rhs):gsub('(%w+)%: %x+', '%1: (ADDR)')
     end,
     __call = function(t, ...)
-        return t:_caller(...)
+        return t:__call(...)
     end,
+    _classes = {
+        string_array = require('stdlib/utils/classes/string_array')
+    }
 }
 Core.__index = Core
 
