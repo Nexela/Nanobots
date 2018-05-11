@@ -410,7 +410,20 @@ function Queue.build_tile_ghost(data)
                 local ptype = data.place_item and game.item_prototypes[data.place_item.name]
                 create_projectile('nano-projectile-constructors', surface, force, player.position, position)
                 surface.create_entity {name = 'nano-sound-build-tiles', position = position}
-                script.raise_event(defines.events.on_player_built_tile, {player_index = player.index, positions = {position}, item = ptype})
+                script.raise_event(
+                    defines.events.on_player_built_tile,
+                    {
+                        player_index = player.index,
+                        positions = {position},
+                        item = ptype,
+                        tiles = {
+                            {
+                                position = position,
+                                old_tile = tile
+                            }
+                        }
+                    }
+                )
             else --Can't revive tile
                 insert_or_spill_items(player, {data.place_item})
             end --revive tile
