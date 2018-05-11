@@ -5,7 +5,6 @@ BUILD_DIR := .build
 OUTPUT_DIR := $(BUILD_DIR)/$(OUTPUT_NAME)
 CONFIG = ./$(OUTPUT_DIR)/config.lua
 MODS_DIRECTORY := ../.mods.15
-##MOD_LINK := $(shell find $(MODS_DIRECTORY)/$(OUTPUT_NAME) -mindepth 1 -maxdepth 1 -type d)
 
 PKG_COPY := $(wildcard *.md) $(wildcard .*.md) $(wildcard graphics) $(wildcard locale) $(wildcard sounds)
 
@@ -16,9 +15,6 @@ OUT_FILES := $(SED_FILES:%=$(OUTPUT_DIR)/%)
 
 SED_EXPRS := -e 's/{{MOD_NAME}}/$(PACKAGE_NAME)/g'
 SED_EXPRS += -e 's/{{VERSION}}/$(VERSION_STRING)/g'
-
-##@luac -p $@
-##@luacheck $@
 
 all: clean
 
@@ -85,12 +81,10 @@ check:
 	@luacheck . -q --codes
 
 package: package-copy $(OUT_FILES) nodebug
-	@cp -r stdlib $(BUILD_DIR)/$(OUTPUT_NAME)/stdlib
 	@cd $(BUILD_DIR) && zip -rq $(OUTPUT_NAME).zip $(OUTPUT_NAME)
 	@echo $(OUTPUT_NAME).zip ready
 
 optimize-package: package-copy $(OUT_FILES) nodebug optimize2
-	@cp -r stdlib $(BUILD_DIR)/$(OUTPUT_NAME)/stdlib
 	@cd $(BUILD_DIR) && zip -rq $(OUTPUT_NAME).zip $(OUTPUT_NAME)
 	@echo $(OUTPUT_NAME).zip ready
 
