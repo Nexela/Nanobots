@@ -2,7 +2,7 @@ local Data = require("stdlib/data/data")
 local constants = require("constants")
 local TTL = 60 * 10
 
-local proxy = {
+Data {
     type = "combat-robot",
     name = "nano-proxy-health",
     icon = "__core__/graphics/shoot.png",
@@ -33,13 +33,13 @@ local proxy = {
             action = nil,
         }
     },
-    idle = Data.empty_animation(),
-    shadow_idle = Data.empty_animation(),
-    in_motion = Data.empty_animation(),
-    shadow_in_motion = Data.empty_animation(),
+    idle = Data.Sprites.empty_animation(),
+    shadow_idle = Data.Sprites.empty_animation(),
+    in_motion = Data.Sprites.empty_animation(),
+    shadow_in_motion = Data.Sprites.empty_animation(),
 }
 
-local projectile_return = {
+Data {
     type = "projectile",
     name = "nano-projectile-return",
     flags = {"not-on-map"},
@@ -49,5 +49,3 @@ local projectile_return = {
     final_action = nil,
     animation = constants.projectile_animation,
 }
-
-data:extend({proxy, projectile_return})

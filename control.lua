@@ -1,18 +1,13 @@
 require('stdlib/core')
 local Event = require('stdlib/event/event')
 
---TODO remove in .16
-defines.events.on_pre_player_mined_item = defines.events.on_pre_player_mined_item or defines.events.on_preplayer_mined_item --luacheck: ignore
-
 MOD = {}
 MOD.name = 'Nanobots'
 MOD.fullname = 'Nanobots'
 MOD.if_name = 'nanobots'
 MOD.interface = require('interface')
 MOD.config = require('config')
-MOD.version = '1.8.7'
-MOD.logfile = require('stdlib/log/logger').new(MOD.fullname, 'log', MOD.config.DEBUG or false, {log_ticks = true, file_extension = 'lua'})
-MOD.log = require('stdlib.utils.wip.debug')
+MOD.version = '2.0.3'
 MOD.commands = require('commands')
 
 local Queue = require('scripts/hash_queue')
@@ -383,7 +378,14 @@ function Queue.build_entity_ghost(data)
                     if requests then
                         satisfy_requests(requests, entity, player)
                     end
-                    script.raise_event(defines.events.on_built_entity, {player_index = player.index, created_entity = entity, revived = true})
+                    script.raise_event(
+                        defines.events.on_built_entity,
+                        {
+                            player_index = player.index,
+                            created_entity = entity,
+                            revived = true
+                        }
+                    )
                 else --not revived, return item
                     insert_or_spill_items(player, {data.place_item})
                 end --revived
@@ -638,7 +640,7 @@ local function on_init()
     global.nano_queue = Queue()
     queue = global.nano_queue
 
-    MOD.log('Nanobots are now ready to serve', 2)
+    game.print('Nanobots are now ready to serve')
 end
 Event.register(Event.core_events.init, on_init)
 

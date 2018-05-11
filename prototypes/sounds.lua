@@ -4,7 +4,7 @@ local sound_creators = {
     name = "nano-sound-build-tiles",
     flags = {"not-on-map"},
     rotate = false,
-    animations = Data.empty_animations(),
+    animations = Data.Sprites.empty_animations(),
     sound =
     {
         aggregation =
@@ -39,7 +39,7 @@ local sound_deconstruct = {
     name = "nano-sound-deconstruct",
     flags = {"not-on-map"},
     rotate = false,
-    animations = Data.empty_animations(),
+    animations = Data.Sprites.empty_animations(),
     sound =
     {
         aggregation =
@@ -57,7 +57,7 @@ local sound_repair = {
     name = "nano-sound-repair",
     flags = {"not-on-map"},
     rotate = false,
-    animations = Data.empty_animations(),
+    animations = Data.Sprites.empty_animations(),
     sound =
     {
         aggregation =
@@ -75,7 +75,7 @@ local sound_termites = {
     name = "nano-sound-termite",
     rotate = false,
     flags = {"not-on-map"},
-    animations = Data.empty_animations(),
+    animations = Data.Sprites.empty_animations(),
     sound =
     {
         aggregation =

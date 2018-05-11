@@ -7,9 +7,9 @@ function interface.reset_mod(are_you_sure)
     if are_you_sure then
         global = {}
         Event.dispatch({name = Event.core_events.init})
-        MOD.log('Full Reset Completed by ' .. player_name)
+        game.print('Full Reset Completed by ' .. player_name)
     else
-        MOD.log('Full reset attempted but ' .. player_name .. ' was not sure')
+        game.print('Full reset attempted but ' .. player_name .. ' was not sure')
     end
 end
 
@@ -17,7 +17,7 @@ function interface.reset_queue(queue)
     queue = queue or 'nano_queue'
     local name = 'reset_' .. queue
     if global[queue] and Event[name] then
-        MOD.log('Resetting ' .. queue)
+        game.print('Resetting ' .. queue)
         Event.dispatch({name = Event[name]})
     end
 end
@@ -26,7 +26,7 @@ function interface.count_queue(queue)
     queue = queue or 'nano_queue'
     if global[queue] then
         local a, b = Queue.count(global[queue])
-        MOD.log('Queued:' .. a .. ' Hashed:' .. b, 2)
+        game.print('Queued:' .. a .. ' Hashed:' .. b, 2)
     end
 end
 

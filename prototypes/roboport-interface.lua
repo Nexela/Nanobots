@@ -2,11 +2,32 @@
 --[[Roboport Interface]]-- Logistic Network roboport interface module
 -------------------------------------------------------------------------------
 local Data = require("stdlib/data/data")
+local Recipe = require('stdlib/data/recipe')
 --Roboport with custom GFX no zones, no recharge, radar with nil gfx, cc with nil gfx - selectable
 --256 x 224
 
+Data {
+    type = "technology",
+    name = "roboport-interface",
+    icon = "__Nanobots__/graphics/technology/roboport-interface.png",
+    icon_size = 128,
+    effects = {},
+    prerequisites = {"construction-robotics", "logistics", "circuit-network"},
+    unit =
+    {
+        count = 100,
+        ingredients =
+        {
+            {"science-pack-1", 1}
+        },
+        time = 30
+    },
+    order = "a-b-ba",
+}
+
+
 --Main recipe.
-local recipe_ri = {
+Recipe {
     type = "recipe",
     name = "roboport-interface",
     enabled = false,
@@ -17,9 +38,9 @@ local recipe_ri = {
     },
     result = "roboport-interface",
     energy_required = 30
-}
+}:add_unlock("roboport-interface")
 
-local item_ri = {
+Data {
     type = "item",
     name = "roboport-interface",
     icons = {
@@ -33,7 +54,7 @@ local item_ri = {
     stack_size = 5
 }
 
-local item_proxy = {
+Data {
     type = "item",
     name = "roboport-interface-cc",
     icons = {
@@ -57,7 +78,7 @@ Constant-Combinator interface for setting the signals.
 -------------------------------------------------------------------------------
 --[[Combinator]]--
 -------------------------------------------------------------------------------
-local ri_cc = Data.duplicate( "constant-combinator", "constant-combinator", "roboport-interface-cc", true )
+local ri_cc = Data("constant-combinator", "constant-combinator"):copy("roboport-interface-cc")
 ri_cc.icon = nil
 ri_cc.icons = {
     {icon = "__Nanobots__/graphics/icons/roboport-interface-cc.png"}
@@ -70,7 +91,7 @@ ri_cc.minable = nil
 ri_cc.selection_box = {{0.0, 0.0}, {1, 1}}
 ri_cc.collision_box = {{-0.9, -0.9}, {0.9, 0.9}}
 for index, direction in pairs({"north", "east", "south", "west"}) do
-    ri_cc.sprites[direction] = Data.empty_sprite()
+    ri_cc.sprites[direction] = Data.Sprites.empty_sprite()
     ri_cc.activity_led_sprites[direction] = {
         filename = "__Nanobots__/graphics/entity/roboport-interface/combinator-led-constant-south.png",
         width = 11,
@@ -104,7 +125,7 @@ ri_cc.activity_led_light =
 -------------------------------------------------------------------------------
 --[[Radar]]--
 -------------------------------------------------------------------------------
-local ri_radar = Data.duplicate("radar", "radar", "roboport-interface-scanner", true)
+local ri_radar = Data("radar", "radar"):copy("roboport-interface-scanner")
 ri_radar.flags = {"not-deconstructable", "player-creation", "placeable-off-grid"}
 ri_radar.icon = "__Nanobots__/graphics/icons/roboport-interface.png"
 ri_radar.icon_size = 32
@@ -112,7 +133,7 @@ ri_radar.minable = nil
 ri_radar.collision_mask = {}
 ri_radar.selection_box = {{-1, -0.0}, {0.0, 1}}
 ri_radar.collision_box = {{-0.9, -0.9}, {0.9, 0.9}}
-ri_radar.pictures = Data.empty_pictures()
+ri_radar.pictures = Data.Sprites.empty_pictures()
 ri_radar.max_distance_of_sector_revealed = 0
 ri_radar.max_distance_of_nearby_sector_revealed = 1
 ri_radar.energy_per_sector = "20MJ"
@@ -122,7 +143,7 @@ ri_radar.energy_usage = "300kW"
 -------------------------------------------------------------------------------
 --[[Roboport]]--
 -------------------------------------------------------------------------------
-local ri_roboport = {
+Data {
     type = "roboport",
     name = "roboport-interface-main",
     icon = "__Nanobots__/graphics/icons/roboport-interface.png",
@@ -152,7 +173,7 @@ local ri_roboport = {
     material_slots_count = 0,
     stationing_offset = nil,
     charging_offsets = nil,
-    base = Data.empty_picture(),
+    base = Data.Sprites.empty_picture(),
     base_animation =
     {
         filename = "__Nanobots__/graphics/entity/roboport-interface/roboport-interface.png",
@@ -166,10 +187,10 @@ local ri_roboport = {
         line_length = 8,
         shift = {0.4, -2.0}
     },
-    base_patch = Data.empty_animation(),
-    door_animation_up = Data.empty_animation(),
-    door_animation_down = Data.empty_animation(),
-    recharging_animation = Data.empty_animation(),
+    base_patch = Data.Sprites.empty_animation(),
+    door_animation_up = Data.Sprites.empty_animation(),
+    door_animation_down = Data.Sprites.empty_animation(),
+    recharging_animation = Data.Sprites.empty_animation(),
     recharging_light = nil,
     request_to_open_door_timeout = 15,
     spawn_and_station_height = 1.75,
@@ -178,30 +199,3 @@ local ri_roboport = {
     radius_visualisation_picture = nil,
     construction_radius_visualisation_picture = nil,
 }
-
-local tech1 = {
-    type = "technology",
-    name = "roboport-interface",
-    icon = "__Nanobots__/graphics/technology/roboport-interface.png",
-    icon_size = 128,
-    effects =
-    {
-        {
-            type = "unlock-recipe",
-            recipe = "roboport-interface"
-        }
-    },
-    prerequisites = {"construction-robotics", "logistics", "circuit-network"},
-    unit =
-    {
-        count = 100,
-        ingredients =
-        {
-            {"science-pack-1", 1}
-        },
-        time = 30
-    },
-    order = "a-b-ba",
-}
-
-data:extend{recipe_ri, item_ri, ri_cc, ri_radar, ri_roboport, item_proxy, tech1}
