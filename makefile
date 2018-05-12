@@ -13,8 +13,8 @@ PNG_FILES := $(shell find ./graphics -iname '*.png' -type f)
 
 OUT_FILES := $(SED_FILES:%=$(OUTPUT_DIR)/%)
 
-SED_EXPRS := -e 's/{{MOD_NAME}}/$(PACKAGE_NAME)/g'
-SED_EXPRS += -e 's/{{VERSION}}/$(VERSION_STRING)/g'
+SED_EXPRS := -e 's/{{_MOD_NAME_}}/$(PACKAGE_NAME)/g'
+SED_EXPRS += -e 's/{{_VERSION_}}/$(VERSION_STRING)/g'
 
 all: clean
 
