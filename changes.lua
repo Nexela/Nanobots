@@ -25,10 +25,10 @@ end
 function changes.on_configuration_changed(event)
     --game.print(serpent.block(global._changes, {comment=false}))
     changes["map-change-always-first"]()
-    if event.data.mod_changes then
+    if event.mod_changes then
         changes["any-change-always-first"]()
-        if event.data.mod_changes[mod_name] then
-            local this_mod_changes = event.data.mod_changes[mod_name]
+        if event.mod_changes[mod_name] then
+            local this_mod_changes = event.mod_changes[mod_name]
             changes.on_mod_changed(this_mod_changes)
             game.print(mod_name..": changed from ".. tostring(this_mod_changes.old_version) .. " to " .. tostring(this_mod_changes.new_version))
         end
