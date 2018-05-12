@@ -1,19 +1,17 @@
+local Recipe = require('stdlib/data/recipe')
+
 --bobmods recipe changes
-if bobmods and bobmods.lib then
-    local replace = bobmods.lib.recipe.replace_ingredient
-    local add = bobmods.lib.recipe.add_ingredient
+if mods['boblibrary'] then
 
-    replace("gun-nano-emitter", "electronic-circuit", "basic-circuit-board")
-    replace("ammo-nano-constructors", "electronic-circuit", "basic-circuit-board")
-    replace("ammo-nano-termites", "electronic-circuit", "basic-circuit-board")
-    replace("ammo-nano-scrappers", "electronic-circuit", "basic-circuit-board")
-    replace("ammo-nano-deconstructors", "advanced-circuit", "electronic-circuit")
+    Recipe("gun-nano-emitter"):replace_ingredient("electronic-circuit", "basic-circuit-board")
+    Recipe("ammo-nano-constructors"):replace_ingredient("electronic-circuit", "basic-circuit-board")
+    Recipe("ammo-nano-termites"):replace_ingredient("electronic-circuit", "basic-circuit-board")
 
-    add("equipment-bot-chip-items", "robot-brain-constuction")
-    add("equipment-bot-chip-trees", "robot-brain-constuction")
-    add("equipment-bot-chip-nanointerface", "robot-brain-constuction")
-    add("equipment-bot-chip-nanointerface", "gun-nano-emitter")
-    add("equipment-bot-chip-launcher", "robot-brain-combat")
-    add("equipment-bot-chip-feeder", "robot-brain-combat")
-    add("belt-immunity-equipment", "robot-brain-construction")
+    Recipe("equipment-bot-chip-items"):add_ingredient("robot-brain-constuction")
+    Recipe("equipment-bot-chip-trees"):add_ingredient("robot-brain-constuction")
+    Recipe("equipment-bot-chip-nanointerface"):add_ingredient("robot-brain-constuction")
+    Recipe("equipment-bot-chip-nanointerface"):add_ingredient("gun-nano-emitter")
+    Recipe("equipment-bot-chip-launcher"):add_ingredient("robot-brain-combat")
+    Recipe("equipment-bot-chip-feeder"):add_ingredient("robot-brain-combat")
+    Recipe("belt-immunity-equipment"):add_ingredient("robot-brain-construction")
 end
