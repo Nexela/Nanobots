@@ -1,4 +1,4 @@
-local Event = require('stdlib/event/event')
+local Event = require('__stdlib__/event/event')
 local Queue = require('scripts/hash_queue')
 local interface = {}
 
@@ -63,7 +63,7 @@ function interface.print_settings()
     end
     game.write_file('/Nanobots/settings.lua', serpent.block(tab, {nocode = true, sortkeys = true, comment = false, sparse = true}))
 end
-interface.console = require('stdlib/utils/scripts/console')
+interface.console = require('__stdlib__/scripts/console')
 
 --Register with creative-mode for easy testing
 function interface.creative_mode_register()

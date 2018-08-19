@@ -94,7 +94,7 @@ local tech4 = {
             modifier = "1"
         }
     },
-    prerequisites = {"flying", "nano-speed-3"},
+    prerequisites = {"robotics", "nano-speed-3"},
     unit =
     {
         count = 100,

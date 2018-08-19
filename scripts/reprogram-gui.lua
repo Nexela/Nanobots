@@ -1,5 +1,5 @@
-local Event = require('stdlib/event/event')
-local Gui = require('stdlib/event/gui')
+local Event = require('__stdlib__/event/event')
+local Gui = require('__stdlib__/event/gui')
 
 local match_to_item = {
     ['equipment-bot-chip-trees'] = true,
@@ -87,6 +87,8 @@ end
 local function load_pad()
     if remote.interfaces['picker'] and remote.interfaces['picker']['get_adjustment_pad_id'] then
         Event.register(remote.call('picker', 'get_adjustment_pad_id'), adjust_pad)
+    elseif remote.interfaces['PickerExtended'] and remote.interfaces['PickerExtended']['get_adjustment_pad_id'] then
+        Event.register(remote.call('PickerExtended', 'get_adjustment_pad_id'), adjust_pad)
     end
 end
 

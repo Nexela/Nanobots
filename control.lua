@@ -1,5 +1,5 @@
-require('stdlib/core')
-local Event = require('stdlib/event/event')
+require('__stdlib__/core')
+local Event = require('__stdlib__/event/event')
 
 MOD = {}
 MOD.name = 'Nanobots'
@@ -13,18 +13,18 @@ MOD.commands = require('commands')
 local Queue = require('scripts/hash_queue')
 local queue
 
-local Force = require('stdlib/event/force')
-local Player = require('stdlib/event/player')
+local Force = require('__stdlib__/event/force')
+local Player = require('__stdlib__/event/player')
 
-local Position = require('stdlib/area/position')
-local Area = require('stdlib/area/area')
+local Position = require('__stdlib__/area/position')
+local Area = require('__stdlib__/area/area')
 
 Event.build_events = {defines.events.on_built_entity, defines.events.on_robot_built_entity}
 Event.mined_events = {defines.events.on_pre_player_mined_item, defines.events.on_robot_pre_mined}
 Event.reset_nano_queue = script.generate_event_name()
 
 if MOD.config.DEBUG then
-    require('stdlib/utils/scipts/quickstart')
+    require('__stdlib__/utils/scipts/quickstart')
 end
 
 require('scripts/robointerface/robointerface')
@@ -139,8 +139,7 @@ end
 -- @param entity: the entity object
 -- @return bool: repairable by nanobots
 local function nano_repairable_entity(entity)
-    return (entity.health and entity.health > 0 and entity.health < entity.prototype.max_health) and
-        not (entity.has_flag('breaths-air') or ((entity.type == 'car' or entity.type == 'train') and entity.speed > 0) or entity.type:find('robot'))
+    return (entity.health and entity.health > 0 and entity.health < entity.prototype.max_health) and not (entity.has_flag('breaths-air') or ((entity.type == 'car' or entity.type == 'train') and entity.speed > 0) or entity.type:find('robot'))
 end
 
 -- TODO: Checking for the gun just wastes time, we could check the ammo directly. id:7

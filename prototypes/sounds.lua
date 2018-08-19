@@ -1,89 +1,80 @@
-local Data = require("stdlib/data/data")
+local Data = require('__stdlib__/data/data')
 local sound_creators = {
-    type = "explosion",
-    name = "nano-sound-build-tiles",
-    flags = {"not-on-map"},
+    type = 'explosion',
+    name = 'nano-sound-build-tiles',
+    flags = {'not-on-map'},
     rotate = false,
     animations = Data.Sprites.empty_animations(),
-    sound =
-    {
-        aggregation =
-        {
+    sound = {
+        aggregation = {
             max_count = 1,
             remove = true
         },
-        variations =
-        {
+        variations = {
             {
-                filename = "__base__/sound/walking/grass-01.ogg",
+                filename = '__base__/sound/walking/grass-01.ogg',
                 volume = 1.0
             },
             {
-                filename = "__base__/sound/walking/grass-02.ogg",
+                filename = '__base__/sound/walking/grass-02.ogg',
                 volume = 1.0
             },
             {
-                filename = "__base__/sound/walking/grass-03.ogg",
+                filename = '__base__/sound/walking/grass-03.ogg',
                 volume = 1.0
             },
             {
-                filename = "__base__/sound/walking/grass-04.ogg",
+                filename = '__base__/sound/walking/grass-04.ogg',
                 volume = 1.0
-            },
+            }
         }
     }
 }
 
 local sound_deconstruct = {
-    type = "explosion",
-    name = "nano-sound-deconstruct",
-    flags = {"not-on-map"},
+    type = 'explosion',
+    name = 'nano-sound-deconstruct',
+    flags = {'not-on-map'},
     rotate = false,
     animations = Data.Sprites.empty_animations(),
-    sound =
-    {
-        aggregation =
-        {
+    sound = {
+        aggregation = {
             max_count = 3,
             remove = true
         },
-        filename = "__core__/sound/deconstruct-small.ogg",
+        filename = '__core__/sound/deconstruct-small.ogg',
         volume = 0.5
     }
 }
 
 local sound_repair = {
-    type = "explosion",
-    name = "nano-sound-repair",
-    flags = {"not-on-map"},
+    type = 'explosion',
+    name = 'nano-sound-repair',
+    flags = {'not-on-map'},
     rotate = false,
     animations = Data.Sprites.empty_animations(),
-    sound =
-    {
-        aggregation =
-        {
+    sound = {
+        aggregation = {
             max_count = 1,
             remove = true
         },
-        filename = "__core__/sound/manual-repair-advanced-1.ogg",
+        filename = '__core__/sound/manual-repair-advanced-1.ogg',
         volume = 0.15
     }
 }
 
 local sound_termites = {
-    type = "explosion",
-    name = "nano-sound-termite",
+    type = 'explosion',
+    name = 'nano-sound-termite',
     rotate = false,
-    flags = {"not-on-map"},
+    flags = {'not-on-map'},
     animations = Data.Sprites.empty_animations(),
-    sound =
-    {
-        aggregation =
-        {
+    sound = {
+        aggregation = {
             max_count = 1,
             remove = true
         },
-        filename = "__Nanobots__/sounds/sawing-wood.ogg",
+        filename = '__Nanobots__/sounds/sawing-wood.ogg',
         volume = 0.15
     }
 }

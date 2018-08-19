@@ -1,4 +1,4 @@
-local Data = require("stdlib/data/data")
+local Data = require("__stdlib__/data/data")
 local constants = require("constants")
 local TTL = 60 * 10
 

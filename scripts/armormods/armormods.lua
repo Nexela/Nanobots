@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
---[[armormods]]-- Power Armor module code.
+--[[armormods]] -- Power Armor module code.
 -------------------------------------------------------------------------------
 local armormods = {}
 
@@ -8,12 +8,10 @@ local armormods = {}
 local combat_robots = MOD.config.COMBAT_ROBOTS
 local healer_capsules = MOD.config.FOOD
 
-local Position = require("stdlib/area/position")
-local min, max, abs, ceil, floor = math.min, math.max, math.abs, math.ceil, math.floor --luacheck: ignore
+local Position = require('__stdlib__/area/position')
+local max, abs, ceil, floor = math.max, math.abs, math.ceil, math.floor
 
--------------------------------------------------------------------------------
---[[Helper functions]]--
--------------------------------------------------------------------------------
+--(( Helper functions ))-------------------------------------------------------
 
 -- Loop through equipment grid and return a table of valid equipment tables indexed by equipment name
 -- @param entity: the entity object
@@ -26,7 +24,7 @@ local function get_valid_equipment(grid)
         for _, equip in pairs(grid.equipment) do
             all[equip.name] = all[equip.name] or {}
             all[equip.name][#all[equip.name] + 1] = equip
-            if equip.type == "energy-shield-equipment" and equip.shield < equip.max_shield * .75 then
+            if equip.type == 'energy-shield-equipment' and equip.shield < equip.max_shield * .75 then
                 energy_shields.shields[#energy_shields.shields + 1] = equip
             end
             if equip.energy > 0 then
@@ -44,9 +42,9 @@ end
 local function increment_position(position)
     local x = position.x - 1
     local y = position.y - .5
-    return function ()
-        y=y+0.5
-        return {x=x, y=y}
+    return function()
+        y = y + 0.5
+        return {x = x, y = y}
     end
 end
 
@@ -75,8 +73,9 @@ local function get_bot_counts(entity, mobile_only, stationed_only)
             end
         else
             local bots = 0
-            --.15 will have find by construction zone for this!
-            table.each(entity.surface.find_logistic_networks_by_construction_area(entity.position, entity.force), function(network)
+            table.each(
+                entity.surface.find_logistic_networks_by_construction_area(entity.position, entity.force),
+                function(network)
                     bots = bots + network.available_construction_robots
                 end
             )
@@ -89,11 +88,11 @@ end
 
 local function get_health_capsules(player)
     for name, health in pairs(healer_capsules) do
-        if game.item_prototypes[name] and player.remove_item({name=name, count = 1}) > 0 then
-            return max(health, 10), game.item_prototypes[name].localised_name or {"nanobots.free-food-unknown"}
+        if game.item_prototypes[name] and player.remove_item({name = name, count = 1}) > 0 then
+            return max(health, 10), game.item_prototypes[name].localised_name or {'nanobots.free-food-unknown'}
         end
     end
-    return 10, {"nanobots.free-food"}
+    return 10, {'nanobots.free-food'}
 end
 
 local function get_best_follower_capsule(player)
@@ -101,7 +100,7 @@ local function get_best_follower_capsule(player)
     for _, data in ipairs(combat_robots) do
         local count = game.item_prototypes[data.capsule] and player.get_item_count(data.capsule) or 0
         if count > 0 then
-            robot_list[#robot_list+1] = {capsule=data.capsule, unit=data.unit, count=count, qty=data.qty, rank=data.rank}
+            robot_list[#robot_list + 1] = {capsule = data.capsule, unit = data.unit, count = count, qty = data.qty, rank = data.rank}
         end
     end
     return robot_list[1] and robot_list
@@ -114,16 +113,13 @@ local function get_chip_radius(player, chip_name)
     local custom_radius = pdata.ranges[chip_name] or max_radius
     return custom_radius <= max_radius and custom_radius or max_radius
 end
+ --))
 
--------------------------------------------------------------------------------
---[[Meat and Potatoes]]--
--------------------------------------------------------------------------------
 --At this point player is valid, not afk and has a character
-
 local function get_chip_results(player, equipment, eq_name, search_type, bot_counter)
     local radius = get_chip_radius(player, eq_name)
     local area = Position.expand_to_area(player.position, radius)
-    local item_entities = equipment and bot_counter(0) > 0 and player.surface.find_entities_filtered{area=area, type=search_type, limit=200}
+    local item_entities = equipment and bot_counter(0) > 0 and player.surface.find_entities_filtered {area = area, type = search_type, limit = 200}
     local num_items = item_entities and #item_entities or 0
     local num_chips = item_entities and #equipment or 0
     return equipment, item_entities, num_items, num_chips, bot_counter
@@ -148,8 +144,8 @@ end
 --Mark items for deconstruction if player has roboport
 local function process_ready_chips(player, equipment)
     local rad = player.character.logistic_cell.construction_radius
-    local enemy = player.surface.find_nearest_enemy{position=player.position, max_distance=rad+10, force=player.force}
-    if not enemy and (equipment["equipment-bot-chip-items"] or equipment["equipment-bot-chip-trees"]) then
+    local enemy = player.surface.find_nearest_enemy {position = player.position, max_distance = rad + 10, force = player.force}
+    if not enemy and (equipment['equipment-bot-chip-items'] or equipment['equipment-bot-chip-trees']) then
         local bots_available = get_bot_counts(player.character)
         if bots_available > 0 then
             local bot_counter = function()
@@ -160,12 +156,12 @@ local function process_ready_chips(player, equipment)
                 end
             end
             bot_counter = bot_counter()
-            mark_items(player, get_chip_results(player, equipment["equipment-bot-chip-items"], "equipment-bot-chip-items", "item-entity", bot_counter))
-            mark_items(player, get_chip_results(player, equipment["equipment-bot-chip-trees"], "equipment-bot-chip-trees", "tree", bot_counter))
+            mark_items(player, get_chip_results(player, equipment['equipment-bot-chip-items'], 'equipment-bot-chip-items', 'item-entity', bot_counter))
+            mark_items(player, get_chip_results(player, equipment['equipment-bot-chip-trees'], 'equipment-bot-chip-trees', 'tree', bot_counter))
         end
     end
-    if enemy and equipment["equipment-bot-chip-launcher"] then
-        local launchers = equipment["equipment-bot-chip-launcher"]
+    if enemy and equipment['equipment-bot-chip-launcher'] then
+        local launchers = equipment['equipment-bot-chip-launcher']
         local num_launchers = #launchers
         local capsule_data = get_best_follower_capsule(player)
         if capsule_data then
@@ -176,8 +172,8 @@ local function process_ready_chips(player, equipment)
             while capsule and existing < (max_bots - capsule.qty) and capsule.count > 0 and num_launchers > 0 do
                 local launcher = launchers[num_launchers]
                 while capsule and existing < (max_bots - capsule.qty) and launcher and launcher.energy >= 500 do
-                    if player.remove_item({name = capsule.capsule, count=1}) == 1 then
-                        player.surface.create_entity{name=capsule.unit, position=player.position, force=player.force, target=player.character}
+                    if player.remove_item({name = capsule.capsule, count = 1}) == 1 then
+                        player.surface.create_entity {name = capsule.unit, position = player.position, force = player.force, target = player.character}
                         launcher.energy = launcher.energy - 500
                         capsule.count = capsule.count - 1
                         existing = existing + capsule.qty
@@ -198,7 +194,6 @@ local function emergency_heal_shield(player, feeders, energy_shields)
     local pos = increment_position(player.position)
     --Only run if we have less than max shield, Feeder max energy is 480
     for _, shield in pairs(energy_shields.shields) do
-
         while num_feeders > 0 do
             local feeder = feeders[num_feeders]
             while feeder and feeder.energy > 120 do
@@ -206,8 +201,8 @@ local function emergency_heal_shield(player, feeders, energy_shields)
                     local last_health = shield.shield
                     local heal, locale = get_health_capsules(player)
                     shield.shield = shield.shield + (heal * 1.5)
-                    local health_line = {"nanobots.health_line", ceil(abs(shield.shield - last_health)), locale}
-                    player.surface.create_entity{name="flying-text", text = health_line, color = defines.color.green, position = pos()}
+                    local health_line = {'nanobots.health_line', ceil(abs(shield.shield - last_health)), locale}
+                    player.surface.create_entity {name = 'flying-text', text = health_line, color = defines.color.green, position = pos()}
                     feeder.energy = feeder.energy - 120
                 else
                     break
@@ -215,12 +210,13 @@ local function emergency_heal_shield(player, feeders, energy_shields)
             end
             num_feeders = num_feeders - 1
         end
-        if num_feeders == 0 then return end
+        if num_feeders == 0 then
+            return
+        end
     end
 end
 
 local function emergency_heal_player(player, feeders)
-
     local num_feeders = #feeders
     local pos = increment_position(player.character.position)
     local max_health = player.character.prototype.max_health * .75
@@ -232,9 +228,9 @@ local function emergency_heal_player(player, feeders)
                 local last_health = player.character.health
                 local heal, locale = get_health_capsules(player)
                 player.character.health = last_health + heal
-                local health_line = {"nanobots.health_line", ceil(abs(player.character.health - last_health)), locale}
+                local health_line = {'nanobots.health_line', ceil(abs(player.character.health - last_health)), locale}
                 feeder.energy = feeder.energy - 120
-                player.surface.create_entity{name="flying-text", text = health_line, color = defines.color.green, position = pos()}
+                player.surface.create_entity {name = 'flying-text', text = health_line, color = defines.color.green, position = pos()}
             else
                 return
             end
@@ -242,20 +238,19 @@ local function emergency_heal_player(player, feeders)
         num_feeders = num_feeders - 1
     end
 end
--------------------------------------------------------------------------------
---[[BOT CHIPS]]--
--------------------------------------------------------------------------------
+
+--(( BOT CHIPS  ))-------------------------------------------------------------
 function armormods.prepare_chips(player)
     if is_personal_roboport_ready(player.character) then
         local _, _, charged, energy_shields = get_valid_equipment(player.character.grid)
-        if charged["equipment-bot-chip-launcher"] or charged["equipment-bot-chip-items"] or charged["equipment-bot-chip-trees"] then
+        if charged['equipment-bot-chip-launcher'] or charged['equipment-bot-chip-items'] or charged['equipment-bot-chip-trees'] then
             process_ready_chips(player, charged)
         end
-        if charged["equipment-bot-chip-feeder"] then
+        if charged['equipment-bot-chip-feeder'] then
             if #energy_shields.shields > 0 then
-                emergency_heal_shield(player, charged["equipment-bot-chip-feeder"], energy_shields)
+                emergency_heal_shield(player, charged['equipment-bot-chip-feeder'], energy_shields)
             elseif player.character.health < player.character.prototype.max_health * .75 then
-                emergency_heal_player(player, charged["equipment-bot-chip-feeder"])
+                emergency_heal_player(player, charged['equipment-bot-chip-feeder'])
             end
         end
     end

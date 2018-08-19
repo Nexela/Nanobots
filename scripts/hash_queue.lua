@@ -96,23 +96,4 @@ local mt = {
     end
 }
 
---[[
-setmetatable(Queue, mt)
-
-local serpent = require("stdlib.utils.scripts.serpent")
-require("stdlib.utils.table")
-
-local data1 = {action = "test", entity = {unit_number = 100}}
-local data2 = {action = "test2", entity = {unit_number = 100}}
-
-local queue = Queue()
---queue[23] = {}
-queue:insert(data1, 25):insert(data2, 25)
-print(serpent.block(queue, {comment=false}))
-
---print(queue:count())
-queue:execute({tick = 25})
-print(queue:count())
-print(serpent.block(queue, {comment=false}))
---]]
 return setmetatable(Queue, mt)
