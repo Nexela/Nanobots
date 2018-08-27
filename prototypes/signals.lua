@@ -23,7 +23,8 @@ local signal2 = {
     subgroup = 'nanobot-signals',
     order = '[nano-signal]-b'
 }
-local signal3 = { --luacheck: ignore signal3
+--luacheck: ignore signal3
+local signal3 = {
     type = 'virtual-signal',
     name = 'nano-signal-remove-tiles',
     special_signal = false,
@@ -32,7 +33,8 @@ local signal3 = { --luacheck: ignore signal3
     subgroup = 'nanobot-signals',
     order = '[nano-signal]-c'
 }
-local signal4 = { --luacheck: ignore signal4
+--luacheck: ignore signal4
+local signal4 = {
     type = 'virtual-signal',
     name = 'nano-signal-landfill-the-world',
     special_signal = false,

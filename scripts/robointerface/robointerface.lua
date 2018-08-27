@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------------
 --[[robointerface]]
 -------------------------------------------------------------------------------
-local Event = require('__stdlib__/event/event')
-local Position = require('__stdlib__/area/position')
+local Event = require('__stdlib__/stdlib/event/event')
+local Position = require('__stdlib__/stdlib/area/position')
 local Queue = require('scripts/hash_queue')
 local queue
 

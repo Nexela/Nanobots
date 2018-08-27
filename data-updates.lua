@@ -1,4 +1,4 @@
-local Recipe = require('__stdlib__/data/recipe')
+local Recipe = require('__stdlib__/stdlib/data/recipe')
 
 --bobmods recipe changes
 if mods['boblibrary'] then

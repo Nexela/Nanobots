@@ -1,5 +1,5 @@
 local NANO = require('config')
-require('__stdlib__/core')
+require('__stdlib__/stdlib/core')
 
 --Custom GUI's
 require('prototypes/gui')

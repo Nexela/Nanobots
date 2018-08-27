@@ -1,5 +1,4 @@
-require('__stdlib__/core')
-local Event = require('__stdlib__/event/event')
+local Event = require('__stdlib__/stdlib/event/event')
 
 MOD = {}
 MOD.name = 'Nanobots'
@@ -13,18 +12,18 @@ MOD.commands = require('commands')
 local Queue = require('scripts/hash_queue')
 local queue
 
-local Force = require('__stdlib__/event/force')
-local Player = require('__stdlib__/event/player')
+local Force = require('__stdlib__/stdlib/event/force')
+local Player = require('__stdlib__/stdlib/event/player')
 
-local Position = require('__stdlib__/area/position')
-local Area = require('__stdlib__/area/area')
+local Position = require('__stdlib__/stdlib/area/position')
+local Area = require('__stdlib__/stdlib/area/area')
 
 Event.build_events = {defines.events.on_built_entity, defines.events.on_robot_built_entity}
 Event.mined_events = {defines.events.on_pre_player_mined_item, defines.events.on_robot_pre_mined}
 Event.reset_nano_queue = script.generate_event_name()
 
 if MOD.config.DEBUG then
-    require('__stdlib__/utils/scipts/quickstart')
+    require('__stdlib__/stdlib/utils/scipts/quickstart')
 end
 
 require('scripts/robointerface/robointerface')

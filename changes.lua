@@ -67,13 +67,12 @@ changes['any-change-always-first'] = function()
 end
 
 changes['mod-change-always-first'] = function()
-end
- --
+end --Major changes made
+--
 
 -------------------------------------------------------------------------------
 --[[Version change code make sure to include the version in
---migrations table above.]] --Major changes made
-changes['1.2.0'] = function()
+--migrations table above.]] changes['1.2.0'] = function()
     global.current_index = 1
 end
 
@@ -89,8 +88,8 @@ end
 --Major changes, add in player and force global tables
 local robointerface = require('scripts/robointerface/robointerface')
 local Queue = require('scripts/hash_queue')
-local Player = require('__stdlib__/event/player')
-local Force = require('__stdlib__/event/force')
+local Player = require('__stdlib__/stdlib/event/player')
+local Force = require('__stdlib__/stdlib/event/force')
 changes['1.7.0'] = function()
     Force.init(nil, true)
     Player.init(nil, true)
@@ -141,7 +140,7 @@ end
 changes['1.8.7'] = function()
     MOD.interface.reset_queue('cell_queue')
 end
- --
+--
 -------------------------------------------------------------------------------
 --[[Always run these at the end ]] changes['mod-change-always-last'] = function()
 end

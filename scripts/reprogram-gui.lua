@@ -1,5 +1,5 @@
-local Event = require('__stdlib__/event/event')
-local Gui = require('__stdlib__/event/gui')
+local Event = require('__stdlib__/stdlib/event/event')
+local Gui = require('__stdlib__/stdlib/event/gui')
 
 local match_to_item = {
     ['equipment-bot-chip-trees'] = true,

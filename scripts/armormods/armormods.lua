@@ -8,7 +8,7 @@ local armormods = {}
 local combat_robots = MOD.config.COMBAT_ROBOTS
 local healer_capsules = MOD.config.FOOD
 
-local Position = require('__stdlib__/area/position')
+local Position = require('__stdlib__/stdlib/area/position')
 local max, abs, ceil, floor = math.max, math.abs, math.ceil, math.floor
 
 --(( Helper functions ))-------------------------------------------------------
@@ -113,7 +113,7 @@ local function get_chip_radius(player, chip_name)
     local custom_radius = pdata.ranges[chip_name] or max_radius
     return custom_radius <= max_radius and custom_radius or max_radius
 end
- --))
+--))
 
 --At this point player is valid, not afk and has a character
 local function get_chip_results(player, equipment, eq_name, search_type, bot_counter)

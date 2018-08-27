@@ -1,19 +1,17 @@
 local tech1 = {
-    type = "technology",
-    name = "nanobots",
-    icon = "__Nanobots__/graphics/technology/tech-nanobots.png",
+    type = 'technology',
+    name = 'nanobots',
+    icon = '__Nanobots__/graphics/technology/tech-nanobots.png',
     icon_size = 128,
     effects = {},
-    prerequisites = {"logistics"},
-    unit =
-    {
+    prerequisites = {'logistics'},
+    unit = {
         count = 30,
-        ingredients =
-        {
-            {"science-pack-1", 1}
+        ingredients = {
+            {'science-pack-1', 1}
         },
         time = 30
     },
-    order = "a-b-ab",
+    order = 'a-b-ab'
 }
-data:extend{tech1}
+data:extend {tech1}

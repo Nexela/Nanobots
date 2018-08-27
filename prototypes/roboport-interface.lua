@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------------
 --[[Roboport Interface]] -- Logistic Network roboport interface module
 -------------------------------------------------------------------------------
-local Data = require('__stdlib__/data/data')
-local Recipe = require('__stdlib__/data/recipe')
+local Data = require('__stdlib__/stdlib/data/data')
+local Recipe = require('__stdlib__/stdlib/data/recipe')
 --Roboport with custom GFX no zones, no recharge, radar with nil gfx, cc with nil gfx - selectable
 --256 x 224
 
@@ -71,7 +71,6 @@ Main roboport type entity to show connections/animations.
 Hidden radar entity, Fires the on sector scanned scripts
 Constant-Combinator interface for setting the signals.
 --]]
-
 local ri_cc = Data('constant-combinator', 'constant-combinator'):copy('roboport-interface-cc')
 ri_cc.icon = nil
 ri_cc.icons = {
