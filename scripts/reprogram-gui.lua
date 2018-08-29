@@ -87,8 +87,8 @@ end
 local function load_pad()
     if remote.interfaces['picker'] and remote.interfaces['picker']['get_adjustment_pad_id'] then
         Event.register(remote.call('picker', 'get_adjustment_pad_id'), adjust_pad)
-    elseif remote.interfaces['PickerExtended'] and remote.interfaces['PickerExtended']['get_adjustment_pad_id'] then
-        Event.register(remote.call('PickerExtended', 'get_adjustment_pad_id'), adjust_pad)
+    elseif remote.interfaces['PickerAtheneum'] and remote.interfaces['PickerAtheneum']['get_adjustment_pad_id'] then
+        Event.register(remote.call('PickerAtheneum', 'get_adjustment_pad_id'), adjust_pad)
     end
 end
 
