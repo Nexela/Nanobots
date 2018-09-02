@@ -4,6 +4,7 @@
 local Event = require('__stdlib__/stdlib/event/event')
 local Position = require('__stdlib__/stdlib/area/position')
 local Queue = require('scripts/hash_queue')
+local table = require('__stdlib__/stdlib/utils/table')
 local queue
 
 local floor = math.floor

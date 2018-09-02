@@ -1,4 +1,6 @@
 local Data = require('__stdlib__/stdlib/data/data')
+
+-- TODO switch to sound type
 local sound_creators = {
     type = 'explosion',
     name = 'nano-sound-build-tiles',

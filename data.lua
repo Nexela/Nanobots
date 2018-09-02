@@ -1,6 +1,3 @@
-local NANO = require('config')
-require('__stdlib__/stdlib/core')
-
 --Custom GUI's
 require('prototypes/gui')
 
@@ -18,7 +15,6 @@ require('prototypes/equipment/equipment-bot-chip-trees')
 require('prototypes/equipment/equipment-bot-chip-launcher')
 require('prototypes/equipment/equipment-bot-chip-nanointerface')
 require('prototypes/equipment/equipment-bot-chip-feeder')
-require('prototypes/equipment/belt-immunity-equipment')
 
 --Gun, When equipped and selected will automaticly revive ghosts around it
 require('prototypes/gun-nano-emitter')
@@ -33,8 +29,3 @@ require('prototypes/roboport-interface')
 
 --Sounds
 require('prototypes/sounds')
-
-if NANO.DEBUG then
-    local developer = require('__stdlib__.data.developer.developer')
-    developer.make_test_entities('Nanobots')
-end

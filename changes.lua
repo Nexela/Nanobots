@@ -13,6 +13,8 @@ local mod_name = MOD.name or 'not-set'
 local migrations = {'1.2.0', '1.2.3', '1.7.0', '1.7.4', '1.8.0', '1.8.2', '1.8.7'}
 local changes = {}
 
+local table = require('__stdlib__/stdlib/utils/table')
+
 --Mark all migrations as complete during Init.
 function changes.on_init(version)
     local list = {}

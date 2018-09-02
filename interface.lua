@@ -45,12 +45,12 @@ end
 --     end
 -- end
 
-function interface.print_global(name)
+function interface.write_global(name)
     if name and type(name) == 'string' then
-        game.write_file('/Nanobots/global.lua', name .. '=' .. serpent.block(global[name], {nocode = true, sortkeys = true, comment = false, sparse = true}))
+        game.write_file(script.mod_name .. '/global.lua', name .. '=' .. serpent.block(global[name], {nocode = true, sortkeys = true, comment = false, sparse = true}))
     else
-        game.write_file('/Nanobots/global.lua', serpent.block(global, {nocode = true, sortkeys = true, comment = false, sparse = true}))
-        game.write_file('/Nanobots/event.lua', serpent.block(Event, {nocode = true, sortkeys = true, comment = false, sparse = true}))
+        game.write_file(script.mod_name .. '/global.lua', serpent.block(global, {nocode = true, sortkeys = true, comment = false, sparse = true}))
+        game.write_file(script.mod_name .. '/event.lua', serpent.block(Event, {nocode = true, sortkeys = true, comment = false, sparse = true}))
     end
 end
 
@@ -61,16 +61,7 @@ function interface.print_settings()
             tab[group][name] = setting.value
         end
     end
-    game.write_file('/Nanobots/settings.lua', serpent.block(tab, {nocode = true, sortkeys = true, comment = false, sparse = true}))
-end
-interface.console = require('__stdlib__/stdlib/scripts/console')
-
---Register with creative-mode for easy testing
-function interface.creative_mode_register()
-    if remote.interfaces['creative-mode'] and remote.interfaces['creative-mode']['register_remote_function_to_modding_ui'] then
-        remote.call('creative-mode', 'register_remote_function_to_modding_ui', MOD.if_name, 'print_global')
-        remote.call('creative-mode', 'register_remote_function_to_modding_ui', MOD.if_name, 'console')
-    end
+    game.write_file(script.mod_name .. '/settings.lua', serpent.block(tab, {nocode = true, sortkeys = true, comment = false, sparse = true}))
 end
 
 return interface

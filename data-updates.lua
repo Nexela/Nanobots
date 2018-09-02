@@ -12,5 +12,4 @@ if mods['boblibrary'] then
     Recipe('equipment-bot-chip-nanointerface'):add_ingredient('gun-nano-emitter')
     Recipe('equipment-bot-chip-launcher'):add_ingredient('robot-brain-combat')
     Recipe('equipment-bot-chip-feeder'):add_ingredient('robot-brain-combat')
-    Recipe('belt-immunity-equipment'):add_ingredient('robot-brain-construction')
 end

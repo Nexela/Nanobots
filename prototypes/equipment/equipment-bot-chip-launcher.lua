@@ -1,4 +1,6 @@
-local recipe_chip = {
+local Data = require('__stdlib__/stdlib/data/data')
+
+Data {
     type = 'recipe',
     name = 'equipment-bot-chip-launcher',
     enabled = false,
@@ -11,7 +13,7 @@ local recipe_chip = {
     result = 'equipment-bot-chip-launcher'
 }
 
-local item_chip = {
+Data {
     type = 'item',
     name = 'equipment-bot-chip-launcher',
     icon = '__Nanobots__/graphics/icons/equipment-bot-chip-launcher.png',
@@ -23,7 +25,7 @@ local item_chip = {
     stack_size = 20
 }
 
-local equipment_chip = {
+local equipment_chip = Data {
     type = 'active-defense-equipment',
     name = 'equipment-bot-chip-launcher',
     take_result = 'equipment-bot-chip-launcher',
@@ -78,12 +80,9 @@ local equipment_chip = {
     categories = {'armor'}
 }
 
-local disabled = table.deepcopy(equipment_chip)
---Keep the same localised name if none is specified
-disabled.localised_name = {'equipment-hotkeys.disabled-eq', disabled.localised_name or {'equipment-name.' .. disabled.name}}
-disabled.name = 'nano-disabled-' .. disabled.name
+equipment_chip:copy('nano-disabled-' .. equipment_chip.name):set_fields{
+    localised_name = {'equipment-hotkeys.disabled-eq', equipment_chip.localised_name or {'equipment-name.' .. equipment_chip.name}}
+}
 
 local effects = data.raw.technology['personal-roboport-equipment'].effects
 effects[#effects + 1] = {type = 'unlock-recipe', recipe = 'equipment-bot-chip-launcher'}
-
-data:extend({item_chip, recipe_chip, equipment_chip, disabled})

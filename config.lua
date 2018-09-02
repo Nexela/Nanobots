@@ -38,37 +38,4 @@ NANO.QUEUE_SPEED_BONUS = {[0] = 0, [1] = 2, [2] = 4, [3] = 6, [4] = 8}
 NANO.control = {}
 NANO.control.loglevel = 2
 
---These settings only affect debug mode, no need to change them
-NANO.quickstart = {
-    clear_items = true,
-    power_armor = 'power-armor-mk2',
-    equipment = {
-        'creative_mode-super-fusion-reactor-equipment',
-        'personal-roboport-mk2-equipment',
-        'belt-immunity-equipment'
-    },
-    destroy_everything = true,
-    disable_rso_starting = true,
-    disable_rso_chunk = true,
-    floor_tile = 'concrete',
-    mod_name = 'Nanobots',
-    area_box = {{-250, -250}, {250, 250}},
-    chunk_bounds = true,
-    center_map_tag = true,
-    setup_power = true,
-    stacks = {
-        'creative-mode_matter-source',
-        'creative-mode_fluid-source',
-        'creative-mode_energy-source',
-        'creative-mode_super-substation',
-        'construction-robot',
-        'creative-mode_magic-wand-modifier',
-        'creative-mode_super-roboport',
-        'gun-nano-emitter',
-        'ammo-nano-constructors',
-        'stone-furnace',
-        'ammo-nano-deconstructors'
-    }
-}
-
 return NANO

@@ -2,6 +2,7 @@
 --[[armormods]] -- Power Armor module code.
 -------------------------------------------------------------------------------
 local armormods = {}
+local table = require('__stdlib__/stdlib/utils/table')
 
 --TODO: Store this in global and update in on_con_changed
 --TODO: Remote call for inserting/removing into table
