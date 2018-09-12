@@ -3,13 +3,11 @@
 -------------------------------------------------------------------------------
 local Event = require('__stdlib__/stdlib/event/event')
 local Position = require('__stdlib__/stdlib/area/position')
-local Queue = require('scripts/hash_queue')
 local table = require('__stdlib__/stdlib/utils/table')
+local Queue = require('scripts/hash_queue')
 local queue
 
 local floor = math.floor
-
-Event.reset_cell_queue = script.generate_event_name()
 
 local params_to_check = {
     ['nano-signal-chop-trees'] = {
@@ -198,14 +196,13 @@ local function run_interface(interface)
     end
 end
 
-local function execute_nano_queue(event)
+local function execute_interface_queue(event)
     queue:execute(event)
 end
-Event.register(defines.events.on_tick, execute_nano_queue) -------------------------------------------------------------------------------
---
+Event.register(defines.events.on_tick, execute_interface_queue)
 
--------------------------------------------------------------------------------
---[[Roboport Interface Scanner]] local function kill_or_remove_interface_parts(event, destroy)
+--[Roboport Interface Scanner]--
+ local function kill_or_remove_interface_parts(event, destroy)
     if event.entity.name == 'roboport-interface-main' then
         destroy = destroy or event.mod == 'creative-mode'
         local interface = event.entity
@@ -296,4 +293,4 @@ local function reset_cell_queue()
         fdata._next_cell_tick = game and game.tick or 0
     end
 end
-Event.register(Event.reset_cell_queue, reset_cell_queue)
+Event.register(Event.generate_event_name('reset_cell_queue'), reset_cell_queue)

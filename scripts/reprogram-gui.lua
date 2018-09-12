@@ -1,5 +1,6 @@
 local Event = require('__stdlib__/stdlib/event/event')
 local Gui = require('__stdlib__/stdlib/event/gui')
+local config = require('config')
 
 local match_to_item = {
     ['equipment-bot-chip-trees'] = true,
@@ -8,7 +9,7 @@ local match_to_item = {
     ['ammo-nano-termites'] = true
 }
 
-local bot_radius = MOD.config.BOT_RADIUS
+local bot_radius = config.BOT_RADIUS
 
 local function get_match(stack)
     return stack.valid_for_read and match_to_item[stack.name]

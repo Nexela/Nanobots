@@ -4,10 +4,12 @@
 local armormods = {}
 local table = require('__stdlib__/stdlib/utils/table')
 
+local config = require('config')
+
 --TODO: Store this in global and update in on_con_changed
 --TODO: Remote call for inserting/removing into table
-local combat_robots = MOD.config.COMBAT_ROBOTS
-local healer_capsules = MOD.config.FOOD
+local combat_robots = config.COMBAT_ROBOTS
+local healer_capsules = config.FOOD
 
 local Position = require('__stdlib__/stdlib/area/position')
 local max, abs, ceil, floor = math.max, math.abs, math.ceil, math.floor

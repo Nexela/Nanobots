@@ -16,9 +16,10 @@ end
 function interface.reset_queue(queue)
     queue = queue or 'nano_queue'
     local name = 'reset_' .. queue
-    if global[queue] and Event[name] then
+    local id = Event.get_event_name(name)
+    if global[queue] and id then
         game.print('Resetting ' .. queue)
-        Event.dispatch({name = Event[name]})
+        Event.dispatch({name = id})
     end
 end
 
@@ -26,42 +27,8 @@ function interface.count_queue(queue)
     queue = queue or 'nano_queue'
     if global[queue] then
         local a, b = Queue.count(global[queue])
-        game.print('Queued:' .. a .. ' Hashed:' .. b, 2)
+        game.print('Queued:' .. a .. ' Hashed:' .. b)
     end
-end
-
--- function interface.get_queue(queue)
---     queue = queue or "nano_queue"
---     if global[queue] then
---         return(global.nano_queue)
---     end
--- end
-
--- function interface.add_to_queue(queue, data, tick)
---     queue = queue or "nano_queue"
---     if global[queue] and tick and data and type(data) =="table" and data.action then
---         Queue.insert(global[queue], data, tick)
---         return true
---     end
--- end
-
-function interface.write_global(name)
-    if name and type(name) == 'string' then
-        game.write_file(script.mod_name .. '/global.lua', name .. '=' .. serpent.block(global[name], {nocode = true, sortkeys = true, comment = false, sparse = true}))
-    else
-        game.write_file(script.mod_name .. '/global.lua', serpent.block(global, {nocode = true, sortkeys = true, comment = false, sparse = true}))
-        game.write_file(script.mod_name .. '/event.lua', serpent.block(Event, {nocode = true, sortkeys = true, comment = false, sparse = true}))
-    end
-end
-
-function interface.print_settings()
-    local tab = {startup = {}, global = {}, user = {}}
-    for _, group in pairs({'startup', 'global'}) do
-        for name, setting in pairs(settings[group]) do
-            tab[group][name] = setting.value
-        end
-    end
-    game.write_file(script.mod_name .. '/settings.lua', serpent.block(tab, {nocode = true, sortkeys = true, comment = false, sparse = true}))
 end
 
 return interface
