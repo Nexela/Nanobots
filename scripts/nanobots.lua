@@ -1,4 +1,5 @@
 local Event = require('__stdlib__/stdlib/event/event')
+Event.protected_mode = true
 local Area = require('__stdlib__/stdlib/area/area')
 local Position = require('__stdlib__/stdlib/area/position')
 local table = require('__stdlib__/stdlib/utils/table')
@@ -68,8 +69,11 @@ end
 --table.find functions
 local table_find = table.find
 -- return the name of the item found for table.find if we found at least 1 item or cheat_mode is enabled.
-local _find_item = function(_, k, p)
-    return get_cheat_mode(p) or p.get_item_count(k) > 0 or (p.vehicle and (p.vehicle.get_item_count(k) > 0 or (p.vehicle and p.vehicle.train and p.vehicle.train.get_item_count(k) > 0)))
+local _find_item = function(v, _, p)
+    local item, count = v.name, v.count
+    return get_cheat_mode(p) or p.get_item_count(item) >= count or (
+        p.vehicle and (p.vehicle.get_item_count(item) >= count or (p.vehicle and p.vehicle.train and p.vehicle.train.get_item_count(item) > count))
+    )
 end
 
 -- Is the player connected, not afk, and have an attached character
@@ -211,11 +215,11 @@ local function get_all_items_on_ground(entity, existing_stacks)
     return (item_stacks[1] and item_stacks) or {}
 end
 
--- Get one item with health data from the inventory
+-- Get items with health data from the inventory
 -- @param entity: the entity object to search
 -- @param item: the item to look for
 -- @return item_stack; SimpleItemStack
-local function get_one_item_from_inv(entity, item, cheat)
+local function get_items_from_inv(entity, item_stack, cheat)
     if not cheat then
         local sources
         if entity.vehicle and entity.vehicle.train then
@@ -230,17 +234,17 @@ local function get_one_item_from_inv(entity, item, cheat)
             for _, inv in pairs(inv_list) do
                 local inventory = source.get_inventory(inv)
                 if inventory and inventory.valid then
-                    local stack = inventory.find_item_stack(item)
-                    if stack then
-                        local item_stack = {name = stack.name, count = 1, health = stack.health or 1}
-                        stack.count = stack.count - 1
-                        return item_stack
+                    local stack = inventory.get_item_count(item_stack.name) > 0 and inventory.find_item_stack(item_stack.name)
+                    if stack and stack.count >= item_stack.count then
+                        local new_item_stack = {name = stack.name, count = item_stack.count, health = stack.health or 1}
+                        stack.count = stack.count - item_stack.count
+                        return new_item_stack
                     end
                 end
             end
         end
     else
-        return {name = item, count = 1, health = 1}
+        return {name = item_stack.name, count = item_stack.count, health = 1}
     end
 end
 
@@ -352,7 +356,7 @@ function Queue.build_entity_ghost(data)
                 local revived, entity, requests = ghost.revive({return_item_request_proxy = true})
                 if revived then
                     create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
-                    entity.health = (entity.health > 0) and ((data.place_item.health or 1) * entity.prototype.max_health)
+                    entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
                     if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
                         create_projectile('nano-projectile-return', ghost_surf, player.force, ghost_pos, player.position)
                     end
@@ -369,13 +373,13 @@ function Queue.build_entity_ghost(data)
                         }
                     )
                 else --not revived, return item
-                    insert_or_spill_items(player, {data.place_item})
+                    insert_or_spill_items(player, {data.item_stack})
                 end --revived
             else --can't build
-                insert_or_spill_items(player, {data.place_item})
+                insert_or_spill_items(player, {data.item_stack})
             end --can build
         else --not valid ghost
-            insert_or_spill_items(player, {data.place_item})
+            insert_or_spill_items(player, {data.item_stack})
         end --valid ghost
     end --valid player
 end
@@ -391,7 +395,7 @@ function Queue.build_tile_ghost(data)
                 create_projectile('nano-projectile-return', ghost.surface, player.force, ghost.position, player.position)
             end
             if ghost.revive() then
-                local ptype = data.place_item and game.item_prototypes[data.place_item.name]
+                local ptype = data.item_stack and game.item_prototypes[data.item_stack.name]
                 create_projectile('nano-projectile-constructors', surface, force, player.position, position)
                 surface.create_entity {name = 'nano-sound-build-tiles', position = position}
                 script.raise_event(
@@ -410,10 +414,10 @@ function Queue.build_tile_ghost(data)
                     }
                 )
             else --Can't revive tile
-                insert_or_spill_items(player, {data.place_item})
+                insert_or_spill_items(player, {data.item_stack})
             end --revive tile
         else --Give the item back ghost isn't valid anymore.
-            insert_or_spill_items(player, {data.place_item})
+            insert_or_spill_items(player, {data.item_stack})
         end --valid ghost
     end --valid player
 end
@@ -456,8 +460,8 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                         elseif (ghost.name == 'entity-ghost' or (ghost.name == 'tile-ghost' and cfg.build_tiles)) and ghost.force == player.force then
                             if not queue:get_hash(ghost) then
                                 --get first available item that places entity from inventory that is not in our hand.
-                                local _, item_name = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
-                                if item_name then
+                                local item_stack = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
+                                if item_stack then
                                     local data = {
                                         player_index = player.index,
                                         entity = ghost,
@@ -469,10 +473,10 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                     if ghost.name == 'entity-ghost' then
                                         --end
                                         --if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
-                                        local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
+                                        local place_item = get_items_from_inv(player, item_stack, get_cheat_mode(player))
                                         if place_item then
                                             data.action = 'build_entity_ghost'
-                                            data.place_item = place_item
+                                            data.item_stack = place_item
                                             queue:insert(data, next_tick())
                                             ammo_drain(player, nano_ammo, 1)
                                         end
@@ -481,9 +485,9 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                         if ghost.surface.count_entities_filtered {name = 'entity-ghost', area = Area(ghost.bounding_box):non_zero(), limit = 1} == 0 then
                                             local tile = ghost.surface.get_tile(ghost.position)
                                             if tile then
-                                                local place_item = get_one_item_from_inv(player, item_name, get_cheat_mode(player))
+                                                local place_item = get_items_from_inv(player, item_stack, get_cheat_mode(player))
                                                 if place_item then
-                                                    data.place_item = place_item
+                                                    data.item_stack = place_item
                                                     data.action = 'build_tile_ghost'
                                                     queue:insert(data, next_tick())
                                                     ammo_drain(player, nano_ammo, 1)
