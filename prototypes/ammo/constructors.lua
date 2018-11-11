@@ -7,7 +7,7 @@ local recipe = {
     enabled = false,
     energy_required = 1,
     ingredients = {
-        {'iron-axe', 1},
+        {'iron-stick', 1},
         {'repair-pack', 1}
     },
     results = {
