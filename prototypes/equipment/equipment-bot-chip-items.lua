@@ -19,7 +19,6 @@ Data {
     icon = '__Nanobots__/graphics/icons/equipment-bot-chip-items.png',
     icon_size = 32,
     placed_as_equipment_result = 'equipment-bot-chip-items',
-    flags = {'goes-to-main-inventory'},
     subgroup = 'equipment',
     order = 'e[robotics]-ab[personal-roboport-equipment]',
     stack_size = 20

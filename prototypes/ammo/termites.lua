@@ -21,7 +21,6 @@ local termites = {
     name = 'ammo-nano-termites',
     icon = '__Nanobots__/graphics/icons/nano-ammo-termites.png',
     icon_size = 32,
-    flags = {'goes-to-main-inventory'},
     magazine_size = 20, --20
     subgroup = 'tool',
     order = 'c[automated-construction]-g[gun-nano-emitter]-d-termites',

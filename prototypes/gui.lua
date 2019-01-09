@@ -30,7 +30,7 @@ style.nano_label_style = {
 
 style.nano_text_style = {
     type = 'textbox_style',
-    parent = 'number_textfield',
+    parent = 'number_input_textbox',
     maximal_width = 42,
     minimal_width = 42,
     maximal_height = 24,

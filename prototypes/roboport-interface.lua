@@ -16,7 +16,7 @@ Data {
     unit = {
         count = 100,
         ingredients = {
-            {'science-pack-1', 1}
+            {'automation-science-pack', 1}
         },
         time = 30
     },
@@ -44,7 +44,6 @@ Data {
         {icon = '__Nanobots__/graphics/icons/roboport-interface.png', icon_size = 32}
     },
     icon_size = 32,
-    flags = {'goes-to-quickbar'},
     subgroup = 'logistic-network',
     order = 'c[signal]-a[roboport]-interface',
     place_result = 'roboport-interface-main',

@@ -13,7 +13,6 @@ local bot_radius = config.BOT_RADIUS
 local queue_speed = config.QUEUE_SPEED_BONUS
 local AFK_TIME = 4 * defines.time.second
 
--- Remove duplicate inventory defines values for quicker searching through inventories
 local function cull_inventory_list(list)
     local temp, culled_list = {}, {}
     for _, value in pairs(list) do
@@ -27,7 +26,7 @@ end
 local inv_list =
     cull_inventory_list {
     defines.inventory.player_main,
-    defines.inventory.player_quickbar,
+    defines.inventory.god_main,
     defines.inventory.chest,
     defines.inventory.player_vehicle,
     defines.inventory.player_trash,

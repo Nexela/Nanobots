@@ -21,7 +21,6 @@ local constructors = {
     name = 'ammo-nano-constructors',
     icon = '__Nanobots__/graphics/icons/nano-ammo-constructors.png',
     icon_size = 32,
-    flags = {'goes-to-main-inventory'},
     magazine_size = 10,
     subgroup = 'tool',
     order = 'c[automated-construction]-g[gun-nano-emitter]-a-constructors',

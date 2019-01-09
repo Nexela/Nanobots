@@ -14,7 +14,7 @@ local tech1 = {
     unit = {
         count = 100,
         ingredients = {
-            {'science-pack-1', 1}
+            {'automation-science-pack', 1}
         },
         time = 30
     },
@@ -38,8 +38,8 @@ local tech2 = {
     unit = {
         count = 100,
         ingredients = {
-            {'science-pack-1', 1},
-            {'science-pack-2', 1}
+            {'automation-science-pack', 1},
+            {'logistic-science-pack', 1}
         },
         time = 60
     },
@@ -63,8 +63,8 @@ local tech3 = {
     unit = {
         count = 100,
         ingredients = {
-            {'science-pack-1', 3},
-            {'science-pack-2', 3}
+            {'automation-science-pack', 3},
+            {'logistic-science-pack', 3}
         },
         time = 90
     },
@@ -88,8 +88,8 @@ local tech4 = {
     unit = {
         count = 100,
         ingredients = {
-            {'science-pack-1', 4},
-            {'science-pack-2', 4}
+            {'automation-science-pack', 4},
+            {'logistic-science-pack', 4}
             --{"science-pack-3", 4}
         },
         time = 120
