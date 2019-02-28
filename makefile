@@ -1,5 +1,7 @@
 PACKAGE_NAME := $(shell cat info.json|jq -r .name)
 VERSION_STRING := $(shell cat info.json|jq -r .version)
+PACKAGE_FULL_NAME := $(PACKAGE_NAME)_$(VERSION_STRING)
+PACKAGE_FILE := $(PACKAGE_FULL_NAME).zip
 OUTPUT_NAME := $(PACKAGE_NAME)_$(VERSION_STRING)
 BUILD_DIR := .build
 OUTPUT_DIR := $(BUILD_DIR)/$(OUTPUT_NAME)
@@ -55,7 +57,7 @@ check:
 	@luacheck . -q --codes
 
 package: package-copy $(OUT_FILES) nodebug optimize
-	@cd $(BUILD_DIR) && zip -rq $(OUTPUT_NAME).zip $(OUTPUT_NAME)
+	@cd $(BUILD_DIR) && zip -rq $(PACKAGE_FILE) $(OUTPUT_NAME) && mkdir artifacts && cp -r $(PACKAGE_FILE) artifacts/$(PACKAGE_FILE)
 	@echo $(OUTPUT_NAME).zip ready
 
 clean:
