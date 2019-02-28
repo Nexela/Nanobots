@@ -1,0 +1,15 @@
+version: 2
+jobs:
+  build:
+    branches:
+      only:
+        - "master"
+    docker:
+      - image: nexela/factorio-lua-env
+    steps:
+      - checkout
+      - run: curl -s -o .luacheckrc https://raw.githubusercontent.com/Nexela/Factorio-luacheckrc/0.17/.luacheckrc
+      - run: luacheck .
+      - run: make all
+      - store_artifacts:
+          path: /root/project/.build/artifacts

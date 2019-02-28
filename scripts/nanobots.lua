@@ -203,7 +203,7 @@ local function get_all_items_on_ground(entity, existing_stacks)
         item_stacks[#item_stacks + 1] = {name = item_on_ground.stack.name, count = item_on_ground.stack.count, health = item_on_ground.health or 1}
         item_on_ground.destroy()
     end
-    local inserter_area = Area.expand(Area.copy(area), 3)
+    local inserter_area = Area.expand(area, 3)
     for _, inserter in pairs(surface.find_entities_filtered {area = inserter_area, type = 'inserter'}) do
         local stack = inserter.held_stack
         if stack.valid_for_read and Area.inside(area, inserter.held_stack_position) then
