@@ -1,65 +1,60 @@
-PACKAGE_NAME := $(shell cat info.json|jq -r .name)
-VERSION_STRING := $(shell cat info.json|jq -r .version)
-PACKAGE_FULL_NAME := $(PACKAGE_NAME)_$(VERSION_STRING)
+# Get the current name and version from info.json
+PACKAGE_NAME := $(shell jq -r .name info.json)
+PACKAGE_VERSION := $(shell jq -r .version info.json)
+PACKAGE_FULL_NAME := $(PACKAGE_NAME)_$(PACKAGE_VERSION)
 PACKAGE_FILE := $(PACKAGE_FULL_NAME).zip
-OUTPUT_NAME := $(PACKAGE_NAME)_$(VERSION_STRING)
+CONFIG_FILE = ./$(OUTPUT_DIR)/config.lua
+
+# Setup Build Directoy and Files
 BUILD_DIR := .build
-OUTPUT_DIR := $(BUILD_DIR)/$(OUTPUT_NAME)
-CONFIG = ./$(OUTPUT_DIR)/config.lua
+OUTPUT_DIR := $(BUILD_DIR)/$(PACKAGE_FULL_NAME)
 
-PKG_COPY := $(wildcard *.md) $(wildcard .*.md) $(wildcard graphics) $(wildcard locale) $(wildcard sounds)
+PKG_FILES := $(wildcard *.md) $(wildcard *.txt) $(wildcard locale) $(wildcard sounds) $(wildcard info.json)
+LUA_FILES += $(shell find . -iname '*.lua' -type f -not -path "./.*/*")
+LUA_FILES := $(LUA_FILES:%=$(OUTPUT_DIR)/%)
+PNG_FILES += $(shell find ./graphics -iname '*.png' -type f)
+PNG_FILES := $(PNG_FILES:%=$(OUTPUT_DIR)/%)
 
-SED_FILES := $(shell find . -iname '*.json' -type f -not -path "./.*/*") $(shell find . -iname '*.lua' -type f -not -path "./.*/*")
-PNG_FILES := $(shell find ./graphics -iname '*.png' -type f)
+all: clean package check zip
 
-OUT_FILES := $(SED_FILES:%=$(OUTPUT_DIR)/%)
+clean:
+	@echo Removing Build Directory.
+	@rm -rf $(BUILD_DIR)
 
-SED_EXPRS := -e 's/{{_MOD_NAME_}}/$(PACKAGE_NAME)/g'
-SED_EXPRS += -e 's/{{_VERSION_}}/$(VERSION_STRING)/g'
-
-all: release
-
-release: clean check package tag
-
-package-copy: $(PKG_DIRS) $(PKG_FILES)
+package: $(PNG_FILES) $(LUA_FILES) nodebug
+	@echo 'Copying files'
 	@mkdir -p $(OUTPUT_DIR)
-ifneq ($(PKG_COPY),)
-	@cp -r $(PKG_COPY) $(OUTPUT_DIR)
-endif
+	@cp -r $(PKG_FILES) $(OUTPUT_DIR)
+
+$(OUTPUT_DIR)/%.png: %.png
+	@mkdir -p $(@D)
+	@cp -r $< $(OUTPUT_DIR)/$<
+#@pngquant --quiet --strip $< -o $(OUTPUT_DIR)/$< || true
+	@pngquant --skip-if-larger --quiet --strip --ext .png --force $(OUTPUT_DIR)/$< || true
 
 $(OUTPUT_DIR)/%.lua: %.lua
 	@mkdir -p $(@D)
-	@sed $(SED_EXPRS) $< > $@
-
-
-$(OUTPUT_DIR)/%: %
-	@mkdir -p $(@D)
-	@sed $(SED_EXPRS) $< > $@
-
-tag:
-	git tag -f v$(VERSION_STRING)
-
-optimize:
-	@echo Please wait, Optimizing Graphics.
-	@for name in $(PNG_FILES); do \
-		pngquant --skip-if-larger -q --strip --ext .png --force $(OUTPUT_DIR)'/'$$name; \
-	done
+	@cp -r $< $(OUTPUT_DIR)/$<
 
 nodebug:
-	@[ -e $(CONFIG) ] && \
+	@[ -e $(CONFIG_FILE) ] && \
 	echo Removing debug switches from config.lua && \
-	sed -i 's/^\(.*DEBUG.*=\).*/\1 false/' $(CONFIG) && \
-	sed -i 's/^\(.*LOGLEVEL.*=\).*/\1 0/' $(CONFIG) && \
-	sed -i 's/^\(.*loglevel.*=\).*/\1 0/' $(CONFIG) || \
+	sed -i 's/^\(.*DEBUG.*=\).*/\1 false/' $(CONFIG_FILE) && \
+	sed -i 's/^\(.*LOGLEVEL.*=\).*/\1 0/' $(CONFIG_FILE) && \
+	sed -i 's/^\(.*loglevel.*=\).*/\1 0/' $(CONFIG_FILE) || \
 	echo No Config Files
 
+#Download the luacheckrc file from the repo, remove the .build guard and check the file.
 check:
-	@luacheck . -q --codes
+	@curl -s -o ./$(BUILD_DIR)/luacheckrc.lua https://raw.githubusercontent.com/Nexela/Factorio-luacheckrc/0.17/.luacheckrc
+	@sed -i 's/\('\''\*\*\/\.\*\/\*'\''\)/--\1/' ./$(BUILD_DIR)/luacheckrc.lua
+	@luacheck ./$(OUTPUT_DIR) -q --codes --config ./$(BUILD_DIR)/luacheckrc.lua
 
-package: package-copy $(OUT_FILES) nodebug optimize
-	@cd $(BUILD_DIR) && zip -rq $(PACKAGE_FILE) $(OUTPUT_NAME) && mkdir artifacts && cp -r $(PACKAGE_FILE) artifacts/$(PACKAGE_FILE)
-	@echo $(OUTPUT_NAME).zip ready
+zip:
+	@cd $(BUILD_DIR) && zip -rq $(PACKAGE_FILE) $(PACKAGE_FULL_NAME) && mkdir artifacts && cp -r $(PACKAGE_FILE) artifacts/$(PACKAGE_FILE)
+	@echo $(PACKAGE_FULL_NAME) ready
 
-clean:
-	@rm -rf $(BUILD_DIR)
-	@echo Removing Build Directory.
+tag:
+	git commit --all --allow-empty -m "Preparing Release v$(PACKAGE_VERSION)"
+	git tag -f v$(PACKAGE_VERSION)
+	git push --tags
