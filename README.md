@@ -1,6 +1,6 @@
 # NANOBOTS 1.8.8
 
-## Robot enhancements from the start of the game.
+## Robot enhancements from the start of the game
 
 Learn how to create powerful but consumable robots after learning automation. Get up and running fast by using these robots to help you build your way up to Roboports and even smarter robots. Add modules to your power armor to reprogram your personal roboport to complete mundane tasks automatically. Place roboport interfaces to have your logistic networks perform tasks while you are away.
 
@@ -67,24 +67,6 @@ The roboport interface allows you to program your logistic networks to do mundan
 - More roboport interface logic
 - Even more script optimization's
 - Found a bug? Report it here: <https://github.com/Nexela/Nanobots/issues>
-
-#### Latest changes
-
-- 1.8.8 - Fix missing files from release script.
-- 1.8.7 - Should fix robointerface cell queuing bug.
-- 1.8.6 - Fixes train check error
-- 1.8.5 - Removes equipment toggling to picker extended
-- 1.8.0 - Convert to Mod settings, Fix power icons, fix module insertion, update custom stdlib, Fix network checks, Better MP queuing, Roboport interface can order bots to go fishing!
-- 1.7.7 - Add in belt immunity equipment
-- 1.7.6 - Fix termites borked, Log spam
-- 1.7.5 - Factorio .15 readyish
-- 1.7.4 - Migration/frozen load issue with entity type change
-- 1.7.3 - Silly debug message, where did you come from!
-- 1.7.2 - Revert can place check that I broke :)
-- 1.7.1 - Beter roboport interface graphics thanks to Arch666Angel, Robointerface deconstruct miners, Many bug fixes, auto feeder also works on shields.
-- 1.7.0 - Major logic re-write, New enhancements and features added including hotkeys.
-
-Full changelog available in CHANGELOG.md
 
 #### Many thanks to
 
