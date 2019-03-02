@@ -124,7 +124,7 @@ end
 -- @param entity: the entity object
 -- @return bool: repairable by nanobots
 local function nano_repairable_entity(entity)
-    return (entity.health and entity.health > 0 and entity.health < entity.prototype.max_health) and not (entity.has_flag('breaths-air') or ((entity.type == 'car' or entity.type == 'train') and entity.speed > 0) or entity.type:find('robot'))
+    return ((entity.get_health_ratio() or 1) < 1) and not (entity.has_flag('breaths-air') or ((entity.type == 'car' or entity.type == 'train') and entity.speed > 0) or entity.type:find('robot'))
 end
 
 -- TODO: Checking for the gun just wastes time, we could check the ammo directly. id:7
@@ -563,13 +563,13 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                     end
                                 end
                             end --hash check
-                        elseif nano_repairable_entity(ghost) and ghost.force == player.force and Area.size(ghost.prototype.collision_box) > 0 then
+                        elseif nano_repairable_entity(ghost) then
                             --Check if entity needs repair, TODO: Better logic for this?
-                            if ghost.surface.count_entities_filtered {name = 'nano-cloud-small-repair', area = ghost.bounding_box} == 0 then
+                            if ghost.surface.count_entities_filtered {name = 'nano-cloud-small-repair', position = ghost.position} == 0 then
                                 ghost.surface.create_entity {
                                     name = 'nano-projectile-repair',
                                     position = player.position,
-                                    force = player.force,
+                                    force = force,
                                     target = ghost.position,
                                     speed = 0.5
                                 }
