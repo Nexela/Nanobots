@@ -437,7 +437,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
 
     for _, ghost in pairs(player.surface.find_entities(area)) do
-        if ghost.to_be_deconstructed(player.force) or ghost.force == player.force then
+        if (ghost.to_be_deconstructed(player.force) or ghost.force == player.force) and ghost.type ~= 'cliff' then
             if nano_ammo.valid and nano_ammo.valid_for_read then
                 if not cfg.network_limits or nano_network_check(player.character, ghost) then
                     if queue_count() < cfg.queue_cycle then
