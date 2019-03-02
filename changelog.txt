@@ -1,6 +1,13 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.0.1
 Date: ??????
+  Features:
+    - Add simple support for upgrade planner.
+  Bugfixes:
+    - Fix constructors endlessly wasting themselves on cliffs.
+---------------------------------------------------------------------------------------------------
+Version: 3.0.1
+Date: ??????
   Bugfixes:
     - Fix .inside check.
     - Add changelog to release.

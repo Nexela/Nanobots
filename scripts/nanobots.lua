@@ -421,6 +421,41 @@ function Queue.build_tile_ghost(data)
     end --valid player
 end
 
+function Queue.upgrade_ghost(data)
+    game.print('upgrade-away')
+    local ghost, player, surface, position = data.entity, game.players[data.player_index], data.surface, data.position
+    if (player and player.valid) then
+        if ghost.valid then
+            local entity = surface.create_entity{
+                name = data.item_stack.name,
+                direction = ghost.direction,
+                force = ghost.force,
+                position = position,
+                fast_replace = true,
+                player = player,
+
+            }
+            if entity then
+                create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
+                entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
+                script.raise_event(
+                    defines.events.on_robot_built_entity,
+                    {
+                        robot = player.character,
+                        created_entity = entity,
+                        revived = true,
+                        stack = nil
+                    }
+                )
+            else --not revived, return item
+                insert_or_spill_items(player, {data.item_stack})
+            end --revived
+        else --not valid ghost
+            insert_or_spill_items(player, {data.item_stack})
+        end --valid ghost
+    end --valid player
+end
+
 --[[ Nano Emmitter --]]
 -- Extension of the tick handler, This functions decide what to do with their
 -- assigned robots and insert them into the queue accordingly.
@@ -430,19 +465,23 @@ end
 local function queue_ghosts_in_range(player, pos, nano_ammo)
     --local queue = global.nano_queue
     local pdata = global.players[player.index]
+    local force = player.force
     local _next_nano_tick = (pdata._next_nano_tick and pdata._next_nano_tick < (game.tick + 2000) and pdata._next_nano_tick) or game.tick
-    local tick_spacing = max(1, cfg.queue_rate - queue_speed[player.force.get_gun_speed_modifier('nano-ammo')])
+    local tick_spacing = max(1, cfg.queue_rate - queue_speed[force.get_gun_speed_modifier('nano-ammo')])
     local next_tick, queue_count = queue:next(_next_nano_tick, tick_spacing)
     local radius = get_ammo_radius(player, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
 
     for _, ghost in pairs(player.surface.find_entities(area)) do
-        if (ghost.to_be_deconstructed(player.force) or ghost.force == player.force) and ghost.type ~= 'cliff' then
+        local deconstruct = ghost.to_be_deconstructed(force)
+        local upgrade = ghost.to_be_upgraded() and ghost.force == force
+
+        if ghost.type ~= 'cliff' and (deconstruct or upgrade or ghost.force == force) then
             if nano_ammo.valid and nano_ammo.valid_for_read then
                 if not cfg.network_limits or nano_network_check(player.character, ghost) then
                     if queue_count() < cfg.queue_cycle then
-                        if ghost.to_be_deconstructed(player.force) and ghost.minable then
-                            if not queue:get_hash(ghost) then
+                        if deconstruct then
+                            if ghost.minable and not queue:get_hash(ghost) then
                                 local data = {
                                     player_index = player.index,
                                     action = 'deconstruction',
@@ -456,7 +495,35 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                 queue:insert(data, next_tick())
                                 ammo_drain(player, nano_ammo, 1)
                             end
-                        elseif (ghost.name == 'entity-ghost' or (ghost.name == 'tile-ghost' and cfg.build_tiles)) and ghost.force == player.force then
+                        elseif upgrade then
+                            game.print('upgrade')
+                            if not queue:get_hash(ghost) then
+                            --get first available item that places entity from inventory that is not in our hand.
+                                local proto = ghost.prototype.next_upgrade
+                                if proto then
+                                    proto = {{name = proto.name, count = 1}}
+                                    local item_stack = table_find(proto, _find_item, player)
+                                    if item_stack then
+                                        local data = {
+                                            action = 'upgrade_ghost',
+                                            player_index = player.index,
+                                            entity = ghost,
+                                            surface = ghost.surface,
+                                            position = ghost.position,
+                                            unit_number = ghost.unit_number,
+                                            ammo = nano_ammo,
+                                        }
+
+                                        local place_item = get_items_from_inv(player, item_stack, get_cheat_mode(player))
+                                        if place_item then
+                                            data.item_stack = place_item
+                                            queue:insert(data, next_tick())
+                                            ammo_drain(player, nano_ammo, 1)
+                                        end
+                                    end
+                                end
+                            end
+                        elseif ghost.name == 'entity-ghost' or (ghost.name == 'tile-ghost' and cfg.build_tiles) then
                             if not queue:get_hash(ghost) then
                                 --get first available item that places entity from inventory that is not in our hand.
                                 local item_stack = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
