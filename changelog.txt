@@ -1,5 +1,12 @@
 ---------------------------------------------------------------------------------------------------
-Version: 3.0.1
+Version: 3.0.3
+Date: ??????
+  Bugfixes:
+    - Fix changelog version.
+    - Fix upgrade spam.
+    - Fix underground belt upgrading.
+---------------------------------------------------------------------------------------------------
+Version: 3.0.2
 Date: ??????
   Features:
     - Add simple support for upgrade planner.

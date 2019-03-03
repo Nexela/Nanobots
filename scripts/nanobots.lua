@@ -422,7 +422,6 @@ function Queue.build_tile_ghost(data)
 end
 
 function Queue.upgrade_ghost(data)
-    game.print('upgrade-away')
     local ghost, player, surface, position = data.entity, game.players[data.player_index], data.surface, data.position
     if (player and player.valid) then
         if ghost.valid then
@@ -433,7 +432,7 @@ function Queue.upgrade_ghost(data)
                 position = position,
                 fast_replace = true,
                 player = player,
-
+                type = ghost.type == 'underground-belt' and ghost.belt_to_ground_type or nil
             }
             if entity then
                 create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
@@ -496,7 +495,6 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                 ammo_drain(player, nano_ammo, 1)
                             end
                         elseif upgrade then
-                            game.print('upgrade')
                             if not queue:get_hash(ghost) then
                             --get first available item that places entity from inventory that is not in our hand.
                                 local proto = ghost.prototype.next_upgrade
