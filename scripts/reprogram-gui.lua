@@ -39,7 +39,7 @@ end
 
 local function get_max_radius(player)
     if player.cursor_stack.type == 'ammo' then
-        return bot_radius[player.force.get_ammo_damage_modifier(player.cursor_stack.prototype.get_ammo_type().category)]
+        return bot_radius[player.force.get_ammo_damage_modifier(player.cursor_stack.prototype.get_ammo_type().category)] or bot_radius[4]
     else
         local c = player.character
         return c and c.logistic_cell and c.logistic_cell.mobile and math.floor(c.logistic_cell.construction_radius) or 15
