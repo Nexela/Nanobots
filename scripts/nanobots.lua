@@ -466,7 +466,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
     local pdata = global.players[player.index]
     local force = player.force
     local _next_nano_tick = (pdata._next_nano_tick and pdata._next_nano_tick < (game.tick + 2000) and pdata._next_nano_tick) or game.tick
-    local tick_spacing = max(1, cfg.queue_rate - queue_speed[force.get_gun_speed_modifier('nano-ammo')] or queue_speed[4])
+    local tick_spacing = max(1, cfg.queue_rate - (queue_speed[force.get_gun_speed_modifier('nano-ammo')] or queue_speed[4]))
     local next_tick, queue_count = queue:next(_next_nano_tick, tick_spacing)
     local radius = get_ammo_radius(player, nano_ammo)
     local area = Position.expand_to_area(pos, radius)
