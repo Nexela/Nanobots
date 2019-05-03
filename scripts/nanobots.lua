@@ -25,11 +25,11 @@ local function cull_inventory_list(list)
 end
 local inv_list =
     cull_inventory_list {
-    defines.inventory.player_main,
+    defines.inventory.character_main,
     defines.inventory.god_main,
     defines.inventory.chest,
-    defines.inventory.player_vehicle,
-    defines.inventory.player_trash,
+    defines.inventory.character_vehicle,
+    defines.inventory.character_trash,
     defines.inventory.car_trunk,
     defines.inventory.cargo_wagon
 }
@@ -83,7 +83,7 @@ local function is_connected_player_ready(player)
 end
 
 local function has_powered_equipment(character, eq_name)
-    --local armor = player.get_inventory(defines.inventory.player_armor)[1]
+    --local armor = player.get_inventory(defines.inventory.character_armor)[1]
     --if armor and armor.valid_for_read and armor.grid and armor.grid.equipment then
     local grid = character.grid
     if grid and grid.get_contents()[eq_name] then
@@ -138,8 +138,8 @@ end
 -- @return string: the name of the ammo or nil
 local function get_gun_ammo_name(player, gun_name)
     local index = player.character.selected_gun_index
-    local gun = player.get_inventory(defines.inventory.player_guns)[index]
-    local ammo = player.get_inventory(defines.inventory.player_ammo)[index]
+    local gun = player.get_inventory(defines.inventory.character_guns)[index]
+    local ammo = player.get_inventory(defines.inventory.character_ammo)[index]
     if gun.valid_for_read and gun.name == gun_name and ammo.valid and ammo.valid_for_read then
         return gun, ammo, ammo.name
     end
@@ -256,7 +256,7 @@ local function ammo_drain(player, ammo, amount)
     local name = ammo.name
     ammo.drain_ammo(amount)
     if not ammo.valid_for_read then
-        local new = player.get_inventory(defines.inventory.player_main).find_item_stack(name)
+        local new = player.get_inventory(defines.inventory.character_main).find_item_stack(name)
         if new then
             ammo.set_stack(new)
             new.clear()
@@ -280,7 +280,7 @@ end
 -- @param entity: the entity to satisfy requests for
 -- @param player: the entity to get modules from
 local function satisfy_requests(requests, entity, player)
-    local pinv = player.get_inventory(defines.inventory.player_main) or player.get_inventory(defines.inventory.god_main)
+    local pinv = player.get_inventory(defines.inventory.character_main) or player.get_inventory(defines.inventory.god_main)
     local new_requests = {}
     for name, count in pairs(requests.item_requests) do
         if entity.can_insert(name) then
