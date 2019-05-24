@@ -402,7 +402,9 @@ function Queue.build_tile_ghost(data)
                     {
                         robot = player.character,
                         positions = {position},
+                        surface_index = surface.index,
                         item = ptype,
+                        tile = tile,
                         tiles = {
                             {
                                 position = position,
