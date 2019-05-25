@@ -9,13 +9,15 @@ CONFIG_FILE = ./$(OUTPUT_DIR)/config.lua
 BUILD_DIR := .build
 OUTPUT_DIR := $(BUILD_DIR)/$(PACKAGE_FULL_NAME)
 
-PKG_FILES := $(wildcard *.md) $(wildcard *.txt) $(wildcard locale) $(wildcard sounds) $(wildcard info.json)
+PKG_FILES := $(wildcard *.md) $(wildcard *.txt) $(wildcard locale) $(wildcard sounds) $(wildcard info.json) $(wildcard thumbnail.png)
 LUA_FILES += $(shell find . -iname '*.lua' -type f -not -path "./.*/*")
 LUA_FILES := $(LUA_FILES:%=$(OUTPUT_DIR)/%)
 PNG_FILES += $(shell find ./graphics -iname '*.png' -type f)
 PNG_FILES := $(PNG_FILES:%=$(OUTPUT_DIR)/%)
 
 all: clean package check zip
+
+quick: package zip
 
 clean:
 	@echo Removing Build Directory.
@@ -29,8 +31,7 @@ package: $(PNG_FILES) $(LUA_FILES) nodebug
 $(OUTPUT_DIR)/%.png: %.png
 	@mkdir -p $(@D)
 	@cp -r $< $(OUTPUT_DIR)/$<
-#@pngquant --quiet --strip $< -o $(OUTPUT_DIR)/$< || true
-	@pngquant --skip-if-larger --quiet --strip --ext .png --force $(OUTPUT_DIR)/$< || true
+	@pngquant --skip-if-larger --quiet --ext .png --force $(OUTPUT_DIR)/$< || true
 
 $(OUTPUT_DIR)/%.lua: %.lua
 	@mkdir -p $(@D)
@@ -54,7 +55,6 @@ zip:
 	@cd $(BUILD_DIR) && zip -rq $(PACKAGE_FILE) $(PACKAGE_FULL_NAME) && mkdir artifacts && cp -r $(PACKAGE_FILE) artifacts/$(PACKAGE_FILE)
 	@echo $(PACKAGE_FULL_NAME) ready
 
-tag:
-	git commit --all --allow-empty -m "Preparing Release v$(PACKAGE_VERSION)"
-	git tag -f v$(PACKAGE_VERSION)
-	git push --tags
+release:
+	@echo Preparing Release
+	@git checkout release && git merge master && git push && git checkout master
