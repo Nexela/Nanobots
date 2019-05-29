@@ -389,13 +389,29 @@ function Queue.build_tile_ghost(data)
         if ghost.valid then
             local tile, hidden_tile = surface.get_tile(position), surface.get_hidden_tile(position)
             local force = ghost.force
+            local tile_was_mined = false
+            local ghost_was_revived = false
+            
             -- Is there any existing tile that needs returned
             if hidden_tile and tile.prototype.can_be_part_of_blueprint and player.mine_tile(tile) then
-                create_projectile('nano-projectile-return', ghost.surface, player.force, ghost.position, player.position)
+                create_projectile('nano-projectile-return', surface, force, position, player.position)
+                tile_was_mined = true
             end
-            if ghost.revive() then
+            -- ghost may be invalid after mining.
+            if ghost.valid then
+                ghost_was_revived = ghost.revive()
+            end
+
+            if tile_was_mined or ghost_was_revived then
                 local ptype = data.item_stack and game.item_prototypes[data.item_stack.name]
-                create_projectile('nano-projectile-constructors', surface, force, player.position, position)
+                create_projectile('nano-projectile-constructors', surface, force, player.position, position)               
+                -- if the tile was mined, we need to manually place the tile.
+                -- checking if the ghost was revived is likely unnecessary but felt safer.
+                if tile_was_mined and not ghost_was_revived then
+                    local tile_name = ptype.place_as_tile_result['result'].name
+                    surface.set_tiles({{name = tile_name , position = position}})
+                end
+
                 surface.create_entity {name = 'nano-sound-build-tiles', position = position}
                 script.raise_event(
                     defines.events.on_robot_built_tile,
@@ -414,9 +430,9 @@ function Queue.build_tile_ghost(data)
                         stack = nil
                     }
                 )
-            else --Can't revive tile
+            else --Can't place or revive the tile, give item back.
                 insert_or_spill_items(player, {data.item_stack})
-            end --revive tile
+            end --Tile was placed or revived
         else --Give the item back ghost isn't valid anymore.
             insert_or_spill_items(player, {data.item_stack})
         end --valid ghost
