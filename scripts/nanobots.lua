@@ -101,8 +101,6 @@ local function nano_repairable_entity(entity)
     return ((entity.get_health_ratio() or 1) < 1) and not (entity.has_flag('breaths-air') or ((entity.type == 'car' or entity.type == 'train') and entity.speed > 0) or entity.type:find('robot'))
 end
 
--- TODO: Checking for the gun just wastes time, we could check the ammo directly. id:7
--- This is also horrendous
 -- Get the gun, ammo and ammo name for the named gun: will return nil
 -- for all returns if there is no ammo for the gun.
 -- @param player: the player object
@@ -528,8 +526,6 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                         ammo = nano_ammo
                                     }
                                     if ghost.name == 'entity-ghost' then
-                                        --end
-                                        --if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
                                         local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
                                         if place_item then
                                             data.action = 'build_entity_ghost'
