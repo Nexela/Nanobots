@@ -71,12 +71,5 @@ data:extend{
         setting_type = "runtime-global",
         default_value = true,
         order = "nanobots-bc[poll-rate]-f"
-    },
-    {
-        type = "bool-setting",
-        name = "nanobots-sync-cheat-mode",
-        setting_type = "runtime-per-user",
-        default_value = true,
-        order = "nanobots-z[sync-cheat-mode]-f"
-    },
+    }
 }

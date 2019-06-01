@@ -1,30 +1,25 @@
-local Event = require('__stdlib__/stdlib/event/event')
-Event.protected_mode = true
+local Event = require('__stdlib__/stdlib/event/event').set_protected_mode(true)
 local Area = require('__stdlib__/stdlib/area/area')
 local Position = require('__stdlib__/stdlib/area/position')
 local table = require('__stdlib__/stdlib/utils/table')
 local Queue = require('scripts/hash_queue')
 local queue
+local cfg
+
+-- Local functions for commonly used math functions
+local max, floor = math.max, math.floor
 
 local config = require('config')
-
 local armormods = require('scripts/armormods')
 local bot_radius = config.BOT_RADIUS
 local queue_speed = config.QUEUE_SPEED_BONUS
 local AFK_TIME = 4 * defines.time.second
 
-local function cull_inventory_list(list)
-    local temp, culled_list = {}, {}
-    for _, value in pairs(list) do
-        temp[value] = true
-    end
-    for ind in pairs(temp) do
-        culled_list[#culled_list + 1] = ind
-    end
-    return culled_list
+local function unique(tbl)
+    return table.keys(table.invert(tbl))
 end
 local inv_list =
-    cull_inventory_list {
+    unique {
     defines.inventory.character_main,
     defines.inventory.god_main,
     defines.inventory.chest,
@@ -34,45 +29,27 @@ local inv_list =
     defines.inventory.cargo_wagon
 }
 
--- Local functions for commonly used math functions
-local max, floor = math.max, math.floor
-
-local function get_settings()
-    local cfg = {}
+local function update_settings()
     local setting = settings['global']
-    cfg.poll_rate = setting['nanobots-nano-poll-rate'].value
-    cfg.queue_rate = setting['nanobots-nano-queue-rate'].value
-    cfg.queue_cycle = setting['nanobots-nano-queue-per-cycle'].value
-    cfg.build_tiles = setting['nanobots-nano-build-tiles'].value
-    cfg.network_limits = setting['nanobots-network-limits'].value
-    cfg.nanobots_auto = setting['nanobots-nanobots-auto'].value
-    cfg.equipment_auto = setting['nanobots-equipment-auto'].value
-    return cfg
+    cfg = {
+        poll_rate = setting['nanobots-nano-poll-rate'].value,
+        queue_rate = setting['nanobots-nano-queue-rate'].value,
+        queue_cycle = setting['nanobots-nano-queue-per-cycle'].value,
+        build_tiles = setting['nanobots-nano-build-tiles'].value,
+        network_limits = setting['nanobots-network-limits'].value,
+        nanobots_auto = setting['nanobots-nanobots-auto'].value,
+        equipment_auto = setting['nanobots-equipment-auto'].value
+    }
 end
-local cfg = get_settings()
-
-Event.register(
-    defines.events.on_runtime_mod_setting_changed,
-    function()
-        cfg = get_settings()
-    end
-)
-
--- Is cheat mode active and are we syncing with cheat mode
--- @param p: the player object
--- @return bool: cheating
-local function get_cheat_mode(p)
-    return p.cheat_mode and settings.get_player_settings(p)['nanobots-sync-cheat-mode'].value
-end
+Event.register(defines.events.on_runtime_mod_setting_changed, update_settings)
+update_settings()
 
 --table.find functions
 local table_find = table.find
 -- return the name of the item found for table.find if we found at least 1 item or cheat_mode is enabled.
 local _find_item = function(v, _, p)
     local item, count = v.name, v.count
-    return get_cheat_mode(p) or p.get_item_count(item) >= count or (
-        p.vehicle and (p.vehicle.get_item_count(item) >= count or (p.vehicle and p.vehicle.train and p.vehicle.train.get_item_count(item) > count))
-    )
+    return p.cheat_mode or p.get_item_count(item) >= count or (p.vehicle and (p.vehicle.get_item_count(item) >= count or (p.vehicle and p.vehicle.train and p.vehicle.train.get_item_count(item) > count)))
 end
 
 -- Is the player connected, not afk, and have an attached character
@@ -83,16 +60,13 @@ local function is_connected_player_ready(player)
 end
 
 local function has_powered_equipment(character, eq_name)
-    --local armor = player.get_inventory(defines.inventory.character_armor)[1]
-    --if armor and armor.valid_for_read and armor.grid and armor.grid.equipment then
     local grid = character.grid
     if grid and grid.get_contents()[eq_name] then
         return table_find(
             grid.equipment,
-            function(v, _, name)
-                return v.name == name and v.energy > 0
-            end,
-            eq_name
+            function(v)
+                return v.name == eq_name and v.energy > 0
+            end
         )
     end
 end
@@ -284,7 +258,7 @@ local function satisfy_requests(requests, entity, player)
     local new_requests = {}
     for name, count in pairs(requests.item_requests) do
         if entity.can_insert(name) then
-            local removed = get_cheat_mode(player) and count or pinv.remove({name = name, count = count})
+            local removed = player.cheat_mode and count or pinv.remove({name = name, count = count})
             local inserted = removed > 0 and entity.insert({name = name, count = removed}) or 0
             local balance = count - inserted
             new_requests[name] = balance > 0 and balance or nil
@@ -391,7 +365,7 @@ function Queue.build_tile_ghost(data)
             local force = ghost.force
             local tile_was_mined = false
             local ghost_was_revived = false
-            
+
             -- Is there any existing tile that needs returned
             if hidden_tile and tile.prototype.can_be_part_of_blueprint and player.mine_tile(tile) then
                 create_projectile('nano-projectile-return', surface, force, position, player.position)
@@ -404,12 +378,12 @@ function Queue.build_tile_ghost(data)
 
             if tile_was_mined or ghost_was_revived then
                 local ptype = data.item_stack and game.item_prototypes[data.item_stack.name]
-                create_projectile('nano-projectile-constructors', surface, force, player.position, position)               
+                create_projectile('nano-projectile-constructors', surface, force, player.position, position)
                 -- if the tile was mined, we need to manually place the tile.
                 -- checking if the ghost was revived is likely unnecessary but felt safer.
                 if tile_was_mined and not ghost_was_revived then
                     local tile_name = ptype.place_as_tile_result['result'].name
-                    surface.set_tiles({{name = tile_name , position = position}})
+                    surface.set_tiles({{name = tile_name, position = position}})
                 end
 
                 surface.create_entity {name = 'nano-sound-build-tiles', position = position}
@@ -443,7 +417,8 @@ function Queue.upgrade_ghost(data)
     local ghost, player, surface, position = data.entity, game.players[data.player_index], data.surface, data.position
     if (player and player.valid) then
         if ghost.valid then
-            local entity = surface.create_entity{
+            local entity =
+                surface.create_entity {
                 name = data.item_stack.name,
                 direction = ghost.direction,
                 force = ghost.force,
@@ -514,7 +489,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             end
                         elseif upgrade then
                             if not queue:get_hash(ghost) then
-                            --get first available item that places entity from inventory that is not in our hand.
+                                --get first available item that places entity from inventory that is not in our hand.
                                 local proto = ghost.prototype.next_upgrade
                                 if proto then
                                     proto = {{name = proto.name, count = 1}}
@@ -527,10 +502,10 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                             surface = ghost.surface,
                                             position = ghost.position,
                                             unit_number = ghost.unit_number,
-                                            ammo = nano_ammo,
+                                            ammo = nano_ammo
                                         }
 
-                                        local place_item = get_items_from_inv(player, item_stack, get_cheat_mode(player))
+                                        local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
                                         if place_item then
                                             data.item_stack = place_item
                                             queue:insert(data, next_tick())
@@ -555,7 +530,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                     if ghost.name == 'entity-ghost' then
                                         --end
                                         --if player.surface.can_place_entity{name=ghost.ghost_name, position=ghost.position,direction=ghost.direction,force=ghost.force} then
-                                        local place_item = get_items_from_inv(player, item_stack, get_cheat_mode(player))
+                                        local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
                                         if place_item then
                                             data.action = 'build_entity_ghost'
                                             data.item_stack = place_item
@@ -567,7 +542,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                         if ghost.surface.count_entities_filtered {name = 'entity-ghost', area = Area(ghost.bounding_box):non_zero(), limit = 1} == 0 then
                                             local tile = ghost.surface.get_tile(ghost.position)
                                             if tile then
-                                                local place_item = get_items_from_inv(player, item_stack, get_cheat_mode(player))
+                                                local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
                                                 if place_item then
                                                     data.item_stack = place_item
                                                     data.action = 'build_tile_ghost'
