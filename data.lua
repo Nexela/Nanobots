@@ -1,5 +1,4 @@
 --Custom GUI's
-require('prototypes/gui')
 
 --Custom virtual signals
 require('prototypes/signals')
