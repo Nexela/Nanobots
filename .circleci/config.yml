@@ -6,7 +6,7 @@ jobs:
     working_directory: /root/mod
     steps:
       - checkout
-      - run: curl -s -o .luacheckrc https://raw.githubusercontent.com/Nexela/Factorio-luacheckrc/0.17/.luacheckrc
+      - run: curl -s -o .luacheckrc https://raw.githubusercontent.com/Nexela/Factorio-luacheckrc/master/.luacheckrc
       - run: luacheck .
       - run: make quick
       - run: make check
@@ -24,7 +24,7 @@ jobs:
           name: Build Project
           command: echo Building Project
 
-      - run: curl -s -o .luacheckrc https://raw.githubusercontent.com/Nexela/Factorio-luacheckrc/0.17/.luacheckrc
+      - run: curl -s -o .luacheckrc https://raw.githubusercontent.com/Nexela/Factorio-luacheckrc/master/.luacheckrc
       - run: luacheck .
       - run: make quick
       - run: make check

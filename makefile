@@ -47,7 +47,7 @@ nodebug:
 
 #Download the luacheckrc file from the repo, remove the .build guard and check the file.
 check:
-	@curl -s -o ./$(BUILD_DIR)/luacheckrc.lua https://raw.githubusercontent.com/Nexela/Factorio-luacheckrc/0.17/.luacheckrc
+	@curl -s -o ./$(BUILD_DIR)/luacheckrc.lua https://raw.githubusercontent.com/Nexela/Factorio-luacheckrc/master/.luacheckrc
 	@sed -i 's/\('\''\*\*\/\.\*\/\*'\''\)/--\1/' ./$(BUILD_DIR)/luacheckrc.lua
 	@luacheck ./$(OUTPUT_DIR) -q --codes --config ./$(BUILD_DIR)/luacheckrc.lua
 
