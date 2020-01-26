@@ -215,6 +215,16 @@ local cloud_small_repair = {
     }
 }
 
+local nano_return = {
+    type = 'projectile',
+    name = 'nano-projectile-return',
+    flags = {'not-on-map'},
+    acceleration = 0.005,
+    direction_only = false,
+    action = nil,
+    final_action = nil,
+    animation = constants.projectile_animation
+}
 -------------------------------------------------------------------------------
 data:extend {
     recipe,
@@ -225,7 +235,8 @@ data:extend {
     projectile_repair,
     cloud_small_repair,
     projectile_deconstructors,
-    cloud_small_deconstructors
+    cloud_small_deconstructors,
+    nano_return
 }
 
 local effects = data.raw.technology['nanobots'].effects

@@ -2,7 +2,10 @@
 Version: 3.2.0
 Date: ??????
   Features:
-    - Update to Factorio 0.18
+    - Update to Factorio 0.18.
+    - Nanobots now use items in hand when nothing else is available.
+    - Nanobots now use an items upgrade target and not just the next_upgrade.
+    - Nanobots can eat cliffs.
 ---------------------------------------------------------------------------------------------------
 Version: 3.1.0
 Date: ??????
