@@ -19,7 +19,6 @@ require('prototypes/equipment/equipment-bot-chip-feeder')
 require('prototypes/gun-nano-emitter')
 
 --Ammo for nano guns
-require('prototypes/ammo/proxies')
 require('prototypes/ammo/constructors')
 require('prototypes/ammo/termites')
 
