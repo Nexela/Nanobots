@@ -10,7 +10,7 @@ local cfg
 local max, floor = math.max, math.floor
 
 local config = require('config')
-local armormods = require('scripts/armormods')
+local armormods = require('scripts/armor-mods')
 local bot_radius = config.BOT_RADIUS
 local queue_speed = config.QUEUE_SPEED_BONUS
 local AFK_TIME = 4 * defines.time.second

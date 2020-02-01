@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
---[[robointerface]]
+--[[roboport-interface]]
 -------------------------------------------------------------------------------
 local Event = require('__stdlib__/stdlib/event/event')
 local Position = require('__stdlib__/stdlib/area/position')

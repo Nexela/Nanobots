@@ -1,5 +1,3 @@
-if script.active_mods["debugadapter"] then require('__debugadapter__/debugadapter.lua') end
-
 local Event = require('__stdlib__/stdlib/event/event').set_protected_mode(true)
 local Interface = require('__stdlib__/stdlib/scripts/interface').merge_interfaces(require('interface'))
 local Commands = require('commands')
@@ -15,8 +13,8 @@ require('__stdlib__/stdlib/event/changes').register_events('mod_versions', 'chan
 Player.additional_data({ranges = {}})
 
 require('scripts/nanobots')
-require('scripts/robointerface')
-require('scripts/armormods')
+require('scripts/roboport-interface')
+require('scripts/armor-mods')
 
 require('scripts/reprogram-gui')
 
