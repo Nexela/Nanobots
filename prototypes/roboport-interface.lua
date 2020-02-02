@@ -119,6 +119,7 @@ ri_radar.icon = '__Nanobots__/graphics/icons/roboport-interface.png'
 ri_radar.icon_size = 32
 ri_radar.icon_mipmaps = 1
 ri_radar.minable = nil
+ri_radar.next_upgrade = nil
 ri_radar.collision_mask = {}
 ri_radar.selection_box = {{-1, -0.0}, {0.0, 1}}
 ri_radar.collision_box = {{-0.9, -0.9}, {0.9, 0.9}}
