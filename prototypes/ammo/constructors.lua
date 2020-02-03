@@ -79,7 +79,7 @@ local cloud_big_constructors = {
     duration = 60 * 2,
     fade_away_duration = 60,
     spread_duration = 10,
-    color = Color.set(defines.color.lightblue, .035),
+    color = Color(Color.color.lightblue):alpha(.035),
     action = nil
 }
 
@@ -95,7 +95,7 @@ local cloud_small_constructors = {
     duration = 60 * 2,
     fade_away_duration = 60,
     spread_duration = 10,
-    color = Color.set(defines.color.lightblue, .035),
+    color = Color(Color.color.lightblue):alpha(.035),
     action = nil
 }
 
@@ -133,7 +133,7 @@ local cloud_small_deconstructors = {
     duration = 60 * 2,
     fade_away_duration = 60,
     spread_duration = 10,
-    color = Color.set(defines.color.lightred, .35),
+    color = Color(Color.color.lightred):alpha(.35),
     action_cooldown = 120,
     action = {
         type = 'direct',
@@ -187,7 +187,7 @@ local cloud_small_repair = {
     duration = 200,
     fade_away_duration = 2 * 60,
     spread_duration = 10,
-    color = Color.set(defines.color.darkblue, 0.35),
+    color = Color(Color.color.darkblue):alpha(0.35),
     action_cooldown = 1,
     action = {
         type = 'direct',
