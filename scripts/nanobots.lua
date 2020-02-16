@@ -29,6 +29,11 @@ local inv_list =
     defines.inventory.cargo_wagon
 }
 
+local CLIFF_EXPLOSIVE = {
+    name = 'cliff-explosives',
+    count = 1
+}
+
 local function update_settings()
     local setting = settings['global']
     cfg = {
@@ -300,6 +305,8 @@ function Queue.cliff_deconstruction(data)
     if entity and entity.valid and entity.to_be_deconstructed(player.force) then
         create_projectile('nano-projectile-deconstructors', entity.surface, entity.force, player.position, entity.position)
         entity.destroy({do_cliff_correction = true, raise_destroy = true})
+    else
+        insert_or_spill_items(player, {data.item_stack})
     end
 end
 
@@ -505,9 +512,13 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             if deconstruct then
                                 if ghost.type == 'cliff' then
                                     if player.force.technologies['nanobots-cliff'].researched then
-                                        data.action = 'cliff_deconstruction'
-                                        queue:insert(data, next_tick())
-                                        ammo_drain(player, nano_ammo, 5)
+                                        local explosive = get_items_from_inv(player, CLIFF_EXPLOSIVE, player.cheat_mode)
+                                        if explosive then
+                                            data.item_stack = explosive
+                                            data.action = 'cliff_deconstruction'
+                                            queue:insert(data, next_tick())
+                                            ammo_drain(player, nano_ammo, 1)
+                                        end
                                     end
                                 elseif ghost.minable then
                                     data.action = 'deconstruction'
