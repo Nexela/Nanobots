@@ -1,3 +1,9 @@
+# Custom
+.build/
+.test/
+.history/
+.trash/
+
 # Compiled Lua sources
 luac.out
 
