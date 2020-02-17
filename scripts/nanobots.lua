@@ -296,6 +296,14 @@ local function create_projectile(name, surface, force, source, target, speed)
     surface.create_entity {name = name, force = force, position = source, target = target, speed = speed}
 end
 
+local function item_places_entity(item_name, entity_name)
+    local item = game.item_prototypes(item_name)
+    if item then
+        local place_result = item.place_result
+        return place_result and place_result.name == entity_name
+    end
+end
+
 --[[Nano Emitter Queue Handler --]]
 --Queued items are handled one at a time, --check validity of all stored objects at this point, They could have become
 --invalidated between the time they were entered into the queue and now.
@@ -350,9 +358,10 @@ end
 function Queue.build_entity_ghost(data)
     local ghost, player, ghost_surf, ghost_pos = data.entity, game.get_player(data.player_index), data.surface, data.position
     if (player and player.valid) then
-        if ghost.valid then
+        if ghost.valid and item_places_entity(data.item_stack.name, ghost.name) then
             local item_stacks = get_all_items_on_ground(ghost)
             if player.surface.can_place_entity {name = ghost.ghost_name, position = ghost.position, direction = ghost.direction, force = ghost.force} then
+                -- if item_places_entity then
                 local revived, entity, requests = ghost.revive({return_item_request_proxy = true})
                 if revived then
                     create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)

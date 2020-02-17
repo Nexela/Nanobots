@@ -1,8 +1,10 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.1
-Date: ????
+Date: 2020-02-17
   Bugfixes:
     - Fixed error when other mods add next_upgrade to radar. #104
+    - Magic upgrades should no longer happen in most cases.
+    - Nanobots now require cliff explosives and the correct technolgy to demolish cliffs.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.0
 Date: ??????
