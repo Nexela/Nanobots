@@ -11,8 +11,6 @@
   "license": "MIT",
   "package": {
     "ignore": ["makefile"],
-    "no_portal_upload": true,
-    "no_git_push": true,
     "scripts": {
       "datestamp": ".vscode/datestamp.sh",
       "prepackage": ".vscode/prepackage.sh",
