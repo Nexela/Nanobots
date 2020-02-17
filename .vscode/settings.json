@@ -1,0 +1,5 @@
+{
+    "terminal.integrated.env.linux": {
+        "FACTORIO_MODS_PICKER":"/home/nexela/factorio/mods",
+    }
+}

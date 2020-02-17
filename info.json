@@ -1,6 +1,6 @@
 {
   "name": "Nanobots",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "factorio_version": "0.18",
   "title": "Nanobots: Early Bots",
   "author": "Nexela",
@@ -8,5 +8,17 @@
   "homepage": "",
   "description": "Early ghost building robots, A special nanobot gun automaticly revives blueprint ghosts near you if you have the items in your inventory. Also reprograms personal construction bots to deconstruct items on ground.",
   "dependencies": ["base >= 0.18.0", "stdlib >= 1.0.0", "(?) PickerAtheneum >= 1.1.2"],
-  "license": "MIT"
+  "license": "MIT",
+  "package": {
+    "ignore": ["makefile"],
+    "no_portal_upload": true,
+    "no_git_push": true,
+    "scripts": {
+      "datestamp": ".vscode/datestamp.sh",
+      "prepackage": ".vscode/prepackage.sh",
+      "prepublish": ".vscode/prepublish.sh",
+      "publish": ".vscode/publish.sh",
+      "version": ".vscode/version.sh"
+    }
+  }
 }
