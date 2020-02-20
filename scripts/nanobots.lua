@@ -51,10 +51,21 @@ update_settings()
 
 --table.find functions
 local table_find = table.find
+
 -- return the name of the item found for table.find if we found at least 1 item or cheat_mode is enabled.
-local _find_item = function(v, _, p)
-    local item, count = v.name, v.count
-    return p.cheat_mode or p.get_item_count(item) >= count or (p.vehicle and (p.vehicle.get_item_count(item) >= count or (p.vehicle and p.vehicle.train and p.vehicle.train.get_item_count(item) > count)))
+-- Don't return items with inventory
+--? Maybe just use same logic as factorio robots {items_that_place_this}[1] instead of a looop.
+local _find_item = function(item_prototype, _, player)
+    local item, count = item_prototype.name, item_prototype.count
+    if item_prototype.type ~= 'item-with-inventory' then
+        if player.cheat_mode or player.get_item_count(item) >= count then
+            return true
+        else
+            local vehicle = player.vehicle
+            local train = vehicle.train
+            return vehicle.get_item_count(item) >= count or (train and train.get_item_count(item) >= 0)
+        end
+    end
 end
 
 -- Is the player connected, not afk, and have an attached character
@@ -128,7 +139,11 @@ end
 -- @param entity: the entity or player object
 -- @param item_stacks: a SimpleItemStack or array of SimpleItemStacks to insert
 -- @return bool : there was some items inserted or spilled
-local function insert_or_spill_items(entity, item_stacks)
+local function insert_or_spill_items(entity, item_stacks, is_return_cheat)
+    if is_return_cheat then
+        return
+    end
+
     local new_stacks = {}
     if item_stacks then
         if item_stacks[1] and item_stacks[1].name then
@@ -241,11 +256,15 @@ end
 -- @param ammo: the ammo itemstack
 -- @return bool: this was the last one to be drained
 local function ammo_drain(player, ammo, amount)
+    if player.cheat_mode then
+        return true
+    end
+
     amount = amount or 1
     local name = ammo.name
     ammo.drain_ammo(amount)
     if not ammo.valid_for_read then
-        local new = player.get_inventory(defines.inventory.character_main).find_item_stack(name)
+        local new = player.get_main_inventory().find_item_stack(name)
         if new then
             ammo.set_stack(new)
             new.clear()
@@ -296,8 +315,9 @@ local function create_projectile(name, surface, force, source, target, speed)
     surface.create_entity {name = name, force = force, position = source, target = target, speed = speed}
 end
 
+-- Use to check queued actions to make sure the item places the ghost in case someone upgraded.
 local function item_places_entity(item_name, entity_name)
-    local item = game.item_prototypes(item_name)
+    local item = game.item_prototypes[item_name]
     if item then
         local place_result = item.place_result
         return place_result and place_result.name == entity_name
@@ -358,10 +378,9 @@ end
 function Queue.build_entity_ghost(data)
     local ghost, player, ghost_surf, ghost_pos = data.entity, game.get_player(data.player_index), data.surface, data.position
     if (player and player.valid) then
-        if ghost.valid and item_places_entity(data.item_stack.name, ghost.name) then
+        if ghost.valid and item_places_entity(data.item_stack.name, ghost.ghost_name) then
             local item_stacks = get_all_items_on_ground(ghost)
             if player.surface.can_place_entity {name = ghost.ghost_name, position = ghost.position, direction = ghost.direction, force = ghost.force} then
-                -- if item_places_entity then
                 local revived, entity, requests = ghost.revive({return_item_request_proxy = true})
                 if revived then
                     create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
@@ -382,13 +401,13 @@ function Queue.build_entity_ghost(data)
                         }
                     )
                 else --not revived, return item
-                    insert_or_spill_items(player, {data.item_stack})
+                    insert_or_spill_items(player, {data.item_stack}, player.cheat_mode)
                 end --revived
             else --can't build
-                insert_or_spill_items(player, {data.item_stack})
+                insert_or_spill_items(player, {data.item_stack}, player.cheat_mode)
             end --can build
         else --not valid ghost
-            insert_or_spill_items(player, {data.item_stack})
+            insert_or_spill_items(player, {data.item_stack}, player.cheat_mode)
         end --valid ghost
     end --valid player
 end
@@ -665,6 +684,7 @@ local function poll_players(event)
         end --Player Ready
         global._last_player = last_player
     end --NANO Automatic scripts
+    queue:execute(event)
 end
 Event.register(defines.events.on_tick, poll_players)
 
@@ -673,11 +693,6 @@ local function players_changed()
     global._last_player = nil
 end
 Event.register({defines.events.on_player_joined_game, defines.events.on_player_left_game}, players_changed)
-
-local function execute_nano_queue(event)
-    queue:execute(event)
-end
-Event.register(defines.events.on_tick, execute_nano_queue)
 
 local function on_nano_init()
     global.nano_queue = Queue()
