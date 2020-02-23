@@ -1,5 +1,8 @@
 local constants = require('constants')
-local Color = require('__stdlib__/stdlib/utils/color')
+
+local red = {r = 1, g = 0, b = 0, a = 0.35}
+local lightblue = {r = 0.67843137254902, g = 0.84705882352941, b = 0.90196078431373, a = 0.35}
+local darkblue = {r = 0, g = 0, b = 0.54509803921569, a = 0.35}
 
 local recipe = {
     type = 'recipe',
@@ -79,7 +82,7 @@ local cloud_big_constructors = {
     duration = 60 * 2,
     fade_away_duration = 60,
     spread_duration = 10,
-    color = Color(Color.color.lightblue):alpha(.035),
+    color = lightblue,
     action = nil
 }
 
@@ -95,7 +98,7 @@ local cloud_small_constructors = {
     duration = 60 * 2,
     fade_away_duration = 60,
     spread_duration = 10,
-    color = Color(Color.color.lightblue):alpha(.035),
+    color = {r = 0.67843137254902, g = 0.84705882352941, b = 0.90196078431373, a = 0.35},
     action = nil
 }
 
@@ -133,7 +136,7 @@ local cloud_small_deconstructors = {
     duration = 60 * 2,
     fade_away_duration = 60,
     spread_duration = 10,
-    color = Color(Color.color.lightred):alpha(.35),
+    color = red,
     action_cooldown = 120,
     action = {
         type = 'direct',
@@ -187,7 +190,7 @@ local cloud_small_repair = {
     duration = 200,
     fade_away_duration = 2 * 60,
     spread_duration = 10,
-    color = Color(Color.color.darkblue):alpha(0.35),
+    color = darkblue,
     action_cooldown = 1,
     action = {
         type = 'direct',

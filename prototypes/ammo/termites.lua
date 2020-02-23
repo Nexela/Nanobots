@@ -1,5 +1,6 @@
 local constants = require('constants')
-local Color = require('__stdlib__/stdlib/utils/color')
+
+local lightgreen = {r = 0.56470588235294, g = 0.93333333333333, b = 0.56470588235294, a = 0.35}
 
 local recipe = {
     type = 'recipe',
@@ -58,7 +59,7 @@ local cloud_big_termites = {
     duration = 60 * 2,
     fade_away_duration = 60,
     spread_duration = 10,
-    color = Color(Color.color.lightgreen):alpha(.35),
+    color = lightgreen,
     action_cooldown = 60,
     action = {
         type = 'direct',
@@ -91,7 +92,7 @@ local cloud_small_termites = {
     duration = 60 * 10,
     fade_away_duration = 2 * 60,
     spread_duration = 10,
-    color = Color(Color.color.lightgreen):alpha(.35),
+    color = lightgreen,
     action_cooldown = 30,
     action = {
         type = 'direct',
