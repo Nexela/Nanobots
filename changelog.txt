@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.1
-Date: 2020-02-17
+Date: 2020-02-23
   Bugfixes:
     - Fixed error when other mods add next_upgrade to radar. #104
     - Magic upgrades should no longer happen in most cases.
