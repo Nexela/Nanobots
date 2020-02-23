@@ -62,8 +62,8 @@ local _find_item = function(item_prototype, _, player)
             return true
         else
             local vehicle = player.vehicle
-            local train = vehicle.train
-            return vehicle.get_item_count(item) >= count or (train and train.get_item_count(item) >= 0)
+            local train = vehicle and vehicle.train
+            return vehicle and ((vehicle.get_item_count(item) >= count) or (train and train.get_item_count(item) >= count))
         end
     end
 end
