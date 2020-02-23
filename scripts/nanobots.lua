@@ -315,15 +315,6 @@ local function create_projectile(name, surface, force, source, target, speed)
     surface.create_entity {name = name, force = force, position = source, target = target, speed = speed}
 end
 
--- Use to check queued actions to make sure the item places the ghost in case someone upgraded.
-local function item_places_entity(item_name, entity_name)
-    local item = game.item_prototypes[item_name]
-    if item then
-        local place_result = item.place_result
-        return place_result and place_result.name == entity_name
-    end
-end
-
 --[[Nano Emitter Queue Handler --]]
 --Queued items are handled one at a time, --check validity of all stored objects at this point, They could have become
 --invalidated between the time they were entered into the queue and now.
@@ -378,7 +369,7 @@ end
 function Queue.build_entity_ghost(data)
     local ghost, player, ghost_surf, ghost_pos = data.entity, game.get_player(data.player_index), data.surface, data.position
     if (player and player.valid) then
-        if ghost.valid and item_places_entity(data.item_stack.name, ghost.ghost_name) then
+        if ghost.valid and data.entity.ghost_name == data.entity_name then --item_places_entity(data.item_stack.name, ghost.ghost_name) then
             local item_stacks = get_all_items_on_ground(ghost)
             if player.surface.can_place_entity {name = ghost.ghost_name, position = ghost.position, direction = ghost.direction, force = ghost.force} then
                 local revived, entity, requests = ghost.revive({return_item_request_proxy = true})
@@ -571,12 +562,14 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                 end
                             elseif ghost.name == 'entity-ghost' or (ghost.name == 'tile-ghost' and cfg.build_tiles) then
                                 --get first available item that places entity from inventory that is not in our hand.
-                                local item_stack = table_find(ghost.ghost_prototype.items_to_place_this, _find_item, player)
+                                local proto = ghost.ghost_prototype
+                                local item_stack = table_find(proto.items_to_place_this, _find_item, player)
                                 if item_stack then
                                     if ghost.name == 'entity-ghost' then
                                         local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
                                         if place_item then
                                             data.action = 'build_entity_ghost'
+                                            data.entity_name = proto.name
                                             data.item_stack = place_item
                                             queue:insert(data, next_tick())
                                             ammo_drain(player, nano_ammo, 1)
