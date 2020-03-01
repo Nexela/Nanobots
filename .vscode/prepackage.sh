@@ -1,4 +1,0 @@
-set -e
-
-echo ''
-luacheck .

@@ -10,13 +10,13 @@
   "dependencies": ["base >= 0.18.0", "stdlib >= 1.0.0", "(?) PickerAtheneum >= 1.1.2"],
   "license": "MIT",
   "package": {
-    "ignore": ["makefile"],
+    "ignore": [],
     "scripts": {
-      "datestamp": ".vscode/datestamp.sh",
-      "prepackage": ".vscode/prepackage.sh",
-      "prepublish": ".vscode/prepublish.sh",
-      "publish": ".vscode/publish.sh",
-      "version": ".vscode/version.sh"
+      "datestamp": "../Picker/PickerAtheneum/.publish/datestamp.sh",
+      "prepackage": "../Picker/PickerAtheneum/.publish/prepackage.sh",
+      "prepublish": "../Picker/PickerAtheneum/.publish/prepublish.sh",
+      "publish": "../Picker/PickerAtheneum/.publish/publish.sh",
+      "version": "../Picker/PickerAtheneum/.publish/version.sh"
     }
   }
 }

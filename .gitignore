@@ -3,6 +3,7 @@
 .test/
 .history/
 .trash/
+.bin/
 
 # Compiled Lua sources
 luac.out

@@ -8,10 +8,9 @@ jobs:
       - checkout
       - run: curl -s -o .luacheckrc https://raw.githubusercontent.com/Nexela/Factorio-luacheckrc/master/.luacheckrc
       - run: luacheck .
-      - run: make quick
-      - run: make check
+      - run: .circleci/package.sh
       - store_artifacts:
-          path: .build/artifacts
+          path: .bin
           destination: /files
 
   release:
@@ -26,10 +25,9 @@ jobs:
 
       - run: curl -s -o .luacheckrc https://raw.githubusercontent.com/Nexela/Factorio-luacheckrc/master/.luacheckrc
       - run: luacheck .
-      - run: make quick
-      - run: make check
+      - run: .circleci/package.sh
       - store_artifacts:
-          path: .build/artifacts
+          path: .bin
           destination: /files
 
       - run:
@@ -37,7 +35,7 @@ jobs:
           command: |
             echo 'export NAME=$(jq -r '.name' info.json)' >> $BASH_ENV
             echo 'export VERSION=$(jq -r '.version' info.json)' >> $BASH_ENV
-            echo 'FILEPATH="${CIRCLE_WORKING_DIRECTORY}/.build/artifacts/${NAME}_${VERSION}.zip"' >> $BASH_ENV
+            echo 'FILEPATH="${CIRCLE_WORKING_DIRECTORY}/.bin/${NAME}_${VERSION}.zip"' >> $BASH_ENV
             echo 'FILESIZE=$(stat --printf="%s" "${FILEPATH}")' >> $BASH_ENV
 
       - run:
@@ -68,8 +66,6 @@ workflows:
                 - release
       - release:
           context: FactorioUpload
-          # requires:
-          #   - build
           filters:
             branches:
               only: release
