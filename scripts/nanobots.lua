@@ -372,6 +372,7 @@ function Queue.build_entity_ghost(data)
         if ghost.valid and data.entity.ghost_name == data.entity_name then --item_places_entity(data.item_stack.name, ghost.ghost_name) then
             local item_stacks = get_all_items_on_ground(ghost)
             if player.surface.can_place_entity {name = ghost.ghost_name, position = ghost.position, direction = ghost.direction, force = ghost.force} then
+                local tags = ghost.tags
                 local revived, entity, requests = ghost.revive({return_item_request_proxy = true})
                 if revived then
                     create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
@@ -383,11 +384,14 @@ function Queue.build_entity_ghost(data)
                         satisfy_requests(requests, entity, player)
                     end
                     script.raise_event(
-                        defines.events.on_robot_built_entity,
+                        -- Raise player built event to coincide with player.mine_entity
+                        defines.events.on_built_entity,
                         {
-                            robot = player.character,
+                            player_index = player.index,
                             created_entity = entity,
                             revived = true,
+                            item = game.item_prototypes[data.item_stack.name],
+                            tags = tags,
                             stack = nil
                         }
                     )
@@ -408,6 +412,7 @@ function Queue.build_tile_ghost(data)
     if (player and player.valid) then
         if ghost.valid then
             local tile, hidden_tile = surface.get_tile(position), surface.get_hidden_tile(position)
+            local tile_name = tile.name
             local force = ghost.force
             local tile_was_mined = false
             local ghost_was_revived = false
@@ -417,34 +422,38 @@ function Queue.build_tile_ghost(data)
                 create_projectile('nano-projectile-return', surface, force, position, player.position)
                 tile_was_mined = true
             end
-            -- ghost may be invalid after mining.
+
+            -- Mining the tile causes the ghost to be cleared also
             if ghost.valid then
                 ghost_was_revived = ghost.revive()
             end
 
             if tile_was_mined or ghost_was_revived then
-                local ptype = data.item_stack and game.item_prototypes[data.item_stack.name]
+                local item_ptype = data.item_stack and game.item_prototypes[data.item_stack.name]
+                local tile_ptype = item_ptype and item_ptype.place_as_tile_result.result
                 create_projectile('nano-projectile-constructors', surface, force, player.position, position)
+                Position.floored(position)
                 -- if the tile was mined, we need to manually place the tile.
                 -- checking if the ghost was revived is likely unnecessary but felt safer.
                 if tile_was_mined and not ghost_was_revived then
-                    local tile_name = ptype.place_as_tile_result['result'].name
-                    surface.set_tiles({{name = tile_name, position = position}})
+                    --local tile_name = ptype.place_as_tile_result['result'].name
+                    surface.set_tiles({{name = tile_ptype.name, position = position}})
                 end
 
                 surface.create_entity {name = 'nano-sound-build-tiles', position = position}
                 script.raise_event(
-                    defines.events.on_robot_built_tile,
+                    -- Raise player_built_tile to coincide with the events raised from player.mine_tile
+                    defines.events.on_player_built_tile,
                     {
-                        robot = player.character,
+                        player_index = player.index,
                         positions = {position},
                         surface_index = surface.index,
-                        item = ptype,
-                        tile = tile,
+                        item = item_ptype,
+                        tile = tile_ptype,
                         tiles = {
                             {
                                 position = position,
-                                old_tile = tile
+                                old_tile = game.tile_prototypes[tile_name]
                             }
                         },
                         stack = nil

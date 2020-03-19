@@ -2,6 +2,12 @@
 Version: 3.2.4
 Date: 2020-03-01
   Changes:
+    - Building events now pass on_built_entity and on_player_built_tile to be consistent with mining.
+  Bugfixes:
+    - Fix wrong tile prototype being passed in the built tile event.
+    - Floor position used in the tile events.
+    - on_built_entity now passes any ghost tags.
+    - on_built_entity now passes the item prototype used.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.3
 Date: 2020-02-23
