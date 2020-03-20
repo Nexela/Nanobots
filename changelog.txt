@@ -2,6 +2,7 @@
 Version: 3.2.5
 Date: ????
   Changes:
+    - Enable construction related shortcuts when researching Nanbots.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.4
 Date: 2020-03-19
