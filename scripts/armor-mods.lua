@@ -55,7 +55,8 @@ end
 -- @param entity: the entity object
 -- @return bool: personal roboport construction radius > 0
 local function is_personal_roboport_ready(entity, ignore_radius)
-    return entity.grid and entity.logistic_cell and entity.logistic_cell.mobile and (entity.logistic_cell.construction_radius > 0 or ignore_radius)
+    local cell = entity.logistic_cell
+    return entity.grid and cell and cell.mobile and (cell.construction_radius > 0 or ignore_radius)
 end
 
 --TODO .15 will have a better/more reliable way to get the construction network
@@ -67,11 +68,12 @@ end
 local function get_bot_counts(entity, mobile_only, stationed_only)
     if entity.logistic_network then
         if mobile_only then
-            if entity.logistic_cell and entity.logistic_cell.mobile then
+            local cell = entity.logistic_cell
+            if cell and cell.mobile then
                 if stationed_only then
-                    return entity.logistic_cell.stationed_construction_robot_count
+                    return cell.stationed_construction_robot_count
                 else
-                    return entity.logistic_cell.logistic_network.available_construction_robots
+                    return cell.logistic_network.available_construction_robots
                 end
             end
         else

@@ -1,4 +1,5 @@
 local Data = require('__stdlib__/stdlib/data/data')
+local make_shortcut = require('prototypes/equipment/make_shortcut')
 
 Data {
     type = 'recipe',
@@ -24,7 +25,8 @@ Data {
     stack_size = 20
 }
 
-local equipment_chip = Data {
+local equipment_chip =
+    Data {
     type = 'active-defense-equipment',
     name = 'equipment-bot-chip-feeder',
     take_result = 'equipment-bot-chip-feeder',
@@ -79,9 +81,7 @@ local equipment_chip = Data {
     categories = {'armor'}
 }
 
-equipment_chip:copy('nano-disabled-' .. equipment_chip.name):set_fields{
-    localised_name = {'equipment-hotkeys.disabled-eq', equipment_chip.localised_name or {'equipment-name.' .. equipment_chip.name}}
-}
+make_shortcut(equipment_chip)
 
 local effects = data.raw.technology['personal-roboport-equipment'].effects
 effects[#effects + 1] = {type = 'unlock-recipe', recipe = 'equipment-bot-chip-feeder'}

@@ -288,10 +288,10 @@ end
 -- @param entity: the entity to satisfy requests for
 -- @param player: the entity to get modules from
 local function satisfy_requests(requests, entity, player)
-    local pinv = player.get_inventory(defines.inventory.character_main) or player.get_inventory(defines.inventory.god_main)
+    local pinv = player.get_main_inventory()
     local new_requests = {}
     for name, count in pairs(requests.item_requests) do
-        if entity.can_insert(name) then
+        if count > 0 and entity.can_insert(name) then
             local removed = player.cheat_mode and count or pinv.remove({name = name, count = count})
             local inserted = removed > 0 and entity.insert({name = name, count = removed}) or 0
             local balance = count - inserted
