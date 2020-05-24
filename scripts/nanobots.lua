@@ -399,7 +399,6 @@ function Queue.build_tile_ghost(data)
     if (player and player.valid) then
         if ghost.valid then
             local tile, hidden_tile = surface.get_tile(position), surface.get_hidden_tile(position)
-            local tile_name = tile.name
             local force = ghost.force
             local tile_was_mined = false
             local ghost_was_revived = false
