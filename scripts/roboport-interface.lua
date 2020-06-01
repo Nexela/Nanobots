@@ -226,7 +226,7 @@ local function build_roboport_interface(event)
     local interface = event.created_entity or event.entity
     if interface and interface.name == 'roboport-interface-main' then
         local pos, force = interface.position, interface.force
-        local cc, ra
+        local cc, ra = {}, {} -- Don't listen the masses.... a little gc churn later is two less type() calls now.
         for _, entity in pairs(interface.surface.find_entities_filtered {position = pos, force = force}) do
             if entity ~= interface then
                 --If we have ghosts either via blueprint or something killed them
