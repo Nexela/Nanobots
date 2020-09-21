@@ -57,7 +57,8 @@ local table_find = table.find
 --? Maybe just use same logic as factorio robots {items_that_place_this}[1] instead of a looop.
 local _find_item = function(item_prototype, _, player)
     local item, count = item_prototype.name, item_prototype.count
-    if item_prototype.type ~= 'item-with-inventory' then
+    local prototype = game.item_prototypes[item]
+    if prototype.type ~= 'item-with-inventory' then
         if player.cheat_mode or player.get_item_count(item) >= count then
             return true
         else
@@ -442,7 +443,7 @@ function Queue.upgrade_ghost(data)
         if ghost.valid then
             local entity =
                 surface.create_entity {
-                name = data.item_stack.name,
+                name = data.entity_name or data.item_stack.name,
                 direction = ghost.direction,
                 force = ghost.force,
                 position = position,
@@ -515,19 +516,19 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                                     ammo_drain(player, nano_ammo, 1)
                                 end
                             elseif upgrade then
-                                local proto = ghost.get_upgrade_target()
-                                if proto then
-                                    proto = {{name = proto.name, count = 1}}
-                                    local item_stack = table_find(proto, _find_item, player)
-                                    if item_stack then
-                                        data.action = 'upgrade_ghost'
-                                        local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
-                                        if place_item then
-                                            data.item_stack = place_item
-                                            queue:insert(data, next_tick())
-                                            ammo_drain(player, nano_ammo, 1)
+                                local prototype = ghost.get_upgrade_target()
+                                if prototype then
+                                        local item_stack = table_find(prototype.items_to_place_this, _find_item, player)
+                                        if item_stack then
+                                            data.action = 'upgrade_ghost'
+                                            local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
+                                            if place_item then
+                                                data.entity_name = prototype.name
+                                                data.item_stack = place_item
+                                                queue:insert(data, next_tick())
+                                                ammo_drain(player, nano_ammo, 1)
+                                            end
                                         end
-                                    end
                                 end
                             elseif ghost.name == 'entity-ghost' or (ghost.name == 'tile-ghost' and cfg.build_tiles) then
                                 --get first available item that places entity from inventory that is not in our hand.
