@@ -12,11 +12,11 @@
   "package": {
     "ignore": [],
     "scripts": {
-      "datestamp": "../Picker/PickerAtheneum/.publish/datestamp.sh",
-      "prepackage": "../Picker/PickerAtheneum/.publish/prepackage.sh",
-      "prepublish": "../Picker/PickerAtheneum/.publish/prepublish.sh",
-      "publish": "../Picker/PickerAtheneum/.publish/publish.sh",
-      "version": "../Picker/PickerAtheneum/.publish/version.sh"
+      "datestamp": "../PickerAtheneum/.publish/datestamp.sh",
+      "prepackage": "../PickerAtheneum/.publish/prepackage.sh",
+      "prepublish": "../PickerAtheneum/.publish/prepublish.sh",
+      "publish": "../PickerAtheneum/.publish/publish.sh",
+      "version": "../PickerAtheneum/.publish/version.sh"
     }
   }
 }
