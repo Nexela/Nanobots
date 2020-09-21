@@ -1,17 +1,18 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.10
 Date: ????
-  Changes:
+  Bugfixes:
+    - Fix unbuildable interface with bobmods logistics.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.9
 Date: 2020-09-21
   Bugfixes:
-      - Upgrade bots look for the correct item and entity now.
+    - Upgrade bots look for the correct item and entity now.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.8
 Date: 2020-06-01
   Bugfixes:
-      - Fix nill error when building roboport interfaces.
+    - Fix nill error when building roboport interfaces.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.7
 Date: 2020-05-24
