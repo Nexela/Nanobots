@@ -26,14 +26,9 @@ Data {
 --Main recipe.
 local ingredients = {
     {'constant-combinator', 1},
-    {'radar', 1}
+    {'radar', 1},
+    {'roboport', 1}
 }
-
-if settings.get_startup('bobmods-logistics-disableroboports') then
-    ingredients[#ingredients + 1] = {'bob-logistic-zone-expander', 1}
-else
-    ingredients[#ingredients + 1] = {'roboport', 1}
-end
 
 Recipe {
     type = 'recipe',
