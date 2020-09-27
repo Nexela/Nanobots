@@ -28,9 +28,15 @@ local inv_list =
     defines.inventory.cargo_wagon
 }
 
-local CLIFF_EXPLOSIVE = {
-    name = 'cliff-explosives',
-    count = 1
+local explosives = {
+    {name = 'cliff-explosives', count = 1},
+    {name = 'explosives', count = 10},
+    {name = 'explosive-rocket', count = 4},
+    {name = 'explosive-cannon-shell', count = 4},
+    {name = 'cluster-grenade', count = 2},
+    {name = 'grenade', count = 14},
+    {name = 'land-mine', count = 5},
+    {name = 'artillery-shell', count = 1}
 }
 
 local function update_settings()
@@ -355,12 +361,18 @@ end
 
 function Queue.cliff_deconstruction(data)
     local entity, player = data.entity, game.get_player(data.player_index)
-    if entity and entity.valid and entity.to_be_deconstructed(player.force) then
-        create_projectile('nano-projectile-deconstructors', entity.surface, entity.force, player.position, entity.position)
-        entity.destroy({do_cliff_correction = true, raise_destroy = true})
-    else
-        insert_or_spill_items(player, {data.item_stack})
+    if not (player and player.valid) then
+        return
     end
+
+    if not (entity and entity.valid and entity.to_be_deconstructed(player.force)) then
+        return insert_or_spill_items(player, {data.item_stack})
+    end
+
+    create_projectile('nano-projectile-deconstructors', entity.surface, entity.force, player.position, entity.position)
+    local exp_name = data.item_stack.name == 'artillery-shell' and 'big-artillery-explosion' or 'big-explosion'
+    entity.surface.create_entity {name = exp_name, position = entity.position}
+    entity.destroy({do_cliff_correction = true, raise_destroy = true})
 end
 
 --Handles all of the deconstruction and scrapper related tasks.
@@ -558,12 +570,15 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             if deconstruct then
                                 if ghost.type == 'cliff' then
                                     if player.force.technologies['nanobots-cliff'].researched then
-                                        local explosive = get_items_from_inv(player, CLIFF_EXPLOSIVE, player.cheat_mode)
-                                        if explosive then
-                                            data.item_stack = explosive
-                                            data.action = 'cliff_deconstruction'
-                                            queue:insert(data, next_tick())
-                                            ammo_drain(player, nano_ammo, 1)
+                                        local item_stack = table_find(explosives, _find_item, player)
+                                        if item_stack then
+                                            local explosive = get_items_from_inv(player, item_stack, player.cheat_mode)
+                                            if explosive then
+                                                data.item_stack = explosive
+                                                data.action = 'cliff_deconstruction'
+                                                queue:insert(data, next_tick())
+                                                ammo_drain(player, nano_ammo, 1)
+                                            end
                                         end
                                     end
                                 elseif ghost.minable then
