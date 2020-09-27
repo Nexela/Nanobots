@@ -2,6 +2,7 @@
 Version: 3.2.10
 Date: ????
   Bugfixes:
+    - Fix attempting to heal entities with no collision mask.
     - Fix unbuildable interface with bobmods logistics.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.9

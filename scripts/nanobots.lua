@@ -111,11 +111,22 @@ local function nano_network_check(character, e)
     end
 end
 
+local moveables = {
+    train = true,
+    car = true,
+    spidertron = true
+}
 -- Can nanobots repair this entity.
 -- @param entity: the entity object
 -- @return bool: repairable by nanobots
 local function nano_repairable_entity(entity)
-    return ((entity.get_health_ratio() or 1) < 1) and not (entity.has_flag('breaths-air') or ((entity.type == 'car' or entity.type == 'train') and entity.speed > 0) or entity.type:find('robot'))
+    if (entity.get_health_ratio() or 1) < 1 then
+        local repairable = not entity.has_flag('breaths-air') or not entity.type:find('robot')
+        local has_mask = table_size(entity.prototype.collision_mask) > 0
+        local moving = moveables[entity.type] and entity.speed ~= 0
+        return repairable and has_mask and not moving
+    end
+    return false
 end
 
 -- Get the gun, ammo and ammo name for the named gun: will return nil
@@ -373,7 +384,7 @@ function Queue.build_entity_ghost(data)
         if ghost.valid and data.entity.ghost_name == data.entity_name then --item_places_entity(data.item_stack.name, ghost.ghost_name) then
             local item_stacks = get_all_items_on_ground(ghost)
             if player.surface.can_place_entity {name = ghost.ghost_name, position = ghost.position, direction = ghost.direction, force = ghost.force} then
-                local revived, entity, requests = ghost.revive{return_item_request_proxy = true, raise_revive = true}
+                local revived, entity, requests = ghost.revive {return_item_request_proxy = true, raise_revive = true}
                 if revived then
                     create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
                     entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
@@ -518,17 +529,17 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             elseif upgrade then
                                 local prototype = ghost.get_upgrade_target()
                                 if prototype then
-                                        local item_stack = table_find(prototype.items_to_place_this, _find_item, player)
-                                        if item_stack then
-                                            data.action = 'upgrade_ghost'
-                                            local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
-                                            if place_item then
-                                                data.entity_name = prototype.name
-                                                data.item_stack = place_item
-                                                queue:insert(data, next_tick())
-                                                ammo_drain(player, nano_ammo, 1)
-                                            end
+                                    local item_stack = table_find(prototype.items_to_place_this, _find_item, player)
+                                    if item_stack then
+                                        data.action = 'upgrade_ghost'
+                                        local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
+                                        if place_item then
+                                            data.entity_name = prototype.name
+                                            data.item_stack = place_item
+                                            queue:insert(data, next_tick())
+                                            ammo_drain(player, nano_ammo, 1)
                                         end
+                                    end
                                 end
                             elseif ghost.name == 'entity-ghost' or (ghost.name == 'tile-ghost' and cfg.build_tiles) then
                                 --get first available item that places entity from inventory that is not in our hand.
