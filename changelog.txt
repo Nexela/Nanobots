@@ -4,6 +4,7 @@ Date: ????
   Features:
     - AFK time is now a global setting.
   Bugfixes:
+    - Fix deconstructable-tile-proxy hanging around in some cases.
     - Fix attempting to heal entities with no collision mask.
     - Fix unbuildable interface with bobmods logistics.
 ---------------------------------------------------------------------------------------------------

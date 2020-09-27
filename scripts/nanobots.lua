@@ -352,30 +352,15 @@ function Queue.deconstruction(data)
             create_projectile('nano-projectile-deconstructors', surface, force, ppos, epos)
             create_projectile('nano-projectile-return', surface, force, epos, ppos)
 
-            if entity.type == 'item-entity' then
-                item_stacks[#item_stacks + 1] = {
-                    name = entity.stack.name,
-                    count = entity.stack.count,
-                    health = entity.stack.health,
-                    durability = entity.stack.durability
-                }
-                if #item_stacks > 0 then
-                    insert_or_spill_items(player, item_stacks)
-                end
-                entity.destroy()
-            elseif entity.name == 'deconstructible-tile-proxy' then
+    if entity.name == 'deconstructible-tile-proxy' then
                 local tile = surface.get_tile(epos)
-                if tile then
-                    player.mine_tile(tile)
+        if tile and player.mine_tile(tile) then
+            return entity.destroy()
                 end
-            elseif entity.valid then
-                player.mine_entity(entity)
+    else
+        return player.mine_entity(entity)
             end
         end
-    --Valid entity
-    end
-    --Valid player
-end
 
 function Queue.build_entity_ghost(data)
     local ghost, player, ghost_surf, ghost_pos = data.entity, game.get_player(data.player_index), data.surface, data.position
