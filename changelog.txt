@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.10
-Date: ????
+Date: 2020-09-27
   Changes:
     - More explody type items are used for nanobot cliff explosives.
   Features:
