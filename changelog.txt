@@ -1,7 +1,12 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.10
 Date: ????
+  Features:
+    - AFK time is now a global setting.
+    - Nanobots can now fullfill item request proxies.
   Bugfixes:
+    - Fix deconstructable-tile-proxy hanging around in some cases.
+    - Fix attempting to heal entities with no collision mask.
     - Fix unbuildable interface with bobmods logistics.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.9
