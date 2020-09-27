@@ -343,120 +343,120 @@ end
 --Handles all of the deconstruction and scrapper related tasks.
 function Queue.deconstruction(data)
     local entity, player = data.entity, game.get_player(data.player_index)
-    if player and player.valid then
-        if entity and entity.valid and entity.to_be_deconstructed(player.force) then
-            local item_stacks = {}
-            local surface, force = data.surface or entity.surface, data.force or entity.force
-            local ppos, epos = player.position, entity.position
+    if not (player and player.valid) then
+        return
+    end
 
-            create_projectile('nano-projectile-deconstructors', surface, force, ppos, epos)
-            create_projectile('nano-projectile-return', surface, force, epos, ppos)
+    if not (entity and entity.valid and entity.to_be_deconstructed(player.force)) then
+        return
+    end
+
+    local surface, force = data.surface or entity.surface, data.force or entity.force
+    local ppos, epos = player.position, entity.position
+
+    create_projectile('nano-projectile-deconstructors', surface, force, ppos, epos)
+    create_projectile('nano-projectile-return', surface, force, epos, ppos)
 
     if entity.name == 'deconstructible-tile-proxy' then
-                local tile = surface.get_tile(epos)
-        if tile and player.mine_tile(tile) then
-            return entity.destroy()
-                end
-    else
-        return player.mine_entity(entity)
-            end
+        local tile = surface.get_tile(epos)
+        if tile then
+            player.mine_tile(tile)
+            entity.destroy()
         end
+    else
+        player.mine_entity(entity)
+    end
+end
 
 function Queue.build_entity_ghost(data)
     local ghost, player, ghost_surf, ghost_pos = data.entity, game.get_player(data.player_index), data.surface, data.position
-    if (player and player.valid) then
-        if ghost.valid and data.entity.ghost_name == data.entity_name then --item_places_entity(data.item_stack.name, ghost.ghost_name) then
-            local item_stacks = get_all_items_on_ground(ghost)
-            if player.surface.can_place_entity {name = ghost.ghost_name, position = ghost.position, direction = ghost.direction, force = ghost.force} then
-                local revived, entity, requests = ghost.revive {return_item_request_proxy = true, raise_revive = true}
-                if revived then
-                    create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
-                    entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
-                    if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
-                        create_projectile('nano-projectile-return', ghost_surf, player.force, ghost_pos, player.position)
-                    end
-                    if requests then
-                        satisfy_requests(requests, entity, player)
-                    end
-                else --not revived, return item
-                    insert_or_spill_items(player, {data.item_stack}, player.cheat_mode)
-                end --revived
-            else --can't build
-                insert_or_spill_items(player, {data.item_stack}, player.cheat_mode)
-            end --can build
-        else --not valid ghost
-            insert_or_spill_items(player, {data.item_stack}, player.cheat_mode)
-        end --valid ghost
-    end --valid player
+    if not (player and player.valid) then
+        return
+    end
+
+    if not (ghost.valid and data.entity.ghost_name == data.entity_name) then
+        return insert_or_spill_items(player, {data.item_stack}, player.cheat_mode)
+    end
+
+    local item_stacks = get_all_items_on_ground(ghost)
+    if not player.surface.can_place_entity {name = ghost.ghost_name, position = ghost.position, direction = ghost.direction, force = ghost.force} then
+        return insert_or_spill_items(player, {data.item_stack}, player.cheat_mode)
+    end
+
+    local revived, entity, requests = ghost.revive {return_item_request_proxy = true, raise_revive = true}
+    if not revived then
+        return insert_or_spill_items(player, {data.item_stack}, player.cheat_mode)
+    end
+
+    create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
+    entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
+    if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
+        create_projectile('nano-projectile-return', ghost_surf, player.force, ghost_pos, player.position)
+    end
+    if requests then
+        satisfy_requests(requests, entity, player)
+    end
 end
 
 function Queue.build_tile_ghost(data)
     local ghost, surface, position, player = data.entity, data.surface, data.position, game.get_player(data.player_index)
-    if (player and player.valid) then
-        if ghost.valid then
-            local tile, hidden_tile = surface.get_tile(position), surface.get_hidden_tile(position)
-            local force = ghost.force
-            local tile_was_mined = false
-            local ghost_was_revived = false
+    if not (player and player.valid) then
+        return
+    end
 
-            -- Is there any existing tile that needs returned
-            if hidden_tile and tile.prototype.can_be_part_of_blueprint and player.mine_tile(tile) then
-                create_projectile('nano-projectile-return', surface, force, position, player.position)
-                tile_was_mined = true
-            end
+    if not ghost.valid then
+        return insert_or_spill_items(player, {data.item_stack})
+    end
 
-            -- Mining the tile causes the ghost to be cleared also
-            if ghost.valid then
-                ghost_was_revived = ghost.revive()
-            end
+    local tile, hidden_tile = surface.get_tile(position), surface.get_hidden_tile(position)
+    local force = ghost.force
+    local tile_was_mined = hidden_tile and tile.prototype.can_be_part_of_blueprint and player.mine_tile(tile)
+    local ghost_was_revived = ghost.valid and ghost.revive() -- Mining tiles invalidates ghosts
+    if not (tile_was_mined or ghost_was_revived) then
+        return insert_or_spill_items(player, {data.item_stack})
+    end
 
-            if tile_was_mined or ghost_was_revived then
-                local item_ptype = data.item_stack and game.item_prototypes[data.item_stack.name]
-                local tile_ptype = item_ptype and item_ptype.place_as_tile_result.result
-                create_projectile('nano-projectile-constructors', surface, force, player.position, position)
-                Position.floored(position)
-                -- if the tile was mined, we need to manually place the tile.
-                -- checking if the ghost was revived is likely unnecessary but felt safer.
-                if tile_was_mined and not ghost_was_revived then
-                    --local tile_name = ptype.place_as_tile_result['result'].name
-                    surface.set_tiles({{name = tile_ptype.name, position = position}}, true, true, false, true)
-                end
+    local item_ptype = data.item_stack and game.item_prototypes[data.item_stack.name]
+    local tile_ptype = item_ptype and item_ptype.place_as_tile_result.result
+    create_projectile('nano-projectile-constructors', surface, force, player.position, position)
+    Position.floored(position)
+    -- if the tile was mined, we need to manually place the tile.
+    -- checking if the ghost was revived is likely unnecessary but felt safer.
+    if tile_was_mined and not ghost_was_revived then
+        create_projectile('nano-projectile-return', surface, force, position, player.position)
+        surface.set_tiles({{name = tile_ptype.name, position = position}}, true, true, false, true)
+    end
 
-                surface.create_entity {name = 'nano-sound-build-tiles', position = position}
-            else --Can't place or revive the tile, give item back.
-                insert_or_spill_items(player, {data.item_stack})
-            end --Tile was placed or revived
-        else --Give the item back ghost isn't valid anymore.
-            insert_or_spill_items(player, {data.item_stack})
-        end --valid ghost
-    end --valid player
+    surface.create_entity {name = 'nano-sound-build-tiles', position = position}
 end
 
 function Queue.upgrade_ghost(data)
     local ghost, player, surface, position = data.entity, game.get_player(data.player_index), data.surface, data.position
-    if (player and player.valid) then
-        if ghost.valid then
-            local entity =
-                surface.create_entity {
-                name = data.entity_name or data.item_stack.name,
-                direction = ghost.direction,
-                force = ghost.force,
-                position = position,
-                fast_replace = true,
-                player = player,
-                type = ghost.type == 'underground-belt' and ghost.belt_to_ground_type or nil,
-                raise_built = true
-            }
-            if entity then
-                create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
-                entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
-            else --not revived, return item
-                insert_or_spill_items(player, {data.item_stack})
-            end --revived
-        else --not valid ghost
-            insert_or_spill_items(player, {data.item_stack})
-        end --valid ghost
-    end --valid player
+    if not (player and player.valid) then
+        return
+    end
+
+    if not ghost.valid then
+        return insert_or_spill_items(player, {data.item_stack})
+    end
+
+    local entity =
+        surface.create_entity {
+        name = data.entity_name or data.item_stack.name,
+        direction = ghost.direction,
+        force = ghost.force,
+        position = position,
+        fast_replace = true,
+        player = player,
+        type = ghost.type == 'underground-belt' and ghost.belt_to_ground_type or nil,
+        raise_built = true
+    }
+    if not entity then
+        return insert_or_spill_items(player, {data.item_stack})
+    end
+
+    create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
+    entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
 end
 
 --[[ Nano Emmitter --]]
