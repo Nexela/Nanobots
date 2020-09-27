@@ -71,5 +71,14 @@ data:extend{
         setting_type = "runtime-global",
         default_value = true,
         order = "nanobots-bc[poll-rate]-f"
+    },
+    {
+        name = "nanobots-afk-time",
+        type = "int-setting",
+        setting_type = "runtime-global",
+        default_value = 4,
+        order = "nanobots-bd",
+        maximum_value = 60*60,
+        minimum_value = 0,
     }
 }

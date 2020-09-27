@@ -13,7 +13,6 @@ local config = require('config')
 local armormods = require('scripts/armor-mods')
 local bot_radius = config.BOT_RADIUS
 local queue_speed = config.QUEUE_SPEED_BONUS
-local AFK_TIME = 4 * defines.time.second
 
 local function unique(tbl)
     return table.keys(table.invert(tbl))
@@ -43,7 +42,8 @@ local function update_settings()
         build_tiles = setting['nanobots-nano-build-tiles'].value,
         network_limits = setting['nanobots-network-limits'].value,
         nanobots_auto = setting['nanobots-nanobots-auto'].value,
-        equipment_auto = setting['nanobots-equipment-auto'].value
+        equipment_auto = setting['nanobots-equipment-auto'].value,
+        afk_time = setting['nanobots-afk-time'].value * defines.time.second
     }
 end
 Event.register(defines.events.on_runtime_mod_setting_changed, update_settings)
@@ -54,7 +54,6 @@ local table_find = table.find
 
 -- return the name of the item found for table.find if we found at least 1 item or cheat_mode is enabled.
 -- Don't return items with inventory
---? Maybe just use same logic as factorio robots {items_that_place_this}[1] instead of a looop.
 local _find_item = function(item_prototype, _, player)
     local item, count = item_prototype.name, item_prototype.count
     local prototype = game.item_prototypes[item]
@@ -73,7 +72,7 @@ end
 -- @param player: the player object
 -- @return bool: player is connected and ready
 local function is_connected_player_ready(player)
-    return (player.afk_time < AFK_TIME and player.character)
+    return (cfg.afk_time <= 0 or player.afk_time < cfg.afk_time) and player.character
 end
 
 local function has_powered_equipment(character, eq_name)
@@ -607,7 +606,6 @@ end --function
 --Kill the trees! Kill them dead
 local function everyone_hates_trees(player, pos, nano_ammo)
     local radius = get_ammo_radius(player, nano_ammo)
-    --local area = Position.expand_to_area(pos, radius)
     for _, stupid_tree in pairs(player.surface.find_entities_filtered {position = pos, radius = radius, type = 'tree', limit = 200}) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if not stupid_tree.to_be_deconstructed(player.force) then
