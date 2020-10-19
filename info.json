@@ -1,13 +1,17 @@
 {
   "name": "Nanobots",
   "version": "3.2.11",
-  "factorio_version": "0.18",
+  "factorio_version": "1.1",
   "title": "Nanobots: Early Bots",
   "author": "Nexela",
   "contact": "www.factorioforums.com",
   "homepage": "",
   "description": "Early ghost building robots, A special nanobot gun automaticly revives blueprint ghosts near you if you have the items in your inventory. Also reprograms personal construction bots to deconstruct items on ground.",
-  "dependencies": ["base >= 0.18.0", "stdlib >= 1.0.0", "(?) PickerAtheneum >= 1.1.2"],
+  "dependencies": [
+    "base >= 1.1.0",
+    "stdlib >= 1.4.6",
+    "(?) PickerAtheneum >= 1.1.2"
+  ],
   "license": "MIT",
   "package": {
     "ignore": [],
