@@ -128,7 +128,7 @@ local moveables = {
 -- @return bool: repairable by nanobots
 local function nano_repairable_entity(entity)
     if (entity.get_health_ratio() or 1) < 1 then
-        local repairable = not entity.has_flag('breaths-air') or not entity.type:find('robot')
+        local repairable = not (entity.has_flag('not-repairable') or entity.type:find('robot'))
         local has_mask = table_size(entity.prototype.collision_mask) > 0
         local moving = moveables[entity.type] and entity.speed ~= 0
         return repairable and has_mask and not moving
