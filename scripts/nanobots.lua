@@ -446,7 +446,7 @@ function Queue.build_tile_ghost(data)
     local tile, hidden_tile = surface.get_tile(position), surface.get_hidden_tile(position)
     local force = ghost.force
     local tile_was_mined = hidden_tile and tile.prototype.can_be_part_of_blueprint and player.mine_tile(tile)
-    local ghost_was_revived = ghost.valid and ghost.revive() -- Mining tiles invalidates ghosts
+    local ghost_was_revived = ghost.valid and ghost.revive({raise_revive=true}) -- Mining tiles invalidates ghosts
     if not (tile_was_mined or ghost_was_revived) then
         return insert_or_spill_items(player, {data.item_stack})
     end
