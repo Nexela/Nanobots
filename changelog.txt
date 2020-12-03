@@ -2,6 +2,7 @@
 Version: 3.2.13
 Date: ????
   Bugfixes:
+    - Add missing upgrade sound.
     - Add missing event dispatch when reviving tile ghosts.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.12
