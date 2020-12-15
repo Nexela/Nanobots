@@ -1,8 +1,5 @@
 --Custom GUI's
 
---Custom virtual signals
-require('prototypes/signals')
-
 --Custom Technologies
 require('prototypes/technology/nano-range')
 require('prototypes/technology/nano-speed')
@@ -21,9 +18,6 @@ require('prototypes/gun-nano-emitter')
 --Ammo for nano guns
 require('prototypes/ammo/constructors')
 require('prototypes/ammo/termites')
-
---Roboport reprogramming interface
-require('prototypes/roboport-interface')
 
 --Sounds
 require('prototypes/sounds')
