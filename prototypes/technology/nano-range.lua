@@ -1,8 +1,7 @@
 local tech1 = {
     type = 'technology',
     name = 'nano-range-1',
-    icon = '__Nanobots__/graphics/technology/tech-nano-range.png',
-    icon_size = 256,
+    icons = util.technology_icon_constant_range("__Nanobots__/graphics/technology/tech-nano-range.png"),
     effects = {
         {
             type = 'ammo-damage',
@@ -25,8 +24,7 @@ local tech1 = {
 local tech2 = {
     type = 'technology',
     name = 'nano-range-2',
-    icon = '__Nanobots__/graphics/technology/tech-nano-range.png',
-    icon_size = 256,
+    icons = util.technology_icon_constant_range("__Nanobots__/graphics/technology/tech-nano-range.png"),
     effects = {
         {
             type = 'ammo-damage',
@@ -50,8 +48,7 @@ local tech2 = {
 local tech3 = {
     type = 'technology',
     name = 'nano-range-3',
-    icon = '__Nanobots__/graphics/technology/tech-nano-range.png',
-    icon_size = 256,
+    icons = util.technology_icon_constant_range("__Nanobots__/graphics/technology/tech-nano-range.png"),
     effects = {
         {
             type = 'ammo-damage',
@@ -75,8 +72,7 @@ local tech3 = {
 local tech4 = {
     type = 'technology',
     name = 'nano-range-4',
-    icon = '__Nanobots__/graphics/technology/tech-nano-range.png',
-    icon_size = 256,
+    icons = util.technology_icon_constant_range("__Nanobots__/graphics/technology/tech-nano-range.png"),
     effects = {
         {
             type = 'ammo-damage',
