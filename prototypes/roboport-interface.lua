@@ -87,6 +87,7 @@ for index, direction in pairs({'north', 'east', 'south', 'west'}) do
         width = 11,
         height = 11,
         frame_count = 1,
+        draw_as_glow = true,
         shift = {0, -.75}
     }
 
@@ -116,7 +117,7 @@ ri_radar.icon_size = 64
 ri_radar.minable = nil
 ri_radar.next_upgrade = nil
 ri_radar.collision_mask = {}
-ri_radar.selection_box = {{-1, -0.0}, {0.0, 1}}
+ri_radar.selection_box = {{-1, 0}, {0, 1}}
 ri_radar.collision_box = {{-0.9, -0.9}, {0.9, 0.9}}
 ri_radar.pictures = Data.Sprites.empty_pictures()
 ri_radar.max_distance_of_sector_revealed = 0
@@ -158,6 +159,26 @@ Data {
     base_animation = {
         layers = {
             {
+                filename = '__Nanobots__/graphics/entity/roboport-interface/roboport-interface-base.png',
+                scale = 1,
+                priority = 'medium',
+                width = 128,
+                height = 224,
+                animation_speed = 0.15,
+                repeat_count = 32,
+                shift = {0.4, -2.0},
+                hr_version = {
+                    filename = '__Nanobots__/graphics/entity/roboport-interface/hr-roboport-interface-base.png',
+                    scale = 0.5,
+                    priority = 'medium',
+                    width = 256,
+                    height = 448,
+                    animation_speed = 0.15,
+                    repeat_count = 32,
+                    shift = {0.4, -2.0},
+                }
+            },
+            {
                 filename = '__Nanobots__/graphics/entity/roboport-interface/roboport-interface.png',
                 scale = 1,
                 priority = 'medium',
@@ -180,6 +201,28 @@ Data {
                 }
             },
             {
+                filename = '__Nanobots__/graphics/entity/roboport-interface/roboport-interface-base-shadow.png',
+                scale = 1,
+                priority = 'medium',
+                width = 211,
+                height = 224,
+                animation_speed = 0.15,
+                repeat_count = 32,
+                shift = {0.4, -2.0},
+                draw_as_shadow = true,
+                hr_version = {
+                    filename = '__Nanobots__/graphics/entity/roboport-interface/hr-roboport-interface-base-shadow.png',
+                    scale = 0.5,
+                    priority = 'medium',
+                    width = 422,
+                    height = 448,
+                    animation_speed = 0.15,
+                    repeat_count = 32,
+                    shift = {0.4, -2.0},
+                    draw_as_shadow = true,
+                }
+            },
+            {
                 filename = '__Nanobots__/graphics/entity/roboport-interface/roboport-interface-shadow.png',
                 scale = 1,
                 priority = 'medium',
@@ -188,7 +231,7 @@ Data {
                 animation_speed = 0.15,
                 frame_count = 32,
                 line_length = 8,
-                shift = {0.4, -2.0},
+                shift = {2.4, -2.0},
                 draw_as_shadow = true,
                 hr_version = {
                     filename = '__Nanobots__/graphics/entity/roboport-interface/hr-roboport-interface-shadow.png',
@@ -199,7 +242,7 @@ Data {
                     animation_speed = 0.15,
                     frame_count = 32,
                     line_length = 8,
-                    shift = {0.4, -2.0},
+                    shift = {2.4, -2.0},
                     draw_as_shadow = true,
                 }
             },

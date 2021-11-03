@@ -2,6 +2,9 @@
 Version: 3.2.16
 Date: ????
   Changes:
+    - (snouz) HD versions of icons, technologies, equipments.
+    - (snouz) Standarized shadow of the Roboport-interface.
+    - (snouz) Roboport-interface technology now costs more.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.15
 Date: 2021-01-27
