@@ -12,11 +12,13 @@ Data {
     icon = '__Nanobots__/graphics/technology/roboport-interface.png',
     icon_size = 256,
     effects = {},
-    prerequisites = {'construction-robotics', 'logistics', 'circuit-network'},
+    prerequisites = {'construction-robotics', 'circuit-network'},
     unit = {
-        count = 100,
+        count = 110,
         ingredients = {
-            {'automation-science-pack', 1}
+            {"automation-science-pack", 1},
+            {"logistic-science-pack", 1},
+            {"chemical-science-pack", 1}
         },
         time = 30
     },
@@ -155,12 +157,12 @@ Data {
     base = Data.Sprites.empty_picture(),
     base_animation = {
         filename = '__Nanobots__/graphics/entity/roboport-interface/roboport-interface.png',
-        scale = .50,
+        scale = 0.50,
         priority = 'medium',
         width = 256,
         height = 448,
         apply_projection = false,
-        animation_speed = .15,
+        animation_speed = 0.15,
         frame_count = 32,
         line_length = 8,
         shift = {0.4, -2.0}

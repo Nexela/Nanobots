@@ -58,10 +58,10 @@ local tech3 = {
     },
     prerequisites = {'electric-engine', 'nano-range-2'},
     unit = {
-        count = 100,
+        count = 300,
         ingredients = {
-            {'automation-science-pack', 3},
-            {'logistic-science-pack', 3}
+            {'automation-science-pack', 1},
+            {'logistic-science-pack', 1}
         },
         time = 90
     },
@@ -82,10 +82,10 @@ local tech4 = {
     },
     prerequisites = {'robotics', 'nano-range-3'},
     unit = {
-        count = 100,
+        count = 400,
         ingredients = {
-            {'automation-science-pack', 4},
-            {'logistic-science-pack', 4}
+            {'automation-science-pack', 1},
+            {'logistic-science-pack', 1}
             --{"science-pack-3", 4}
         },
         time = 120
