@@ -30,12 +30,6 @@ local equipment_chip =
     type = 'active-defense-equipment',
     name = 'equipment-bot-chip-trees',
     take_result = 'equipment-bot-chip-trees',
-    ability_icon = {
-        filename = '__Nanobots__/graphics/equipment/discharge-defense-equipment-ability.png',
-        width = 32,
-        height = 32,
-        priority = 'medium'
-    },
     sprite = {
         filename = '__Nanobots__/graphics/equipment/equipment-bot-chip-trees.png',
         width = 32,
