@@ -18,7 +18,7 @@ Data {
     type = 'item',
     name = 'equipment-bot-chip-trees',
     icon = '__Nanobots__/graphics/icons/equipment-bot-chip-trees.png',
-    icon_size = 32,
+    icon_size = 64,
     placed_as_equipment_result = 'equipment-bot-chip-trees',
     subgroup = 'equipment',
     order = 'e[robotics]-ad[personal-roboport-equipment]',
@@ -32,9 +32,10 @@ local equipment_chip =
     take_result = 'equipment-bot-chip-trees',
     sprite = {
         filename = '__Nanobots__/graphics/equipment/equipment-bot-chip-trees.png',
-        width = 32,
-        height = 32,
-        priority = 'medium'
+        width = 64,
+        height = 64,
+        priority = 'medium',
+        scale = 0.5
     },
     shape = {
         width = 1,

@@ -18,7 +18,7 @@ Data {
     type = 'item',
     name = 'equipment-bot-chip-launcher',
     icon = '__Nanobots__/graphics/icons/equipment-bot-chip-launcher.png',
-    icon_size = 32,
+    icon_size = 64,
     placed_as_equipment_result = 'equipment-bot-chip-launcher',
     subgroup = 'equipment',
     order = 'e[robotics]-ac[personal-roboport-equipment]',
@@ -32,9 +32,10 @@ local equipment_chip =
     take_result = 'equipment-bot-chip-launcher',
     sprite = {
         filename = '__Nanobots__/graphics/equipment/equipment-bot-chip-launcher.png',
-        width = 32,
-        height = 32,
-        priority = 'medium'
+        width = 64,
+        height = 64,
+        priority = 'medium',
+        scale = 0.5
     },
     shape = {
         width = 1,

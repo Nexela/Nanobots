@@ -2,7 +2,7 @@ local tech1 = {
     type = 'technology',
     name = 'nano-speed-1',
     icon = '__Nanobots__/graphics/technology/tech-nano-speed.png',
-    icon_size = 128,
+    icon_size = 256,
     effects = {
         {
             type = 'gun-speed',
@@ -26,7 +26,7 @@ local tech2 = {
     type = 'technology',
     name = 'nano-speed-2',
     icon = '__Nanobots__/graphics/technology/tech-nano-speed.png',
-    icon_size = 128,
+    icon_size = 256,
     effects = {
         {
             type = 'gun-speed',
@@ -51,7 +51,7 @@ local tech3 = {
     type = 'technology',
     name = 'nano-speed-3',
     icon = '__Nanobots__/graphics/technology/tech-nano-speed.png',
-    icon_size = 128,
+    icon_size = 256,
     effects = {
         {
             type = 'gun-speed',
@@ -76,7 +76,7 @@ local tech4 = {
     type = 'technology',
     name = 'nano-speed-4',
     icon = '__Nanobots__/graphics/technology/tech-nano-speed.png',
-    icon_size = 128,
+    icon_size = 256,
     effects = {
         {
             type = 'gun-speed',
