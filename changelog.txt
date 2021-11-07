@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.16
-Date: ????
+Date: 2021-11-07
   Changes:
     - (snouz) New and HD versions of icons (10), technologies (5), equipments (5).
     - (snouz) Reworked Roboport-interface graphics (proper shadow, lighter files, night light, ground patch, alignment)
