@@ -419,19 +419,25 @@ function Queue.build_entity_ghost(data)
     end
 
     local revived, entity, requests = ghost.revive {return_item_request_proxy = true, raise_revive = true}
+
     if not revived then
         return insert_or_spill_items(player, {data.item_stack}, player.cheat_mode)
     end
 
-    if entity then
-        create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
-        entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
-        if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
+    if not entity then
+        if insert_or_spill_items(player, item_stacks, player.cheat_mode) then
             create_projectile('nano-projectile-return', ghost_surf, player.force, ghost_pos, player.position)
         end
-        if requests then
-            satisfy_requests(requests, entity, player)
-        end
+        return
+    end
+
+    create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
+    entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
+    if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
+        create_projectile('nano-projectile-return', ghost_surf, player.force, ghost_pos, player.position)
+    end
+    if requests then
+        satisfy_requests(requests, entity, player)
     end
 end
 
