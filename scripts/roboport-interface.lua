@@ -26,12 +26,12 @@ local params_to_check = {
         action = 'deconstruct_finished_miners',
         find_type = 'mining-drill'
     },
-    ['nano-signal-landfill-the-world'] = {
+    --[[['nano-signal-landfill-the-world'] = {
         action = 'landfill_the_world'
     },
     ['nano-signal-remove-tiles'] = {
         action = 'remove_tiles'
-    },
+    },]] -- signals removed
     ['nano-signal-catch-fish'] = {
         action = 'mark_items_or_trees',
         find_type = 'fish',

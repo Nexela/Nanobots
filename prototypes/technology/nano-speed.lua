@@ -1,8 +1,7 @@
 local tech1 = {
     type = 'technology',
     name = 'nano-speed-1',
-    icon = '__Nanobots__/graphics/technology/tech-nano-speed.png',
-    icon_size = 128,
+    icons = util.technology_icon_constant_movement_speed("__Nanobots__/graphics/technology/tech-nano-speed.png"),
     effects = {
         {
             type = 'gun-speed',
@@ -25,8 +24,7 @@ local tech1 = {
 local tech2 = {
     type = 'technology',
     name = 'nano-speed-2',
-    icon = '__Nanobots__/graphics/technology/tech-nano-speed.png',
-    icon_size = 128,
+    icons = util.technology_icon_constant_movement_speed("__Nanobots__/graphics/technology/tech-nano-speed.png"),
     effects = {
         {
             type = 'gun-speed',
@@ -50,8 +48,7 @@ local tech2 = {
 local tech3 = {
     type = 'technology',
     name = 'nano-speed-3',
-    icon = '__Nanobots__/graphics/technology/tech-nano-speed.png',
-    icon_size = 128,
+    icons = util.technology_icon_constant_movement_speed("__Nanobots__/graphics/technology/tech-nano-speed.png"),
     effects = {
         {
             type = 'gun-speed',
@@ -61,10 +58,10 @@ local tech3 = {
     },
     prerequisites = {'electric-engine', 'nano-speed-2'},
     unit = {
-        count = 100,
+        count = 300,
         ingredients = {
-            {'automation-science-pack', 3},
-            {'logistic-science-pack', 3}
+            {'automation-science-pack', 1},
+            {'logistic-science-pack', 1}
         },
         time = 90
     },
@@ -75,8 +72,7 @@ local tech3 = {
 local tech4 = {
     type = 'technology',
     name = 'nano-speed-4',
-    icon = '__Nanobots__/graphics/technology/tech-nano-speed.png',
-    icon_size = 128,
+    icons = util.technology_icon_constant_movement_speed("__Nanobots__/graphics/technology/tech-nano-speed.png"),
     effects = {
         {
             type = 'gun-speed',
@@ -86,11 +82,10 @@ local tech4 = {
     },
     prerequisites = {'robotics', 'nano-speed-3'},
     unit = {
-        count = 100,
+        count = 400,
         ingredients = {
-            {'automation-science-pack', 4},
-            {'logistic-science-pack', 4}
-            --{"science-pack-3", 4}
+            {'automation-science-pack', 1},
+            {'logistic-science-pack', 1}
         },
         time = 120
     },

@@ -18,7 +18,7 @@ Data {
     type = 'item',
     name = 'equipment-bot-chip-feeder',
     icon = '__Nanobots__/graphics/icons/equipment-bot-chip-feeder.png',
-    icon_size = 32,
+    icon_size = 64,
     placed_as_equipment_result = 'equipment-bot-chip-feeder',
     subgroup = 'equipment',
     order = 'e[robotics]-ae[personal-roboport-equipment]',
@@ -30,17 +30,12 @@ local equipment_chip =
     type = 'active-defense-equipment',
     name = 'equipment-bot-chip-feeder',
     take_result = 'equipment-bot-chip-feeder',
-    ability_icon = {
-        filename = '__Nanobots__/graphics/equipment/discharge-defense-equipment-ability.png',
-        width = 32,
-        height = 32,
-        priority = 'medium'
-    },
     sprite = {
         filename = '__Nanobots__/graphics/equipment/equipment-bot-chip-feeder.png',
-        width = 32,
-        height = 32,
-        priority = 'medium'
+        width = 64,
+        height = 64,
+        priority = 'medium',
+        scale = 0.5
     },
     shape = {
         width = 1,
