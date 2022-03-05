@@ -125,15 +125,22 @@ local moveables = {
 }
 -- Can nanobots repair this entity.
 -- @param entity: the entity object
--- @return bool: repairable by nanobots
+-- @return bool: is damaged and repairable by nanobots
 local function nano_repairable_entity(entity)
-    if (entity.get_health_ratio() or 1) < 1 then
-        local repairable = not (entity.has_flag('not-repairable') or entity.type:find('robot'))
-        local has_mask = table_size(entity.prototype.collision_mask) > 0
-        local moving = moveables[entity.type] and entity.speed ~= 0
-        return repairable and has_mask and not moving
+    if entity.has_flag('not-repairable') or entity.type:find('robot') then
+        return false
     end
-    return false
+    -- Can't repair tracks with trains on them.
+    if (entity.type == "straight-rail" or entity.type == "curved-rail") and entity.minable == false then
+        return false
+    end
+    if (entity.get_health_ratio() or 1) >= 1 then
+        return false
+    end
+    if moveables[entity.type] and entity.speed > 0 then
+        return false
+    end
+    return table_size(entity.prototype.collision_mask) > 0
 end
 
 -- Get the gun, ammo and ammo name for the named gun: will return nil
