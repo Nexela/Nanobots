@@ -480,6 +480,22 @@ function Queue.build_tile_ghost(data)
     surface.play_sound {path = 'nano-sound-build-tiles', position = position}
 end
 
+function Queue.upgrade_direction(data)
+    local ghost, player, surface = data.entity, game.get_player(data.player_index), data.surface
+    if not (player and player.valid) then
+        return
+    end
+
+    if not ghost.valid and not ghost.to_be_upgraded() then
+        return
+    end
+
+    ghost.direction = data.direction
+    ghost.cancel_upgrade(player.force, player)
+    create_projectile('nano-projectile-constructors', ghost.surface, ghost.force, player.position, ghost.position)
+    surface.play_sound {path = 'utility/build_small', position = ghost.position}
+end
+
 function Queue.upgrade_ghost(data)
     local ghost, player, surface, position = data.entity, game.get_player(data.player_index), data.surface, data.position
     if not (player and player.valid) then
@@ -606,15 +622,25 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                             elseif upgrade then
                                 local prototype = ghost.get_upgrade_target()
                                 if prototype then
-                                    local item_stack = table_find(prototype.items_to_place_this, _find_item, player)
-                                    if item_stack then
-                                        data.action = 'upgrade_ghost'
-                                        local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
-                                        if place_item then
-                                            data.entity_name = prototype.name
-                                            data.item_stack = place_item
+                                    if prototype.name == ghost.name then
+                                        local dir = ghost.get_upgrade_direction()
+                                        if ghost.direction ~= dir then
+                                            data.action = 'upgrade_direction'
+                                            data.direction = dir
                                             queue:insert(data, next_tick())
                                             ammo_drain(player, nano_ammo, 1)
+                                        end
+                                    else
+                                        local item_stack = table_find(prototype.items_to_place_this, _find_item, player)
+                                        if item_stack then
+                                            data.action = 'upgrade_ghost'
+                                            local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
+                                            if place_item then
+                                                data.entity_name = prototype.name
+                                                data.item_stack = place_item
+                                                queue:insert(data, next_tick())
+                                                ammo_drain(player, nano_ammo, 1)
+                                            end
                                         end
                                     end
                                 end

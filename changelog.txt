@@ -3,6 +3,7 @@ Version: 3.2.17
 Date: ????
   Bugfixes:
     - Fix nanobots being consumed trying to repair tracks with trains on them. #131
+    - Fix nanobot and item consumption on upgrade planner rotations. #129
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.16
 Date: 2021-11-07
