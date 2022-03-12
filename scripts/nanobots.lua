@@ -721,6 +721,7 @@ end --function
 --Kill the trees! Kill them dead
 local function everyone_hates_trees(player, pos, nano_ammo)
     local radius = get_ammo_radius(player, nano_ammo)
+    local force = player.force
     for _, stupid_tree in pairs(player.surface.find_entities_filtered {position = pos, radius = radius, type = 'tree', limit = 200}) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
             if not stupid_tree.to_be_deconstructed(player.force) then
@@ -729,7 +730,7 @@ local function everyone_hates_trees(player, pos, nano_ammo)
                     player.surface.create_entity {
                         name = 'nano-projectile-termites',
                         position = player.position,
-                        force = player.force,
+                        force = force,
                         target = stupid_tree,
                         speed = .5
                     }
