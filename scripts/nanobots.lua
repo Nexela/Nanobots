@@ -547,6 +547,7 @@ end
 -- TODO: replace table_find entity-match with hashed lookup
 -- Nano Constructors
 -- Queue the ghosts in range for building, heal stuff needing healed
+--- @param player LuaPlayer
 local function queue_ghosts_in_range(player, pos, nano_ammo)
     -- local queue = global.nano_queue
     local pdata = global.players[player.index]
@@ -559,7 +560,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
 
     for _, ghost in pairs(player.surface.find_entities(area)) do
         local same_force = ghost.force == force
-        local deconstruct = ghost.to_be_deconstructed(force)
+        local deconstruct = ghost.to_be_deconstructed()
         local upgrade = ghost.to_be_upgraded() and ghost.force == force
 
         if (deconstruct or upgrade or same_force) then
