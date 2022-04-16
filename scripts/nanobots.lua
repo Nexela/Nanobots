@@ -7,8 +7,7 @@ local Queue = require('scripts/hash_queue')
 local queue
 local cfg
 
--- Local functions for commonly used math functions
-local max, floor = math.max, math.floor
+local max, floor, table_size, table_find = math.max, math.floor, table_size, table.find
 
 local config = require('config')
 local armormods = require('scripts/armor-mods')
@@ -23,11 +22,16 @@ local inv_list = unique {
     defines.inventory.character_vehicle, defines.inventory.car_trunk, defines.inventory.cargo_wagon
 }
 
+local moveable_types = { train = true, car = true, spidertron = true } ---@type { [string]: true }
+local blockable_types = {['straight-rail'] = true, ['curved-rail'] = true} ---@type { [string]: true }
+
+---@type ItemStackDefinition[]
 local explosives = {
     { name = 'cliff-explosives', count = 1 }, { name = 'explosives', count = 10 }, { name = 'explosive-rocket', count = 4 },
     { name = 'explosive-cannon-shell', count = 4 }, { name = 'cluster-grenade', count = 2 }, { name = 'grenade', count = 14 },
     { name = 'land-mine', count = 5 }, { name = 'artillery-shell', count = 1 }
 }
+
 
 local function update_settings()
     local setting = settings['global']
@@ -46,13 +50,15 @@ end
 Event.register(defines.events.on_runtime_mod_setting_changed, update_settings)
 update_settings()
 
--- table.find functions
-local table_find = table.find
-
--- return the name of the item found for table.find if we found at least 1 item or cheat_mode is enabled.
--- Don't return items with inventory
-local _find_item = function(item_prototype, _, player, at_least_one)
-    local item, count = item_prototype.name, item_prototype.count
+--- Return the name of the item found for table.find if we found at least 1 item or cheat_mode is enabled.
+--- Doesnt return items with inventory
+--- @param simple_stack SimpleItemStack
+--- @param _ any
+--- @param player LuaPlayer
+--- @param at_least_one boolean
+--- @return boolean
+local _find_item = function(simple_stack, _, player, at_least_one)
+    local item, count = simple_stack.name, simple_stack.count
     count = at_least_one and 1 or count
     local prototype = game.item_prototypes[item]
     if prototype.type ~= 'item-with-inventory' then
@@ -60,15 +66,15 @@ local _find_item = function(item_prototype, _, player, at_least_one)
             return true
         else
             local vehicle = player.vehicle
-            local train = vehicle and vehicle.train
+            local train = vehicle and vehicle.train --- @type LuaTrain
             return vehicle and ((vehicle.get_item_count(item) >= count) or (train and train.get_item_count(item) >= count))
         end
     end
 end
 
--- Is the player connected, not afk, and have an attached character
--- @param player: the player object
--- @return bool: player is connected and ready
+--- Is the player connected, not afk, and have an attached character
+--- @param player LuaPlayer
+--- @return boolean
 local function is_connected_player_ready(player)
     return (cfg.afk_time <= 0 or player.afk_time < cfg.afk_time) and player.character
 end
@@ -82,15 +88,16 @@ local function has_powered_equipment(character, eq_name)
     end
 end
 
--- Is the player not in a logistic network or has a working nano-interface
--- @param player: the player character object
--- @return bool: true if has chip or not in network
-local function nano_network_check(character, e)
+--- Is the player character not in a logistic network or has a working nano-interface
+--- @param character LuaEntity
+--- @param target LuaEntity
+--- @return boolean
+local function nano_network_check(character, target)
     if has_powered_equipment(character, 'equipment-bot-chip-nanointerface') then
         return true
     else
         local c = character
-        local networks = e and e.surface.find_logistic_networks_by_construction_area(e.position, e.force) or
+        local networks = target and target.surface.find_logistic_networks_by_construction_area(target.position, target.force) or
                              c.surface.find_logistic_networks_by_construction_area(c.position, c.force)
         -- Con bots in network
         local pnetwork = c.logistic_cell and c.logistic_cell and c.logistic_cell.mobile and c.logistic_cell.logistic_network
@@ -103,35 +110,31 @@ local function nano_network_check(character, e)
     end
 end
 
-local moveables = { train = true, car = true, spidertron = true }
--- Can nanobots repair this entity.
--- @param entity: the entity object
--- @return bool: is damaged and repairable by nanobots
+--- Can nanobots repair this entity?
+--- @param entity LuaEntity
+--- @return boolean
 local function nano_repairable_entity(entity)
     if entity.has_flag('not-repairable') or entity.type:find('robot') then
         return false
     end
-    -- Can't repair tracks with trains on them.
-    if (entity.type == 'straight-rail' or entity.type == 'curved-rail') and entity.minable == false then
+    if blockable_types[entity.type] and entity.minable == false then
         return false
     end
     if (entity.get_health_ratio() or 1) >= 1 then
         return false
     end
-    if moveables[entity.type] and entity.speed > 0 then
+    if moveable_types[entity.type] and entity.speed > 0 then
         return false
     end
     return table_size(entity.prototype.collision_mask) > 0
 end
 
--- Get the gun, ammo and ammo name for the named gun: will return nil
--- for all returns if there is no ammo for the gun.
--- @param player: the player object
--- @param gun_name: the name of the gun to get
--- @return the gun object or nil
--- @return the ammo object or nil
--- @return string: the name of the ammo or nil
+--- Get the gun, ammo and ammo name for the named gun: will return nil for all returns if there is no ammo for the gun.
 --- @param player LuaPlayer
+--- @param gun_name string
+--- @return LuaItemStack|nil
+--- @return LuaItemStack|nil
+--- @return string|nil
 local function get_gun_ammo_name(player, gun_name)
     local gun_inv = player.get_inventory(defines.inventory.character_guns)
     local ammo_inv = player.get_inventory(defines.inventory.character_ammo)
@@ -148,17 +151,18 @@ local function get_gun_ammo_name(player, gun_name)
         gun, ammo = gun_inv[index], ammo_inv[index]
     end
 
-    if gun and gun.valid_for_read and gun.name == gun_name and ammo.valid_for_read then
+    if gun and gun.valid_for_read and ammo.valid_for_read then
         return gun, ammo, ammo.name
     end
     return nil, nil, nil
 end
 
--- Attempt to insert an item_stack or array of item_stacks into the entity
--- Spill to the ground at the entity/player anything that doesn't get inserted
--- @param entity: the entity or player object
--- @param item_stacks: a SimpleItemStack or array of SimpleItemStacks to insert
--- @return bool : there was some items inserted or spilled
+--- Attempt to insert an ItemStackDefinition or array of ItemStackDefinition into the entity
+--- Spill to the ground at the entity anything that doesn't get inserted
+--- @param entity LuaEntity
+--- @param item_stacks ItemStackDefinition|ItemStackDefinition[]
+--- @param is_return_cheat boolean
+--- @return boolean #there was some items inserted or spilled
 local function insert_or_spill_items(entity, item_stacks, is_return_cheat)
     if is_return_cheat then
         return
@@ -184,10 +188,10 @@ local function insert_or_spill_items(entity, item_stacks, is_return_cheat)
     end
 end
 
--- Attempt to insert an arrary of items stacks into an entity
--- @param entity: the entity object
--- @param item_stacks: a SimpleItemStack or array of SimpleitemStacks to insert
--- @return table: an array of SimpleItemStacks not inserted
+--- Attempt to insert an arrary of items stacks into an entity
+--- @param entity LuaEntity
+--- @param item_stacks ItemStackDefinition|ItemStackDefinition[]
+--- @return ItemStackDefinition[] #Items not inserted
 local function insert_into_entity(entity, item_stacks)
     item_stacks = item_stacks or {}
     if item_stacks and item_stacks.name then
@@ -204,9 +208,9 @@ local function insert_into_entity(entity, item_stacks)
     return new_stacks
 end
 
--- Scan the ground under a ghost entities collision box for items and insert them into the player.
--- @param entity: the entity object to scan under
--- @return table: a table of SimpleItemStacks or nil if empty
+--- Scan the ground under a ghost entities collision box for items and return an array of SimpleItemStack.
+--- @param entity LuaEntity the entity object to scan under
+--- @return ItemStackDefinition[] #array of ItemStackDefinition
 local function get_all_items_on_ground(entity, existing_stacks)
     local item_stacks = existing_stacks or {}
     local surface, position, bouding_box = entity.surface, entity.position, entity.ghost_prototype.selection_box
@@ -226,10 +230,12 @@ local function get_all_items_on_ground(entity, existing_stacks)
     return (item_stacks[1] and item_stacks) or {}
 end
 
--- Get items with health data from the inventory
--- @param entity: the entity object to search
--- @param item: the item to look for
--- @return item_stack; SimpleItemStack
+--- Get an item with health data from the inventory
+--- @param entity LuaEntity the entity object to search
+--- @param item_stack ItemStackDefinition the item to look for
+--- @param cheat boolean cheat the item
+--- @param at_least_one boolean #return as long as count > 0
+--- @return ItemStackDefinition|nil
 local function get_items_from_inv(entity, item_stack, cheat, at_least_one)
     if cheat then
         return { name = item_stack.name, count = item_stack.count, health = 1 }
@@ -288,10 +294,10 @@ local function get_items_from_inv(entity, item_stack, cheat, at_least_one)
     end
 end
 
--- Manually drain ammo, if it is the last bit of ammo in the stack pull in more ammo from inventory if available
--- @param player: the player object
--- @param ammo: the ammo itemstack
--- @return bool: this was the last one to be drained
+--- Manually drain ammo, if it is the last bit of ammo in the stack pull in more ammo from inventory if available
+--- @param player LuaPlayer the player object --- Todo Character?
+--- @param ammo LuaItemStack the ammo itemstack
+--- @return boolean #Ammo was drained
 local function ammo_drain(player, ammo, amount)
     if player.cheat_mode then
         return true
@@ -310,9 +316,9 @@ local function ammo_drain(player, ammo, amount)
     end
 end
 
--- Get the radius to use based on tehnology and player defined radius
--- @param player: the player entity to check
--- @param nano_ammo: the ammo to check
+--- Get the radius to use based on tehnology and player defined radius
+--- @param player LuaPlayer
+--- @param nano_ammo LuaItemStack
 local function get_ammo_radius(player, nano_ammo)
     local data = global.players[player.index]
     local max_radius = bot_radius[player.force.get_ammo_damage_modifier(nano_ammo.prototype.get_ammo_type().category)] or 7
@@ -320,10 +326,10 @@ local function get_ammo_radius(player, nano_ammo)
     return custom_radius <= max_radius and custom_radius or max_radius
 end
 
--- Attempt to satisfy module requests from player inventory
--- @param requests: the item request proxy to get requests from
--- @param entity: the entity to satisfy requests for
--- @param player: the entity to get modules from
+--- Attempt to satisfy module requests from player inventory
+--- @param requests LuaEntity the item request proxy to get requests from
+--- @param entity LuaEntity the entity to satisfy requests for
+--- @param player LuaEntity the entity to get modules from
 local function satisfy_requests(requests, entity, player)
     local pinv = player.get_main_inventory()
     local new_requests = {}
@@ -340,12 +346,12 @@ local function satisfy_requests(requests, entity, player)
     requests.item_requests = new_requests
 end
 
--- Create a projectile from source to target
--- @param name: the name of the projecticle
--- @param surface: the surface to create the projectile on
--- @param force: the force this projectile belongs too
--- @param source: position table to start at
--- @param target: position table to end at
+--- Create a projectile from source to target
+--- @param name string the name of the projecticle
+--- @param surface LuaSurface the surface to create the projectile on
+--- @param force LuaForce the force this projectile belongs too
+--- @param source MapPosition|LuaEntity position table to start at
+--- @param target MapPosition|LuaEntity position table to end at
 local function create_projectile(name, surface, force, source, target, speed)
     speed = speed or 1
     force = force or 'player'
@@ -356,13 +362,22 @@ end
 -- Queued items are handled one at a time, --check validity of all stored objects at this point, They could have become
 -- invalidated between the time they were entered into the queue and now.
 
+
+-- - @class Nanobots.data
+-- - @field player_index number
+-- - @field entity LuaEntity
+-- - @field surface LuaSurface
+-- - @field position MapPosition
+-- - @field item_stack ItemStackDefinition
+
+--- @param data Nanobots.data
 function Queue.cliff_deconstruction(data)
     local entity, player = data.entity, game.get_player(data.player_index)
     if not (player and player.valid) then
         return
     end
 
-    if not (entity and entity.valid and entity.to_be_deconstructed(player.force)) then
+    if not (entity and entity.valid and entity.to_be_deconstructed()) then
         return insert_or_spill_items(player, { data.item_stack })
     end
 
@@ -373,18 +388,22 @@ function Queue.cliff_deconstruction(data)
 end
 
 -- Handles all of the deconstruction and scrapper related tasks.
+--- @param data Nanobots.data
 function Queue.deconstruction(data)
-    local entity, player = data.entity, game.get_player(data.player_index)
+    local entity = data.entity
+    local player = game.get_player(data.player_index)
     if not (player and player.valid) then
         return
     end
 
-    if not (entity and entity.valid and entity.to_be_deconstructed(player.force)) then
+    if not (entity and entity.valid and entity.to_be_deconstructed()) then
         return
     end
 
-    local surface, force = data.surface or entity.surface, data.force or entity.force
-    local ppos, epos = player.position, entity.position
+    local surface = data.surface or entity.surface
+    local force =  entity.force
+    local ppos = player.position
+    local epos = entity.position
 
     create_projectile('nano-projectile-deconstructors', surface, force, ppos, epos)
     create_projectile('nano-projectile-return', surface, force, epos, ppos)
@@ -400,8 +419,12 @@ function Queue.deconstruction(data)
     end
 end
 
+--- @param data Nanobots.data
 function Queue.build_entity_ghost(data)
-    local ghost, player, ghost_surf, ghost_pos = data.entity, game.get_player(data.player_index), data.surface, data.position
+    local ghost = data.entity
+    local player = game.get_player(data.player_index)
+    local surface = data.surface
+    local position = data.position
     if not (player and player.valid) then
         return
     end
@@ -423,7 +446,7 @@ function Queue.build_entity_ghost(data)
 
     if not entity then
         if insert_or_spill_items(player, item_stacks, player.cheat_mode) then
-            create_projectile('nano-projectile-return', ghost_surf, player.force, ghost_pos, player.position)
+            create_projectile('nano-projectile-return', surface, player.force, position, player.position)
         end
         return
     end
@@ -431,15 +454,19 @@ function Queue.build_entity_ghost(data)
     create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
     entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
     if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
-        create_projectile('nano-projectile-return', ghost_surf, player.force, ghost_pos, player.position)
+        create_projectile('nano-projectile-return', surface, player.force, position, player.position)
     end
     if requests then
         satisfy_requests(requests, entity, player)
     end
 end
 
+--- @param data Nanobots.data
 function Queue.build_tile_ghost(data)
-    local ghost, surface, position, player = data.entity, data.surface, data.position, game.get_player(data.player_index)
+    local ghost = data.entity
+    local player = game.get_player(data.player_index)
+    local surface = data.surface
+    local position = data.position
     if not (player and player.valid) then
         return
     end
@@ -470,8 +497,11 @@ function Queue.build_tile_ghost(data)
     surface.play_sound { path = 'nano-sound-build-tiles', position = position }
 end
 
+--- @param data Nanobots.data
 function Queue.upgrade_direction(data)
-    local ghost, player, surface = data.entity, game.get_player(data.player_index), data.surface
+    local ghost = data.entity
+    local player = game.get_player(data.player_index)
+    local surface = data.surface
     if not (player and player.valid) then
         return
     end
@@ -486,8 +516,12 @@ function Queue.upgrade_direction(data)
     surface.play_sound { path = 'utility/build_small', position = ghost.position }
 end
 
+--- @param data Nanobots.data
 function Queue.upgrade_ghost(data)
-    local ghost, player, surface, position = data.entity, game.get_player(data.player_index), data.surface, data.position
+    local ghost = data.entity
+    local player = game.get_player(data.player_index)
+    local surface = data.surface
+    local position = data.position
     if not (player and player.valid) then
         return
     end
@@ -515,9 +549,11 @@ function Queue.upgrade_ghost(data)
     entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
 end
 
+--- @param data Nanobots.data
 function Queue.item_requests(data)
-    local proxy, player = data.entity, game.get_player(data.player_index)
-    local target = proxy.valid and proxy.proxy_target
+    local proxy = data.entity
+    local player = game.get_player(data.player_index)
+    local target = proxy.valid and proxy.proxy_target ---@type LuaEntity
     if not (player and player.valid) then
         return
     end
@@ -561,8 +597,9 @@ end
 -- Nano Constructors
 -- Queue the ghosts in range for building, heal stuff needing healed
 --- @param player LuaPlayer
+--- @param pos MapPosition
+--- @param nano_ammo LuaItemStack
 local function queue_ghosts_in_range(player, pos, nano_ammo)
-    -- local queue = global.nano_queue
     local pdata = global.players[player.index]
     local force = player.force
     local _next_nano_tick = (pdata._next_nano_tick and pdata._next_nano_tick < (game.tick + 2000) and pdata._next_nano_tick) or game.tick
@@ -581,6 +618,7 @@ local function queue_ghosts_in_range(player, pos, nano_ammo)
                 if not cfg.network_limits or nano_network_check(player.character, ghost) then
                     if queue_count() < cfg.queue_cycle then
                         if not queue:get_hash(ghost) then
+                            --- @class Nanobots.data
                             local data = {
                                 player_index = player.index,
                                 ammo = nano_ammo,
@@ -710,12 +748,15 @@ end -- function
 
 -- Nano Termites
 -- Kill the trees! Kill them dead
+--- @param player LuaPlayer
+--- @param pos MapPosition
+--- @param nano_ammo LuaItemStack
 local function everyone_hates_trees(player, pos, nano_ammo)
     local radius = get_ammo_radius(player, nano_ammo)
     local force = player.force
     for _, stupid_tree in pairs(player.surface.find_entities_filtered { position = pos, radius = radius, type = 'tree', limit = 200 }) do
         if nano_ammo.valid and nano_ammo.valid_for_read then
-            if not stupid_tree.to_be_deconstructed(player.force) then
+            if not stupid_tree.to_be_deconstructed() then
                 local tree_area = Area.expand(stupid_tree.bounding_box, .5)
                 if player.surface.count_entities_filtered { area = tree_area, name = 'nano-cloud-small-termites' } == 0 then
                     player.surface
@@ -731,6 +772,7 @@ end
 
 --[[ EVENTS --]]
 -- The Tick Handler
+--- @param event on_tick
 local function poll_players(event)
     -- Run logic for nanobots and power armor modules
     -- if event.tick % math.ceil(#game.connected_players/cfg.poll_rate) == 0 then
