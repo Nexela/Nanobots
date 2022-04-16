@@ -148,7 +148,7 @@ local function get_gun_ammo_name(player, gun_name)
         gun, ammo = gun_inv[index], ammo_inv[index]
     end
 
-    if gun.valid_for_read and gun.name == gun_name and ammo.valid_for_read then
+    if gun and gun.valid_for_read and gun.name == gun_name and ammo.valid_for_read then
         return gun, ammo, ammo.name
     end
     return nil, nil, nil
