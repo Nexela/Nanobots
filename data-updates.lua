@@ -4,11 +4,6 @@ require('prototypes/technology/shortcuts')
 
 -- bobmods recipe changes
 if mods['boblibrary'] then
-
-    local key = 'bobmods-logistics-disableroboports'
-    if settings["startup"][key] and settings["startup"][key].value then
-        Recipe('roboport-interface'):replace_ingredient('roboport', 'bob-logistic-zone-expander')
-    end
     Recipe('gun-nano-emitter'):replace_ingredient('electronic-circuit', 'basic-circuit-board')
     Recipe('ammo-nano-constructors'):replace_ingredient('electronic-circuit', 'basic-circuit-board')
     Recipe('ammo-nano-termites'):replace_ingredient('electronic-circuit', 'basic-circuit-board')

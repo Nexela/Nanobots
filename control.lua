@@ -13,7 +13,6 @@ require('__stdlib__/stdlib/event/changes').register_events('mod_versions', 'chan
 Player.additional_data({ranges = {}})
 
 require('scripts/nanobots')
-require('scripts/roboport-interface')
 require('scripts/armor-mods')
 
 require('scripts/reprogram-gui')

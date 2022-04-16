@@ -76,23 +76,5 @@ data:extend{
         maximum_value = 60*60,
         minimum_value = 4,
         order = "nanobots-ec[nano-queue-rate]"
-    },
-    {
-        type = "int-setting",
-        name = "nanobots-cell-queue-rate",
-        setting_type = "runtime-global",
-        default_value = 5,
-        maximum_value = 60*60,
-        minimum_value = 1,
-        order = "nanobots-fa[cell-queue-rate]"
-    },
-    {
-        type = "int-setting",
-        name = "nanobots-free-bots-per",
-        setting_type = "runtime-global",
-        default_value = 50,
-        maximum_value = 100,
-        minimum_value = 1,
-        order = "nanobots-fb[free-bots-per]"
     }
 }

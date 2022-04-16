@@ -2,6 +2,7 @@
 Version: 3.2.20
 Date: ????
   Changes:
+    - Remove roboport interface to its own mod.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.19
 Date: 2022-04-16
