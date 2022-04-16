@@ -131,11 +131,24 @@ end
 -- @return the gun object or nil
 -- @return the ammo object or nil
 -- @return string: the name of the ammo or nil
+--- @param player LuaPlayer
 local function get_gun_ammo_name(player, gun_name)
-    local index = player.character.selected_gun_index
-    local gun = player.get_inventory(defines.inventory.character_guns)[index]
-    local ammo = player.get_inventory(defines.inventory.character_ammo)[index]
-    if gun.valid_for_read and gun.name == gun_name and ammo.valid and ammo.valid_for_read then
+    local gun_inv = player.get_inventory(defines.inventory.character_guns)
+    local ammo_inv = player.get_inventory(defines.inventory.character_ammo)
+
+    local gun --- @type LuaItemStack
+    local ammo --- @type LuaItemStack
+
+    if not player.mod_settings['nanobots-active-emitter-mode'].value then
+        local index
+        gun, index = gun_inv.find_item_stack(gun_name)
+        ammo = gun and ammo_inv[index]
+    else
+        local index = player.character.selected_gun_index
+        gun, ammo = gun_inv[index], ammo_inv[index]
+    end
+
+    if gun.valid_for_read and gun.name == gun_name and ammo.valid_for_read then
         return gun, ammo, ammo.name
     end
     return nil, nil, nil
