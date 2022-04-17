@@ -244,8 +244,7 @@ local function emergency_heal_player(player, feeders)
     end
 end
 
---(( BOT CHIPS  ))-------------------------------------------------------------
-function armormods.prepare_chips(player)
+local function prepare_chips(player)
     if is_personal_roboport_ready(player.character) then
         local _, _, charged, energy_shields = get_valid_equipment(player.character.grid)
         if charged['equipment-bot-chip-launcher'] or charged['equipment-bot-chip-items'] or charged['equipment-bot-chip-trees'] then
@@ -261,4 +260,4 @@ function armormods.prepare_chips(player)
     end
 end
 
-return armormods
+return prepare_chips

@@ -13,20 +13,20 @@ function interface.reset_mod(are_you_sure)
     end
 end
 
-function interface.reset_queue(queue)
-    queue = queue or 'nano_queue'
-    local name = 'reset_' .. queue
+function interface.reset_queue(queue_name)
+    queue_name = queue_name or 'nano_queue'
+    local name = 'reset_' .. queue_name
     local id = Event.get_event_name(name)
-    if global[queue] and id then
-        game.print('Resetting ' .. queue)
+    if global[queue_name] and id then
         Event.dispatch({name = id})
     end
 end
 
-function interface.count_queue(queue)
-    queue = queue or 'nano_queue'
-    if global[queue] then
-        local a, b = Queue.count(global[queue])
+function interface.count_queue(queue_name)
+    queue_name = queue_name or 'nano_queue'
+    local queue = global[queue_name]
+    if queue then
+        local a, b = Queue.count(queue)
         game.print('Queued:' .. a .. ' Hashed:' .. b)
     end
 end

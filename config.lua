@@ -31,6 +31,8 @@ NANO.ALLOWED_NOT_ON_MAP = {
     ['item-on-ground'] = true
 }
 
+NANO.NANO_EMITTER = 'gun-nano-emitter'
+
 --Tables linked to technologies, values are the tile radius
 NANO.BOT_RADIUS = {[0] = 7, [1] = 9, [2] = 11, [3] = 13, [4] = 15}
 NANO.QUEUE_SPEED_BONUS = {[0] = 0, [1] = 2, [2] = 4, [3] = 6, [4] = 8}
