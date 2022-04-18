@@ -14,7 +14,7 @@ require('prototypes/equipment/equipment-bot-chip-feeder')
 
 --Gun, When equipped and selected will automaticly revive ghosts around it
 require('prototypes/gun-nano-emitter')
-require('prototypes/entity/nano-loot-bag')
+require('prototypes/entity/loot-bag')
 
 --Ammo for nano guns
 require('prototypes/ammo/constructors')

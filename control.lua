@@ -9,12 +9,7 @@ local Player = require('__stdlib__/stdlib/event/player').register_events(true)
 require('__stdlib__/stdlib/event/force').register_events(true)
 require('__stdlib__/stdlib/event/changes').register_events('mod_versions', 'changes/versions')
 
-Player.additional_data({ ranges = {} })
-Player.additional_data(function()
-    local res = {}
-    res.inventory = game.create_inventory(50)
-    return res
-end)
+Player.additional_data { ranges = {} }
 
 require('scripts/nanobots')
 require('scripts/armor-mods')

@@ -8,7 +8,19 @@ local Config = require('config')
 local prepare_chips = require('scripts/armor-mods')
 
 local queue
-local setting
+
+--- @class Nanobots.settings
+--- @field poll_rate uint
+--- @field entities_per_cycle uint
+--- @field actions_per_group uint
+--- @field ticks_between_actions uint
+--- @field build_tiles boolean
+--- @field network_limits boolean
+--- @field nanobots_auto boolean
+--- @field equipment_auto boolean
+--- @field afk_time uint
+--- @field do_proxies boolean
+local setting = {}
 
 local max, floor, table_size, table_find = math.max, math.floor, table_size, table.find
 
@@ -236,7 +248,8 @@ local function queue_ghosts_in_range(player, pos, ammo)
 
     local next_nano_tick = (pdata._next_nano_tick and pdata._next_nano_tick < (game.tick + 2000) and pdata._next_nano_tick) or game.tick
     local tick_spacing = max(1, setting.ticks_between_actions - (QUEUE_SPEED[player_force.get_gun_speed_modifier('nano-ammo')] or QUEUE_SPEED[4]))
-    local get_next_tick, queued_counter = queue:get_counters(next_nano_tick, tick_spacing)
+    local actions_per_group = setting.actions_per_group
+    local get_next_tick = queue:get_counters(next_nano_tick, tick_spacing, actions_per_group)
 
     local area = Position.expand_to_area(pos, get_ammo_radius(player, ammo))
     local cheat_mode = player.cheat_mode
@@ -244,15 +257,16 @@ local function queue_ghosts_in_range(player, pos, ammo)
     for _, ghost in pairs(player.surface.find_entities(area)) do
         local ghost_force = ghost.force
         local friendly_force = ghost_force.is_friend(player_force)
-        local deconstruct = friendly_force and ghost.to_be_deconstructed()
-        local upgrade = friendly_force and ghost.to_be_upgraded()
+        local _, count = get_next_tick(false, true)
 
         if not ammo.valid_for_read then return end
-        if queued_counter() >= setting.entities_per_cycle then return end
-        if not (friendly_force) then goto next_ghost end
+        if count >= setting.entities_per_cycle then return end
+        if not friendly_force then goto next_ghost end
         if queue:is_hashed(ghost) then goto next_ghost end
         if setting.network_limits and not is_outside_network(player.character, ghost) then goto next_ghost end
 
+        local deconstruct = friendly_force and ghost.to_be_deconstructed()
+        local upgrade = friendly_force and ghost.to_be_upgraded()
         local ghost_surface = ghost.surface
 
         --- @class Nanobots.action_data: Nanobots.data
@@ -363,7 +377,7 @@ local function queue_ghosts_in_range(player, pos, ammo)
         end
         ::next_ghost::
     end
-    pdata._next_nano_tick = get_next_tick()
+    pdata._next_nano_tick = get_next_tick(false, true)
 end
 
 --- Nano Termites
@@ -391,7 +405,6 @@ local function everyone_hates_trees(player, pos, ammo)
 end
 
 do
-    Event = Event
     --- The tick handler
     --- @param event on_tick
     local function poll_players(event)
@@ -427,17 +440,16 @@ do
     Event.register(defines.events.on_tick, poll_players)
 
     local function update_settings()
-        setting = {
-            poll_rate = settings['global']['nanobots-nano-poll-rate'].value,
-            ticks_between_actions = settings['global']['nanobots-nano-queue-rate'].value,
-            entities_per_cycle = settings['global']['nanobots-nano-queue-per-cycle'].value,
-            build_tiles = settings['global']['nanobots-nano-build-tiles'].value,
-            network_limits = settings['global']['nanobots-network-limits'].value,
-            nanobots_auto = settings['global']['nanobots-nanobots-auto'].value,
-            equipment_auto = settings['global']['nanobots-equipment-auto'].value,
-            afk_time = settings['global']['nanobots-afk-time'].value,
-            do_proxies = settings['global']['nanobots-nano-fullfill-requests'].value
-        }
+        setting.poll_rate = settings['global']['nanobots-player-cycle-rate'].value
+        setting.entities_per_cycle = settings['global']['nanobots-queued-actions-per-cycle'].value
+        setting.actions_per_group = settings['global']['nanobots-queued-actions-per-group'].value
+        setting.ticks_between_actions = settings['global']['nanobots-ticks-between-action-groups'].value
+        setting.build_tiles = settings['global']['nanobots-build-tiles'].value
+        setting.network_limits = settings['global']['nanobots-network-limits'].value
+        setting.nanobots_auto = settings['global']['nanobots-nanobots-auto'].value
+        setting.equipment_auto = settings['global']['nanobots-equipment-auto'].value
+        setting.afk_time = settings['global']['nanobots-afk-time'].value
+        setting.do_proxies = settings['global']['nanobots-fullfill-requests'].value
     end
     Event.register(defines.events.on_runtime_mod_setting_changed, update_settings)
 

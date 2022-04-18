@@ -1,80 +1,98 @@
-data:extend{
+data:extend {
     {
-        type = "bool-setting",
-        name = "nanobots-nanobots-auto",
-        setting_type = "runtime-global",
+        type = 'bool-setting',
+        name = 'nanobots-active-emitter-mode',
+        setting_type = 'runtime-per-user',
         default_value = true,
-        order = "nanobots-aa[auto-bots-roll-out]"
+        order = 'nanobots-aa[mode]',
+    },
+}
+
+data:extend {
+    {
+        type = 'bool-setting',
+        name = 'nanobots-nanobots-auto',
+        setting_type = 'runtime-global',
+        default_value = true,
+        order = 'nanobots-aa[auto-bots-roll-out]',
     },
     {
-        type = "bool-setting",
-        name = "nanobots-active-emitter-mode",
-        setting_type = "runtime-per-user",
+        type = 'bool-setting',
+        name = 'nanobots-equipment-auto',
+        setting_type = 'runtime-global',
         default_value = true,
-        order = "nanobots-aa[mode]"
+        order = 'nanobots-ab[poll-rate]',
     },
     {
-        type = "bool-setting",
-        name = "nanobots-equipment-auto",
-        setting_type = "runtime-global",
+        type = 'bool-setting',
+        name = 'nanobots-build-tiles',
+        setting_type = 'runtime-global',
         default_value = true,
-        order = "nanobots-ab[poll-rate]"
+        order = 'nanobots-ba[build-tiles]',
     },
     {
-        type = "bool-setting",
-        name = "nanobots-nano-build-tiles",
-        setting_type = "runtime-global",
+        type = 'bool-setting',
+        name = 'nanobots-fullfill-requests',
+        setting_type = 'runtime-global',
         default_value = true,
-        order = "nanobots-ba[build-tiles]"
+        order = 'nanobots-bb',
     },
     {
-        type = "bool-setting",
-        name = "nanobots-nano-fullfill-requests",
-        setting_type = "runtime-global",
+        type = 'bool-setting',
+        name = 'nanobots-network-limits',
+        setting_type = 'runtime-global',
         default_value = true,
-        order = "nanobots-bb"
+        order = 'nanobots-ca[check-networks]',
     },
     {
-        type = "bool-setting",
-        name = "nanobots-network-limits",
-        setting_type = "runtime-global",
-        default_value = true,
-        order = "nanobots-ca[check-networks]"
-    },
-    {
-        name = "nanobots-afk-time",
-        type = "int-setting",
-        setting_type = "runtime-global",
+        name = 'nanobots-afk-time',
+        type = 'int-setting',
+        setting_type = 'runtime-global',
         default_value = 4,
-        maximum_value = 60*60,
+        maximum_value = 60 * 60,
         minimum_value = 0,
-        order = "nanobots-da",
+        order = 'nanobots-da',
     },
     {
-        type = "int-setting",
-        name = "nanobots-nano-poll-rate",
-        setting_type = "runtime-global",
+        type = 'int-setting',
+        name = 'nanobots-player-cycle-rate',
+        setting_type = 'runtime-global',
         default_value = 60,
-        maximum_value = 60*60,
+        maximum_value = 60 * 60,
         minimum_value = 1,
-        order = "nanobots-ea[nano-poll-rate]"
+        order = 'nanobots-ea',
     },
     {
-        type = "int-setting",
-        name = "nanobots-nano-queue-per-cycle",
-        setting_type = "runtime-global",
+        type = 'int-setting',
+        name = 'nanobots-queued-actions-per-cycle',
+        setting_type = 'runtime-global',
         default_value = 100,
         maximum_value = 800,
         minimum_value = 1,
-        order = "nanobots-eb[nano-queue-rate]"
+        order = 'nanobots-eb',
     },
     {
-        type = "int-setting",
-        name = "nanobots-nano-queue-rate",
-        setting_type = "runtime-global",
-        default_value = 12,
-        maximum_value = 60*60,
+        type = 'int-setting',
+        name = 'nanobots-queued-actions-per-group',
+        setting_type = 'runtime-global',
+        default_value = 5,
+        minimum_value = 1,
+        maximum_value = 100,
+        order = 'nanobots-ec',
+    },
+    {
+        type = 'int-setting',
+        name = 'nanobots-ticks-between-action-groups',
+        setting_type = 'runtime-global',
+        default_value = 30,
+        maximum_value = 60 * 60,
         minimum_value = 4,
-        order = "nanobots-ec[nano-queue-rate]"
-    }
+        order = 'nanobots-ed',
+    },
 }
+--[[
+nanobots-player-cycle-rate
+nanobots-queued-actions-per-cycle
+nanobots-queued-actions-per-group
+nanobots-ticks-between-action-groups
+]]

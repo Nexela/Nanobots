@@ -37,33 +37,47 @@ function Queue:insert(data, tick)
     return self
 end
 
---- @param next_tick? uint
+--- @param start_tick? uint
 --- @param tick_spacing? uint
---- @param dont_combine? boolean
 --- @return fun(dont_combine: boolean):uint, uint
---- @return fun(num:uint):uint
-function Queue:get_counters(next_tick, tick_spacing, dont_combine)
-    local tick = (next_tick and next_tick >= game.tick and next_tick) or game.tick
+function Queue:get_counters(start_tick, tick_spacing, actions_per_group)
+    start_tick = start_tick or 0
     tick_spacing = tick_spacing or 1
-    local count = 0
+    actions_per_group = actions_per_group or 1
 
-    --- @param really_dont_combine boolean
+    local tick = ((start_tick >= game.tick and start_tick) or game.tick) + tick_spacing
+    local last_tick = tick
+
+    local count = 0
+    local num_groups = 0
+    local group_count = actions_per_group
+
+    --- @param dont_combine boolean
+    --- @param get_last_tick boolean
     --- @return uint, uint
-    local get_next_tick = function(really_dont_combine)
-        tick = tick + tick_spacing
-        while (dont_combine or really_dont_combine) and self.tick_map[tick] do tick = tick + 1 end
+    local get_next_tick = function(dont_combine, get_last_tick)
+        if get_last_tick then return last_tick, count end
+
+        last_tick = tick
         count = count + 1
+        -- Find the next unused tick if we don't want to combine
+        while dont_combine and self.tick_map[tick] do
+            tick = tick + 1
+            group_count = actions_per_group
+        end
+
+        if group_count > 0 then
+            group_count = group_count - 1
+            return tick, count
+        end
+
+        group_count = actions_per_group - 1
+        num_groups = num_groups + 1
+        tick = tick + tick_spacing
         return tick, count
     end
 
-    --- @param num uint
-    --- @return uint
-    local queue_counter = function(num)
-        count = count + (num or 0)
-        return count
-    end
-
-    return get_next_tick, queue_counter
+    return get_next_tick
 end
 
 --- @param event on_tick
