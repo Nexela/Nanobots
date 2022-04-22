@@ -1,9 +1,7 @@
 -------------------------------------------------------------------------------
 --[[armormods]] -- Power Armor module code.
 -------------------------------------------------------------------------------
-local armormods = {}
 local table = require('__stdlib__/stdlib/utils/table')
-
 local config = require('config')
 
 --TODO: Store this in global and update in on_con_changed
@@ -12,7 +10,7 @@ local combat_robots = config.COMBAT_ROBOTS
 local healer_capsules = config.FOOD
 
 local Position = require('__stdlib__/stdlib/area/position')
-local max, abs, ceil, floor = math.max, math.abs, math.ceil, math.floor
+local min, max, abs, ceil, floor = math.min, math.max, math.abs, math.ceil, math.floor
 
 --(( Helper functions ))-------------------------------------------------------
 
@@ -66,28 +64,22 @@ end
 -- @param stationed_only: bool if mobile only return all construction robots
 -- @return number: count of available bots
 local function get_bot_counts(entity, mobile_only, stationed_only)
-    if entity.logistic_network then
-        if mobile_only then
-            local cell = entity.logistic_cell
-            if cell and cell.mobile then
-                if stationed_only then
-                    return cell.stationed_construction_robot_count
-                else
-                    return cell.logistic_network.available_construction_robots
-                end
-            end
-        else
-            local bots = 0
-            table.each(
-                entity.surface.find_logistic_networks_by_construction_area(entity.position, entity.force),
-                function(network)
-                    bots = bots + network.available_construction_robots
-                end
-            )
-            return bots
-        end
+    if not entity.logistic_network then return 0 end
+
+    if mobile_only then
+        local cell = entity.logistic_cell
+        if not (cell and cell.mobile) then return 0 end
+
+        return stationed_only and cell.stationed_construction_robot_count or cell.logistic_network.available_construction_robots
     else
-        return 0
+        local bots = 0
+        table.each(
+            entity.surface.find_logistic_networks_by_construction_area(entity.position, entity.force),
+            function(network)
+                bots = bots + network.available_construction_robots
+            end
+        )
+        return bots
     end
 end
 
@@ -113,10 +105,11 @@ end
 
 local function get_chip_radius(player, chip_name)
     local pdata = global.players[player.index]
-    local c = player.character
-    local max_radius = c and c.logistic_cell and c.logistic_cell.mobile and floor(c.logistic_cell.construction_radius) or 15
-    local custom_radius = pdata.ranges[chip_name] or max_radius
-    return custom_radius <= max_radius and custom_radius or max_radius
+    local character = player.character
+    local cell = character and character.logistic_cell
+    local max_radius = cell.mobile and floor(cell.construction_radius) or 15
+    local radius = pdata.ranges[chip_name] or max_radius
+    return min(radius, max_radius)
 end
 --))
 
@@ -148,10 +141,11 @@ end
 
 --Mark items for deconstruction if player has roboport
 local function process_ready_chips(player, equipment)
-    local rad = player.character.logistic_cell.construction_radius
+    local character = player.character
+    local rad = character.logistic_cell.construction_radius
     local enemy = player.surface.find_nearest_enemy {position = player.position, max_distance = rad + 10, force = player.force}
     if not enemy and (equipment['equipment-bot-chip-items'] or equipment['equipment-bot-chip-trees']) then
-        local bots_available = get_bot_counts(player.character)
+        local bots_available = get_bot_counts(character)
         if bots_available > 0 then
             local bot_counter = function()
                 local count = bots_available
@@ -245,15 +239,16 @@ local function emergency_heal_player(player, feeders)
 end
 
 local function prepare_chips(player)
-    if is_personal_roboport_ready(player.character) then
-        local _, _, charged, energy_shields = get_valid_equipment(player.character.grid)
+    local character = player.character
+    if is_personal_roboport_ready(character) then
+        local _, _, charged, energy_shields = get_valid_equipment(character.grid)
         if charged['equipment-bot-chip-launcher'] or charged['equipment-bot-chip-items'] or charged['equipment-bot-chip-trees'] then
             process_ready_chips(player, charged)
         end
         if charged['equipment-bot-chip-feeder'] then
             if #energy_shields.shields > 0 then
                 emergency_heal_shield(player, charged['equipment-bot-chip-feeder'], energy_shields)
-            elseif player.character.health < player.character.prototype.max_health * .75 then
+            elseif character.health < character.prototype.max_health * .75 then
                 emergency_heal_player(player, charged['equipment-bot-chip-feeder'])
             end
         end

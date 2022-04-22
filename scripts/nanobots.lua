@@ -38,13 +38,14 @@ local explosives = {
 local function unique(tbl)
     return table.keys(table.invert(tbl))
 end
+
 local main_inventories = unique {
     defines.inventory.character_trash, defines.inventory.character_main, defines.inventory.god_main, defines.inventory.chest,
     defines.inventory.character_vehicle, defines.inventory.car_trunk, defines.inventory.cargo_wagon
 }
 
---- Return the name of the item found for table.find if we found at least 1 item or cheat_mode is enabled.
---- Doesnt return items with inventory
+--- Return the name of the item found for table.find if we found at least 1 item
+--- or cheat_mode is enabled. Does not return items with inventory
 --- @param simple_stack ItemStackDefinition
 --- @param _ any
 --- @param player LuaPlayer
@@ -257,10 +258,10 @@ local function queue_ghosts_in_range(player, pos, ammo)
     for _, ghost in pairs(player.surface.find_entities(area)) do
         local ghost_force = ghost.force
         local friendly_force = ghost_force.is_friend(player_force)
-        local _, count = get_next_tick(false, true)
+        local _, queued_this_cycle = get_next_tick(false, true)
 
         if not ammo.valid_for_read then return end
-        if count >= setting.entities_per_cycle then return end
+        if queued_this_cycle >= setting.entities_per_cycle then return end
         if not friendly_force then goto next_ghost end
         if queue:is_hashed(ghost) then goto next_ghost end
         if setting.network_limits and not is_outside_network(player.character, ghost) then goto next_ghost end
@@ -327,27 +328,27 @@ local function queue_ghosts_in_range(player, pos, ammo)
             end
         elseif ghost.name == 'entity-ghost' or (ghost.name == 'tile-ghost' and setting.build_tiles) then
             -- get first available item that places entity from inventory that is not in our hand.
-            local proto = ghost.ghost_prototype
-            local item_stack = table_find(proto.items_to_place_this, _find_item, player)
+            local prototype = ghost.ghost_prototype
+            local item_stack = table_find(prototype.items_to_place_this, _find_item, player)
             if item_stack then
                 if ghost.name == 'entity-ghost' then
-                    local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
+                    local place_item = get_items_from_inv(player, item_stack, cheat_mode)
                     if place_item then
                         data.action = 'build_entity_ghost'
-                        data.entity_name = proto.name
                         data.item_stack = place_item
                         queue:insert(data, get_next_tick())
                         drain_ammo(player, ammo, 1)
                     end
                 elseif ghost.name == 'tile-ghost' then
                     -- Don't queue tile ghosts if entity ghost is on top of it.
-                    if ghost_surface.count_entities_filtered { name = 'entity-ghost', area = Area(ghost.bounding_box):non_zero(), limit = 1 } == 0 then
+                    if ghost_surface.count_entities_filtered { name = 'entity-ghost', area = ghost.selection_box, limit = 1 } == 0 then
                         local tile = ghost_surface.get_tile(ghost.position)
                         if tile then
-                            local place_item = get_items_from_inv(player, item_stack, player.cheat_mode)
+                            local place_item = get_items_from_inv(player, item_stack, cheat_mode)
                             if place_item then
-                                data.item_stack = place_item
                                 data.action = 'build_tile_ghost'
+                                data.tile = tile
+                                data.item_stack = place_item
                                 queue:insert(data, get_next_tick())
                                 drain_ammo(player, ammo, 1)
                             end
@@ -415,7 +416,7 @@ do
         if event.tick % max(1, floor(setting.poll_rate / #game.connected_players)) == 0 then
             local player
             global._last_player, player = next(game.connected_players, global._last_player)
-            if not (player and is_player_afk(player)) then return end
+            if not (player and not is_player_afk(player)) then return end
 
             local character = player.character
             if not character then return end
@@ -475,6 +476,7 @@ do
 
         global.nano_queue = Queue()
         queue = global.nano_que
+        global._last_player = nil
         for _, player in pairs(global.players) do player._next_nano_tick = 0 end
     end)
 end

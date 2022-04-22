@@ -24,7 +24,8 @@ local function insert_or_spill_items(entity, item_stacks, is_return_cheat)
         end
         for _, stack in pairs(new_stacks) do
             local name, count, health = stack.name, stack.count, stack.health or 1
-            if game.item_prototypes[name] and not game.item_prototypes[name].has_flag('hidden') then
+            local prototype = game.item_prototypes[name]
+            if prototype and not prototype.has_flag('hidden') then
                 local inserted = entity.insert({ name = name, count = count, health = health })
                 if inserted ~= count then
                     entity.surface.spill_item_stack(entity.position, { name = name, count = count - inserted, health = health }, true)
@@ -51,26 +52,25 @@ local function insert_into_entity(entity, item_stacks)
     return new_stacks
 end
 
---- Scan the ground under a ghost entities collision box for items and return an array of SimpleItemStack.
---- @param entity LuaEntity the entity object to scan under
+--- Scan the ground under a ghost entities collision box for items and return an array of ItemStackDefinition.
+--- @param surface LuaSurface
+--- @param box BoundingBox
 --- @return ItemStackDefinition[] #array of ItemStackDefinition
-local function get_all_items_on_ground(entity, existing_stacks)
-    local item_stacks = existing_stacks or {}
-    local surface, position, bouding_box = entity.surface, entity.position, entity.ghost_prototype.selection_box
-    local area = Area.offset(bouding_box, position)
-    for _, item_on_ground in pairs(surface.find_entities_filtered { name = 'item-on-ground', area = area }) do
+local function get_all_items_on_ground(surface, box)
+    local item_stacks = {}
+    for _, item_on_ground in pairs(surface.find_entities_filtered { name = 'item-on-ground', area = box }) do
         item_stacks[#item_stacks + 1] = { name = item_on_ground.stack.name, count = item_on_ground.stack.count, health = item_on_ground.health or 1 }
         item_on_ground.destroy()
     end
-    local inserter_area = Area.expand(area, 3)
+    local inserter_area = Area.expand(box, 3)
     for _, inserter in pairs(surface.find_entities_filtered { area = inserter_area, type = 'inserter' }) do
         local stack = inserter.held_stack
-        if stack.valid_for_read and Position.inside(inserter.held_stack_position, area) then
+        if stack.valid_for_read and Position.inside(inserter.held_stack_position, box) then
             item_stacks[#item_stacks + 1] = { name = stack.name, count = stack.count, health = stack.health or 1 }
             stack.clear()
         end
     end
-    return (item_stacks[1] and item_stacks) or {}
+    return item_stacks
 end
 
 --- Attempt to satisfy module requests from player inventory
@@ -107,9 +107,10 @@ end
 
 --- @param data Nanobots.action_data
 function Actions.cliff_deconstruction(data)
-    local entity, player = data.entity, game.get_player(data.player_index)
+    local player = data.player
     if not (player and player.valid) then return end
 
+    local entity = data.entity
     if not (entity and entity.valid and entity.to_be_deconstructed()) then return insert_or_spill_items(player, { data.item_stack }) end
 
     create_projectile('nano-projectile-deconstructors', entity.surface, entity.force, player.position, entity.position)
@@ -121,10 +122,10 @@ end
 -- Handles all of the deconstruction and scrapper related tasks.
 --- @param data Nanobots.action_data
 function Actions.deconstruction(data)
-    local entity = data.entity
-    local player = game.get_player(data.player_index)
+    local player = data.player
     if not (player and player.valid) then return end
 
+    local entity = data.entity
     if not (entity and entity.valid and entity.to_be_deconstructed()) then return end
 
     local surface = data.surface or entity.surface
@@ -148,21 +149,26 @@ end
 
 --- @param data Nanobots.action_data
 function Actions.build_entity_ghost(data)
-    local ghost = data.entity
     local player = data.player
-    local surface = data.surface
-    local position = data.position
     if not (player and player.valid) then return end
 
-    if not (ghost.valid and ghost.ghost_name == data.entity_name) then return insert_or_spill_items(player, { data.item_stack }, player.cheat_mode) end
+    local ghost = data.entity
+    if not (ghost and ghost.valid) then return insert_or_spill_items(player, { data.item_stack }, player.cheat_mode) end
 
-    local item_stacks = get_all_items_on_ground(ghost)
-    if not surface.can_place_entity { name = ghost.ghost_name, position = ghost.position, direction = ghost.direction, force = data.force } then
+    local surface = data.surface
+    local position = data.position
+    local item_stacks = get_all_items_on_ground(surface, ghost.selection_box)
+    if not surface.can_place_entity {
+        name = ghost.ghost_name,
+        position = position,
+        direction = ghost.direction,
+        force = data.force,
+        build_check_type = defines.build_check_type.manual
+    } then
         return insert_or_spill_items(player, { data.item_stack }, player.cheat_mode)
     end
 
     local revived, entity, requests = ghost.revive { return_item_request_proxy = true, raise_revive = true }
-
     if not revived then return insert_or_spill_items(player, { data.item_stack }, player.cheat_mode) end
 
     if not entity then
@@ -182,21 +188,22 @@ end
 
 --- @param data Nanobots.action_data
 function Actions.build_tile_ghost(data)
-    local ghost = data.entity
     local player = data.player
-    local surface = data.surface
-    local position = data.position
     if not (player and player.valid) then return end
 
-    if not ghost.valid then return insert_or_spill_items(player, { data.item_stack }) end
+    local ghost = data.entity
+    local tile = data.tile
+    if not (ghost.valid and tile.valid) then return insert_or_spill_items(player, { data.item_stack }) end
 
-    local tile, hidden_tile = surface.get_tile(position), surface.get_hidden_tile(position)
+    local position = data.position
+    local surface = data.surface
     local force = data.force
-    local tile_was_mined = hidden_tile and tile.prototype.can_be_part_of_blueprint and player.mine_tile(tile)
+    local tile_was_mined = tile.hidden_tile and tile.prototype.can_be_part_of_blueprint and player.mine_tile(tile)
     local ghost_was_revived = ghost.valid and ghost.revive({ raise_revive = true }) -- Mining tiles invalidates ghosts
     if not (tile_was_mined or ghost_was_revived) then return insert_or_spill_items(player, { data.item_stack }) end
 
-    local item_ptype = data.item_stack and game.item_prototypes[data.item_stack.name]
+    local item_stack = data.item_stack
+    local item_ptype = item_stack and game.item_prototypes[item_stack.name]
     local tile_ptype = item_ptype and item_ptype.place_as_tile_result.result
     create_projectile('nano-projectile-constructors', surface, force, player.position, position)
     Position.floored(position)
@@ -212,13 +219,13 @@ end
 
 --- @param data Nanobots.action_data
 function Actions.upgrade_direction(data)
-    local ghost = data.entity
     local player = data.player
-    local surface = data.surface
     if not (player and player.valid) then return end
 
-    if not ghost.valid and not ghost.to_be_upgraded() then return end
+    local ghost = data.entity
+    if not (ghost.valid and ghost.to_be_upgraded()) then return end
 
+    local surface = data.surface
     ghost.direction = data.direction
     ghost.cancel_upgrade(player.force, player)
     create_projectile('nano-projectile-constructors', ghost.surface, data.force, player.position, ghost.position)
@@ -227,14 +234,14 @@ end
 
 --- @param data Nanobots.action_data
 function Actions.upgrade_ghost(data)
-    local ghost = data.entity
     local player = data.player
-    local surface = data.surface
-    local position = data.position
     if not (player and player.valid) then return end
 
-    if not ghost.valid then return insert_or_spill_items(player, { data.item_stack }) end
+    local ghost = data.entity
+    if not (ghost.valid and ghost.to_be_upgraded()) then return insert_or_spill_items(player, { data.item_stack }) end
 
+    local surface = data.surface
+    local position = data.position
     local entity = surface.create_entity {
         name = data.entity_name or data.item_stack.name,
         direction = ghost.direction,
@@ -255,21 +262,21 @@ end
 --- @param data Nanobots.action_data
 function Actions.repair_entity(data)
     local player = data.player
-    local force = data.force
-    local surface = data.surface
     if not (player and player.valid) then return end
 
+    local surface = data.surface
+    local force = data.force
     if surface.count_entities_filtered { name = 'nano-cloud-small-repair', position = data.position } > 0 then return end
     create_projectile('nano-projectile-repair', surface, force, player.position, data.position, .5)
 end
 
 --- @param data Nanobots.action_data
 function Actions.item_requests(data)
-    local proxy = data.entity
-    local player = game.get_player(data.player_index)
-    local target = proxy.valid and proxy.proxy_target ---@type LuaEntity
+    local player = data.player
     if not (player and player.valid) then return end
 
+    local proxy = data.entity
+    local target = proxy.valid and proxy.proxy_target ---@type LuaEntity
     if not (proxy.valid and target and target.valid) then return insert_or_spill_items(player, { data.item_stack }) end
 
     if not target.can_insert(data.item_stack) then return insert_or_spill_items(player, { data.item_stack }) end

@@ -118,7 +118,7 @@ local function new(queue)
     else
         assert(queue.hash_count and queue.hash_map and queue.tick_map and queue.tick_count, 'Invalid queue object')
         if table_size(queue.tick_map) ~= queue.tick_count or table_size(queue.hash_map) ~= queue.hash_count then
-            game.print('Nanotbots have encountered a discrepency')
+            game.print('Nanobots has encountered a discrepency')
         end
     end
     return setmetatable(queue, queue_mt)
