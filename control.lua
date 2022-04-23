@@ -1,3 +1,11 @@
+--- @class Nanobots.global
+--- @field players {[uint]: Nanobots.pdata}
+global = {}
+
+--- @class Nanobots.pdata
+--- @field _next_nano_tick uint
+--- @field ranges table
+
 local Event = require('__stdlib__/stdlib/event/event').set_protected_mode(true)
 local Interface = require('__stdlib__/stdlib/scripts/interface').merge_interfaces(require('interface'))
 
@@ -12,9 +20,7 @@ require('__stdlib__/stdlib/event/changes').register_events('mod_versions', 'chan
 Player.additional_data { ranges = {} }
 
 require('scripts/nanobots')
-require('scripts/armor-mods')
 require('scripts/reprogram-gui')
 
 remote.add_interface(script.mod_name, Interface)
-
 commands.add_command(script.mod_name, 'Nanobot commands', require('commands'))

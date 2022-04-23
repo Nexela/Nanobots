@@ -7,10 +7,16 @@ local function cantor_position(pos)
     return h + h
 end
 
+--- @class Nanobots.queue
+--- @field hash_count uint
+--- @field hash_map {[uint]: Nanobots.action_data}
+--- @field tick_count uint
+--- @field tick_map table<uint, Nanobots.action_data[]>
 local Queue = {}
 local Actions = require('scripts/actions')
 
 --- @param entity LuaEntity
+--- @return uint, Nanobots.action_data
 function Queue:get_hash(entity)
     local index = entity.unit_number or cantor_position(entity.position)
     local hashed = self.hash_map[index]
@@ -18,11 +24,12 @@ function Queue:get_hash(entity)
 end
 
 --- @param entity LuaEntity
+--- @return boolean
 function Queue:is_hashed(entity)
     return self.hash_map[self:get_hash(entity)] and true
 end
 
---- @param data Nanobots.data
+--- @param data Nanobots.action_data
 --- @param tick uint
 function Queue:insert(data, tick)
     data.on_tick = tick or (game.tick + 1)
@@ -39,7 +46,7 @@ end
 
 --- @param start_tick? uint
 --- @param tick_spacing? uint
---- @return fun(dont_combine: boolean):uint, uint
+--- @param actions_per_group? uint
 function Queue:get_counters(start_tick, tick_spacing, actions_per_group)
     start_tick = start_tick or 0
     tick_spacing = tick_spacing or 1
@@ -52,8 +59,8 @@ function Queue:get_counters(start_tick, tick_spacing, actions_per_group)
     local num_groups = 0
     local group_count = actions_per_group
 
-    --- @param dont_combine boolean
-    --- @param get_last_tick boolean
+    --- @param dont_combine? boolean
+    --- @param get_last_tick? boolean
     --- @return uint, uint
     local get_next_tick = function(dont_combine, get_last_tick)
         if get_last_tick then return last_tick, count end
@@ -82,8 +89,9 @@ end
 
 --- @param event on_tick
 function Queue:execute(event)
-    if self.tick_map[event.tick] then
-        for _, data in ipairs(self.tick_map[event.tick]) do
+    local array = self.tick_map[event.tick]
+    if array then
+        for _, data in ipairs(array) do
             Actions[data.action](data)
             self.hash_map[data.hash_id] = nil
             self.hash_count = self.hash_count - 1
@@ -94,24 +102,13 @@ function Queue:execute(event)
     return self
 end
 
---- @class Nanobots.data
---- @field on_tick uint
---- @field action string
---- @field hash_id uint
---- @field entity LuaEntity
-
---- @class Nanobots.queue
---- @field hash_count int
---- @field hash_map {[uint]: Nanobots.action_data}
---- @field tick_count int
---- @field tick_map {[uint]: Nanobots.action_data[]}
-
 local function __len(self)
     return self.hash_count
 end
 local queue_mt = { __index = Queue, __len = __len }
 
---- @param queue Nanobots.queue
+--- @param queue? Nanobots.queue
+--- @return Nanobots.queue
 local function new(queue)
     if not queue then
         queue = { tick_count = 0, hash_count = 0, tick_map = {}, hash_map = {} }

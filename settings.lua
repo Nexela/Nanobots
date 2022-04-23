@@ -48,8 +48,8 @@ data:extend {
         name = 'nanobots-afk-time',
         type = 'int-setting',
         setting_type = 'runtime-global',
-        default_value = 4,
-        maximum_value = 60 * 60,
+        default_value = 5,
+        maximum_value = 60 * 10,
         minimum_value = 0,
         order = 'nanobots-da',
     },
@@ -90,9 +90,3 @@ data:extend {
         order = 'nanobots-ed',
     },
 }
---[[
-nanobots-player-cycle-rate
-nanobots-queued-actions-per-cycle
-nanobots-queued-actions-per-group
-nanobots-ticks-between-action-groups
-]]

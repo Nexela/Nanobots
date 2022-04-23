@@ -10,7 +10,7 @@ local Position = require('__stdlib__/stdlib/area/position')
 --- Spill to the ground at the entity anything that doesn't get inserted
 --- @param entity LuaEntity
 --- @param item_stacks ItemStackDefinition|ItemStackDefinition[]
---- @param is_return_cheat boolean
+--- @param is_return_cheat? boolean
 --- @return boolean #there was some items inserted or spilled
 local function insert_or_spill_items(entity, item_stacks, is_return_cheat)
     if is_return_cheat then return end
@@ -55,7 +55,7 @@ end
 --- Scan the ground under a ghost entities collision box for items and return an array of ItemStackDefinition.
 --- @param surface LuaSurface
 --- @param box BoundingBox
---- @return ItemStackDefinition[] #array of ItemStackDefinition
+--- @return ItemStackDefinition[]
 local function get_all_items_on_ground(surface, box)
     local item_stacks = {}
     for _, item_on_ground in pairs(surface.find_entities_filtered { name = 'item-on-ground', area = box }) do
