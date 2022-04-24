@@ -1,4 +1,3 @@
-local Player = require('__stdlib__/stdlib/event/player')
 local Pad = prequire('__PickerAtheneum__/utils/adjustment-pad', true)
 local config = require('config')
 
@@ -11,22 +10,29 @@ local match_to_item = {
 
 local bot_radius = config.BOT_RADIUS
 
+--- @param stack LuaItemStack
+--- @return boolean
 local function get_match(stack)
     return stack.valid_for_read and match_to_item[stack.name]
 end
 
+--- @param player LuaPlayer
+--- @return number
 local function get_max_radius(player)
-    if player.cursor_stack.type == 'ammo' then
-        return bot_radius[player.force.get_ammo_damage_modifier(player.cursor_stack.prototype.get_ammo_type().category)] or bot_radius[4]
+    local cursor = player.cursor_stack
+    if cursor.type == 'ammo' then
+        return bot_radius[player.force.get_ammo_damage_modifier(cursor.prototype.get_ammo_type().category)] or bot_radius[4]
     else
-        local c = player.character
-        return c and c.logistic_cell and c.logistic_cell.mobile and math.floor(c.logistic_cell.construction_radius) or 15
+        local character = player.character
+        local cell = character and character.logistic_cell
+        return cell and cell.mobile and math.floor(cell.construction_radius) or 15
     end
 end
 
 if Pad then
     local function increase_decrease_reprogrammer(event)
-        local player, pdata = Player.get(event.player_index)
+        local player = game.get_player(event.player_index)
+        local pdata = global.players[event.player_index]
         local stack = player.cursor_stack
         local change = event.change or 0
         if get_match(stack) then
