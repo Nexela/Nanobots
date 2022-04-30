@@ -1,9 +1,9 @@
 --- @class Nanobots.global
---- @field players {[uint]: Nanobots.pdata}
+--- @field players {[integer]: Nanobots.pdata}
 global = {}
 
 --- @class Nanobots.pdata
---- @field _next_nano_tick uint
+--- @field _next_nano_tick integer
 --- @field ranges table
 
 local Event = require('__stdlib__/stdlib/event/event').set_protected_mode(true)
