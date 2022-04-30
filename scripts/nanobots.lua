@@ -90,7 +90,6 @@ local function is_outside_network(character, target)
         end)
         return not has_network_bots
     end
-    return true
 end
 
 --- Can nanobots repair this entity?
