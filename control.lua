@@ -3,10 +3,10 @@
 global = {}
 
 --- @class Nanobots.pdata
---- @field _next_nano_tick integer
+--- @field next_nano_tick uint
 --- @field ranges table
 
-local Event = require('__stdlib__/stdlib/event/event').set_protected_mode(true)
+local Event = require('__stdlib__/stdlib/event/event').set_protected_mode(false)
 local Interface = require('__stdlib__/stdlib/scripts/interface').merge_interfaces(require('interface'))
 
 local ev = defines.events
@@ -18,6 +18,7 @@ require('__stdlib__/stdlib/event/force').register_events(true)
 require('__stdlib__/stdlib/event/changes').register_events('mod_versions', 'changes/versions')
 
 Player.additional_data { ranges = {} }
+Player.additional_data(function() return {next_nano_tick = game.tick} end )
 
 require('scripts/nanobots')
 require('scripts/reprogram-gui')

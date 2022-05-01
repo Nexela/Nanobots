@@ -32,6 +32,8 @@ NANO.ALLOWED_NOT_ON_MAP = {
 }
 
 NANO.NANO_EMITTER = 'gun-nano-emitter'
+NANO.AMMO_TERMITES = 'ammo-nano-termites'
+NANO.AMMO_CONSTRUCTORS = 'ammo-nano-constructors'
 
 --Tables linked to technologies, values are the tile radius
 NANO.BOT_RADIUS = {[0] = 7, [1] = 9, [2] = 11, [3] = 13, [4] = 15}

@@ -1,6 +1,4 @@
-local Event = require('__stdlib__/stdlib/event/event').set_protected_mode(true)
-local Area = require('__stdlib__/stdlib/area/area')
-local Position = require('__stdlib__/stdlib/area/position')
+local Event = require('__stdlib__/stdlib/event/event').set_protected_mode(false)
 local table = require('__stdlib__/stdlib/utils/table')
 
 local Config = require('config')
@@ -13,6 +11,8 @@ local max, floor, table_size, table_find = math.max, math.floor, table_size, tab
 local BOT_RADIUS = Config.BOT_RADIUS
 local QUEUE_SPEED = Config.QUEUE_SPEED_BONUS
 local NANO_EMITTER = Config.NANO_EMITTER
+local AMMO_CONSTRUCTORS = Config.AMMO_CONSTRUCTORS
+local AMMO_TERMITES = Config.AMMO_TERMITES
 local moveable_types = { train = true, car = true, spidertron = true } ---@type { [string]: true }
 local blockable_types = { ['straight-rail'] = true, ['curved-rail'] = true } ---@type { [string]: true }
 
@@ -210,12 +210,12 @@ local function drain_ammo(player, ammo, amount)
 end
 
 --- Get the radius to use based on tehnology and player defined radius
---- @param player LuaPlayer
+--- @param pdata Nanobots.pdata
+--- @param force LuaForce
 --- @param nano_ammo LuaItemStack
-local function get_ammo_radius(player, nano_ammo)
-    local data = global.players[player.index]
-    local max_radius = BOT_RADIUS[player.force.get_ammo_damage_modifier(nano_ammo.prototype.get_ammo_type().category)] or 7
-    local custom_radius = data.ranges[nano_ammo.name] or max_radius
+local function get_ammo_radius(pdata, force, nano_ammo)
+    local max_radius = BOT_RADIUS[force.get_ammo_damage_modifier(nano_ammo.prototype.get_ammo_type().category)] or 7
+    local custom_radius = pdata.ranges[nano_ammo.name] or max_radius
     return custom_radius <= max_radius and custom_radius or max_radius
 end
 
@@ -228,24 +228,30 @@ end
 --- @param player LuaPlayer
 --- @param pos MapPosition
 --- @param ammo LuaItemStack
-local function queue_ghosts_in_range(player, pos, ammo)
+--- @param tick uint
+local function queue_ghosts_in_range(player, pos, ammo, tick)
     local pdata = global.players[player.index]
-    local player_force = player.force --[[@as LuaForce]]
+    pdata.next_nano_tick = pdata.next_nano_tick > tick and pdata.next_nano_tick or tick
+    if pdata.next_nano_tick > (tick + 1800) then return end
 
-    local next_nano_tick = (pdata._next_nano_tick and pdata._next_nano_tick < (game.tick + 3600) and pdata._next_nano_tick) or game.tick ---@type uint
+    local player_force = player.force --[[@as LuaForce]]
+    local surface = player.surface
     local tick_spacing = max(1, setting.ticks_between_actions - (QUEUE_SPEED[player_force.get_gun_speed_modifier('nano-ammo')] or QUEUE_SPEED[4]))
     local actions_per_group = setting.actions_per_group
-    local get_next_tick = queue:get_counters(next_nano_tick, tick_spacing, actions_per_group)
+    local get_next_tick = queue:get_counters(pdata.next_nano_tick, tick_spacing, actions_per_group)
 
-    local area = Position.expand_to_area(pos, get_ammo_radius(player, ammo))
+    -- local area = Position.expand_to_area(pos, get_ammo_radius(pdata, player_force, ammo))
+    local radius = get_ammo_radius(pdata, player_force, ammo)
     local cheat_mode = player.cheat_mode
 
-    for _, ghost in pairs(player.surface.find_entities(area)) do
+    for _, ghost in pairs(player.surface.find_entities_filtered{position = pos, radius = radius}) do
+        --- Check constraints for contiuned iteration
+        local this_tick, queued_this_cycle = get_next_tick(false, true)
+        pdata.next_nano_tick = this_tick
         if not ammo.valid_for_read then return end
-
-        local _, queued_this_cycle = get_next_tick(false, true)
         if queued_this_cycle >= setting.entities_per_cycle then return end
 
+        --- Check constraints on this iteration.
         local ghost_force = ghost.force --[[@as LuaForce]]
         local friendly_force = ghost_force.is_friend(player_force)
         if not friendly_force then goto next_ghost end
@@ -254,7 +260,6 @@ local function queue_ghosts_in_range(player, pos, ammo)
 
         local deconstruct = friendly_force and ghost.to_be_deconstructed()
         local upgrade = friendly_force and ghost.to_be_upgraded()
-        local ghost_surface = ghost.surface
 
         --- @class Nanobots.action_data
         --- @field on_tick uint
@@ -265,7 +270,7 @@ local function queue_ghosts_in_range(player, pos, ammo)
             ammo = ammo, ---@type LuaItemStack
             entity = ghost, ---@type LuaEntity
             position = ghost.position, ---@type MapPosition
-            surface = ghost_surface, ---@type LuaSurface
+            surface = surface, ---@type LuaSurface
             unit_number = ghost.unit_number, ---@type uint
             force = ghost_force ---@type LuaForce
         }
@@ -329,8 +334,8 @@ local function queue_ghosts_in_range(player, pos, ammo)
                     end
                 elseif ghost.name == 'tile-ghost' then
                     -- Don't queue tile ghosts if entity ghost is on top of it.
-                    if ghost_surface.count_entities_filtered { name = 'entity-ghost', area = ghost.selection_box, limit = 1 } == 0 then
-                        local tile = ghost_surface.get_tile(ghost.position)
+                    if surface.count_entities_filtered { name = 'entity-ghost', area = ghost.selection_box, limit = 1 } == 0 then
+                        local tile = surface.get_tile(ghost.position)
                         local place_item = get_items_from_inv(player, item_stack, cheat_mode)
                         if place_item then
                             data.action = 'build_tile_ghost'
@@ -343,7 +348,7 @@ local function queue_ghosts_in_range(player, pos, ammo)
                 end
             end
         elseif is_nanobot_repairable(ghost) then
-            if ghost_surface.count_entities_filtered { name = 'nano-cloud-small-repair', position = data.position } == 0 then
+            if surface.count_entities_filtered { name = 'nano-cloud-small-repair', position = data.position } == 0 then
                 data.action = 'repair_entity'
                 queue:insert(data, get_next_tick())
                 drain_ammo(player, ammo, 1)
@@ -364,7 +369,6 @@ local function queue_ghosts_in_range(player, pos, ammo)
         end
         ::next_ghost::
     end
-    pdata._next_nano_tick = get_next_tick(false, true)
 end
 
 --- Nano Termites
@@ -373,14 +377,14 @@ end
 --- @param pos MapPosition
 --- @param ammo LuaItemStack
 local function everyone_hates_trees(player, pos, ammo)
-    local radius = get_ammo_radius(player, ammo)
     local force = player.force--[[@as LuaForce]]
     local surface = player.surface
+    local radius = get_ammo_radius(global.players[player.index], force, ammo)
     for _, stupid_tree in pairs(surface.find_entities_filtered { position = pos, radius = radius, type = 'tree', limit = 200 }) do
         if not ammo.valid_for_read then return end
         if not stupid_tree.to_be_deconstructed then
-            local tree_area = Area.expand(stupid_tree.bounding_box, .5)
-            if surface.count_entities_filtered { area = tree_area, name = 'nano-cloud-small-termites' } == 0 then
+            -- local tree_area = Area.expand(stupid_tree.bounding_box, .5)
+            if surface.count_entities_filtered { position = stupid_tree.position, radius = 0.5, name = 'nano-cloud-small-termites' } == 0 then
                 surface.create_entity {
                     name = 'nano-projectile-termites',
                     source = player,
@@ -403,8 +407,10 @@ do
         queue:execute(event)
 
         -- Default rate is 1 player ever 60 ticks, 2 players is 1 every 30 ticks.
-        if event.tick % max(1, floor(setting.poll_rate / #game.connected_players)) == 0 then
-            local _last_player, player = next(game.connected_players, global._last_player)
+        local tick = event.tick
+        local connected_players = game.connected_players
+        if tick % max(1, floor(setting.poll_rate / #connected_players)) == 0 then
+            local _last_player, player = next(connected_players, global._last_player)
             global._last_player = _last_player
             if not (player and is_ready(player)) then return end --- @cast player -?
 
@@ -420,9 +426,9 @@ do
             local gun, ammo = get_gun_ammo_name(player, NANO_EMITTER)
             if not gun then return end --- @cast ammo -?
             local ammo_name = ammo.name
-            if ammo_name == 'ammo-nano-constructors' then
-                queue_ghosts_in_range(player, player.position, ammo)
-            elseif ammo_name == 'ammo-nano-termites' then
+            if ammo_name == AMMO_CONSTRUCTORS then
+                queue_ghosts_in_range(player, player.position, ammo, tick)
+            elseif ammo_name == AMMO_TERMITES then
                 everyone_hates_trees(player, player.position, ammo)
             end
         end
