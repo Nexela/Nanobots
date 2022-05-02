@@ -1,4 +1,4 @@
-local Interface = require('__stdlib__/stdlib/scripts/interface')
+local Config = require('config')
 require('__stdlib__/stdlib/utils/string')
 
 local function commands(event)
@@ -6,13 +6,7 @@ local function commands(event)
     if player.admin then
         local params = event.parameter and event.parameter:split(' ') or {}
         if params[1] == 'reset' then
-            if params[2] == 'mod' then
-                Interface.reset_mod(true)
-            elseif params[2] == 'nano_queue' then
-                Interface.reset_queue('nano_queue')
-            end
-        elseif params[1] == 'count' then
-            Interface.count_queue(params[2])
+            script.raise_event(Config.reset_nano_queue, event)
         end
     end
 end

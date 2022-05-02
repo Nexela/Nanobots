@@ -12,12 +12,12 @@ end
 --- @field hash_map {[uint]: Nanobots.action_data}
 --- @field tick_count uint
 --- @field tick_map table<uint, Nanobots.action_data[]>
-local Queue = {}
+local queue = {}
 local Actions = require('scripts/actions')
 
 --- @param entity LuaEntity
 --- @return uint, Nanobots.action_data
-function Queue:get_hash(entity)
+function queue:get_hash(entity)
     local index = entity.unit_number or cantor_position(entity.position)
     local hashed = self.hash_map[index]
     return index, hashed
@@ -25,13 +25,13 @@ end
 
 --- @param entity LuaEntity
 --- @return boolean
-function Queue:is_hashed(entity)
+function queue:is_hashed(entity)
     return self.hash_map[self:get_hash(entity)] and true
 end
 
 --- @param data Nanobots.action_data
 --- @param tick uint
-function Queue:insert(data, tick)
+function queue:insert(data, tick)
     data.on_tick = tick or (game.tick + 1)
 
     self.tick_map[tick] = self.tick_map[tick] or {}
@@ -47,7 +47,7 @@ end
 --- @param start_tick? uint
 --- @param tick_spacing? uint
 --- @param actions_per_group? uint
-function Queue:get_counters(start_tick, tick_spacing, actions_per_group)
+function queue:get_counters(start_tick, tick_spacing, actions_per_group)
     start_tick = start_tick or 0
     tick_spacing = tick_spacing or 1
     actions_per_group = actions_per_group or 1
@@ -88,7 +88,7 @@ function Queue:get_counters(start_tick, tick_spacing, actions_per_group)
 end
 
 --- @param event on_tick
-function Queue:execute(event)
+function queue:execute(event)
     local array = self.tick_map[event.tick]
     if array then
         for _, data in ipairs(array) do
@@ -105,20 +105,26 @@ end
 local function __len(self)
     return self.hash_count
 end
-local queue_mt = { __index = Queue, __len = __len }
+local queue_mt = { __index = queue, __len = __len }
 
---- @param queue? Nanobots.queue
---- @return Nanobots.queue
-local function new(queue)
-    if not queue then
-        queue = { tick_count = 0, hash_count = 0, tick_map = {}, hash_map = {} }
-    else
-        assert(queue.hash_count and queue.hash_map and queue.tick_map and queue.tick_count, 'Invalid queue object')
-        if table_size(queue.tick_map) ~= queue.tick_count or table_size(queue.hash_map) ~= queue.hash_count then
-            game.print('Nanobots has encountered a discrepency')
+do
+    local Queue = {}
+
+    --- @param existing? Nanobots.queue
+    --- @return Nanobots.queue
+    function Queue.new(existing)
+        if not existing then
+            existing = { tick_count = 0, hash_count = 0, tick_map = {}, hash_map = {} }
+        else
+            assert(existing.hash_count and existing.hash_map and existing.tick_map and existing.tick_count, 'Invalid queue object')
+            if table_size(existing.tick_map) ~= existing.tick_count or table_size(existing.hash_map) ~= existing.hash_count then
+                game.print('Nanobots has encountered a discrepency')
+            end
         end
+        return setmetatable(existing, queue_mt)
     end
-    return setmetatable(queue, queue_mt)
-end
 
-return new
+    function Queue.reset() end
+
+    return Queue
+end
