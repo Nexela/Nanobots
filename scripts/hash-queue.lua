@@ -1,10 +1,6 @@
 --- @param pos MapPosition
-local function cantor_position(pos)
-    local x, y = math.floor(pos.x), math.floor(pos.y)
-    x, y = (x >= 0 and x or (-0.5 - x)), (y >= 0 and y or (-0.5 - y))
-    local s = x + y
-    local h = s * (s + 0.5) + x
-    return h + h
+local function pos_string(pos)
+    return (pos.x .. ', ' .. pos.y)
 end
 
 --- @class Nanobots.queue
@@ -16,17 +12,9 @@ local queue = {}
 local Actions = require('scripts/actions')
 
 --- @param entity LuaEntity
---- @return uint, Nanobots.action_data
+--- @return Nanobots.action_data|nil
 function queue:get_hash(entity)
-    local index = entity.unit_number or cantor_position(entity.position)
-    local hashed = self.hash_map[index]
-    return index, hashed
-end
-
---- @param entity LuaEntity
---- @return boolean
-function queue:is_hashed(entity)
-    return self.hash_map[self:get_hash(entity)] and true
+    return self.hash_map[entity.unit_number or pos_string(entity.position)]
 end
 
 --- @param data Nanobots.action_data
@@ -35,10 +23,11 @@ function queue:insert(data, tick)
     data.on_tick = tick or (game.tick + 1)
 
     self.tick_map[tick] = self.tick_map[tick] or {}
-    self.tick_map[tick][#self.tick_map[tick] + 1] = data
+    data.tick_index = #self.tick_map[tick] + 1
+    self.tick_map[tick][data.tick_index] = data
     self.tick_count = self.tick_count + 1
 
-    data.hash_id = self:get_hash(data.entity)
+    data.hash_id = data.entity.unit_number or pos_string(data.entity.position)
     self.hash_map[data.hash_id] = data
     self.hash_count = self.hash_count + 1
     return self
@@ -117,9 +106,6 @@ do
             existing = { tick_count = 0, hash_count = 0, tick_map = {}, hash_map = {} }
         else
             assert(existing.hash_count and existing.hash_map and existing.tick_map and existing.tick_count, 'Invalid queue object')
-            if table_size(existing.tick_map) ~= existing.tick_count or table_size(existing.hash_map) ~= existing.hash_count then
-                game.print('Nanobots has encountered a discrepency')
-            end
         end
         return setmetatable(existing, queue_mt)
     end

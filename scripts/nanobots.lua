@@ -217,7 +217,7 @@ local function queue_ghosts_in_range(player, pos, ammo, tick)
     pdata.next_nano_tick = pdata.next_nano_tick > tick and pdata.next_nano_tick or tick
     if pdata.next_nano_tick > (tick + 1800) then return end
 
-    local player_force = player.force --[[@as LuaForce]]
+    local player_force = player.force--[[@as LuaForce]]
     local surface = player.surface
     local tick_spacing = max(1, Config.ticks_between_actions - (QUEUE_SPEED[player_force.get_gun_speed_modifier('nano-ammo')] or QUEUE_SPEED[4]))
     local actions_per_group = Config.actions_per_group
@@ -235,10 +235,10 @@ local function queue_ghosts_in_range(player, pos, ammo, tick)
         if queued_this_cycle >= Config.entities_per_cycle then return end
 
         --- Check constraints on this iteration.
-        local ghost_force = ghost.force --[[@as LuaForce]]
+        local ghost_force = ghost.force--[[@as LuaForce]]
         local friendly_force = ghost_force.is_friend(player_force)
         if not friendly_force then goto next_ghost end
-        if queue:is_hashed(ghost) then goto next_ghost end
+        if queue:get_hash(ghost) then goto next_ghost end
         if Config.network_limits and not is_outside_network(player.character, ghost) then goto next_ghost end
 
         local deconstruct = friendly_force and ghost.to_be_deconstructed()
@@ -246,6 +246,7 @@ local function queue_ghosts_in_range(player, pos, ammo, tick)
 
         --- @class Nanobots.action_data
         --- @field on_tick uint
+        --- @field tick_index uint
         --- @field hash_id uint
         local data = {
             player_index = player.index, ---@type uint
@@ -360,7 +361,7 @@ end
 --- @param pos MapPosition
 --- @param ammo LuaItemStack
 local function everyone_hates_trees(player, pos, ammo)
-    local force = player.force --[[@as LuaForce]]
+    local force = player.force--[[@as LuaForce]]
     local surface = player.surface
     local radius = get_ammo_radius(global.players[player.index], force, ammo)
     for _, stupid_tree in pairs(surface.find_entities_filtered { position = pos, radius = radius, type = 'tree', limit = 200 }) do
@@ -391,27 +392,27 @@ do
         local tick = event.tick
         local connected_players = game.connected_players
         -- if tick % max(1, floor(Config.poll_rate / #connected_players)) == 0 then
-            local last_player, player = next(connected_players, global.last_player)
-            global.last_player = last_player
-            if not (player and is_ready(player)) then return end --- @cast player -?
+        local last_player, player = next(connected_players, global.last_player)
+        global.last_player = last_player
+        if not (player and is_ready(player)) then return end --- @cast player -?
 
-            local character = player.character
-            if not character then return end
+        local character = player.character
+        if not character then return end
 
-            if Config.equipment_auto then prepare_chips(player) end
+        if Config.equipment_auto then prepare_chips(player) end
 
-            if not Config.nanobots_auto then return end
+        if not Config.nanobots_auto then return end
 
-            if Config.network_limits and not is_outside_network(character) then return end
+        if Config.network_limits and not is_outside_network(character) then return end
 
-            local gun, ammo = get_gun_ammo_name(player, NANO_EMITTER)
-            if not gun then return end --- @cast ammo -?
-            local ammo_name = ammo.name
-            if ammo_name == AMMO_CONSTRUCTORS then
-                queue_ghosts_in_range(player, player.position, ammo, tick)
-            elseif ammo_name == AMMO_TERMITES then
-                everyone_hates_trees(player, player.position, ammo)
-            end
+        local gun, ammo = get_gun_ammo_name(player, NANO_EMITTER)
+        if not gun then return end --- @cast ammo -?
+        local ammo_name = ammo.name
+        if ammo_name == AMMO_CONSTRUCTORS then
+            queue_ghosts_in_range(player, player.position, ammo, tick)
+        elseif ammo_name == AMMO_TERMITES then
+            everyone_hates_trees(player, player.position, ammo)
+        end
         -- end
     end
 
