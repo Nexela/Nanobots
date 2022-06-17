@@ -48,5 +48,4 @@ script.on_event(Config.reset_nano_queue, Nanobots.reset_nano_queue)
 
 remote.add_interface(script.mod_name, require('__stdlib__/stdlib/scripts/interface'))
 
----@diagnostic disable-next-line: missing-parameter
 commands.add_command(script.mod_name, 'Nanobot commands', require('commands'))
