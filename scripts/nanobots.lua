@@ -35,6 +35,7 @@ local _find_item = function(simple_stack, _, player, at_least_one)
             return vehicle and ((vehicle.get_item_count(item) >= count) or (train and train.get_item_count(item) >= count))
         end
     end
+    return false
 end
 
 --- Is the player ready?
@@ -111,7 +112,7 @@ local function get_gun_ammo_name(player, gun_name)
 end
 
 --- Get an item with health data from the inventory
---- @param entity LuaEntity the entity object to search
+--- @param entity LuaEntity|LuaPlayer the entity object to search
 --- @param item_stack ItemStackDefinition the item to look for
 --- @param cheat? boolean cheat the item
 --- @param at_least_one? boolean #return as long as count > 0
@@ -123,7 +124,7 @@ local function get_items_from_inv(entity, item_stack, cheat, at_least_one)
         local sources
         if entity.vehicle and entity.vehicle.train then
             sources = entity.vehicle.train.cargo_wagons
-            sources[#sources + 1] = entity
+            sources[#sources + 1] = entity--[[@as LuaEntity]]
         elseif entity.vehicle then
             sources = { entity.vehicle, entity }
         else
@@ -190,6 +191,7 @@ local function drain_ammo(player, ammo, amount)
         end
         return true
     end
+    return false
 end
 
 --- Get the radius to use based on tehnology and player defined radius
@@ -371,7 +373,7 @@ local function everyone_hates_trees(player, pos, ammo)
             if surface.count_entities_filtered { position = stupid_tree.position, radius = 0.5, name = 'nano-cloud-small-termites' } == 0 then
                 surface.create_entity {
                     name = 'nano-projectile-termites',
-                    source = player,
+                    source = player--[[@as LuaEntity]],
                     position = player.position,
                     force = force,
                     target = stupid_tree,

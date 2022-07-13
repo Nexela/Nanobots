@@ -8,12 +8,12 @@ local Position = require('__stdlib__/stdlib/area/position')
 
 --- Attempt to insert an ItemStackDefinition or array of ItemStackDefinition into the entity
 --- Spill to the ground at the entity anything that doesn't get inserted
---- @param entity LuaEntity
+--- @param entity LuaEntity|LuaPlayer
 --- @param item_stacks ItemStackDefinition|ItemStackDefinition[]
 --- @param is_return_cheat? boolean
 --- @return boolean #there was some items inserted or spilled
 local function insert_or_spill_items(entity, item_stacks, is_return_cheat)
-    if is_return_cheat then return end
+    if is_return_cheat then return false end
 
     local new_stacks = {}
     if item_stacks then
@@ -23,7 +23,7 @@ local function insert_or_spill_items(entity, item_stacks, is_return_cheat)
             new_stacks = { item_stacks }
         end
         for _, stack in pairs(new_stacks) do
-            local name, count, health = stack.name, stack.count, stack.health or 1
+            local name, count, health = stack.name, stack.count, stack.health or 1.0
             local prototype = game.item_prototypes[name]
             if prototype and not prototype.has_flag('hidden') then
                 local inserted = entity.insert({ name = name, count = count, health = health })
@@ -34,6 +34,7 @@ local function insert_or_spill_items(entity, item_stacks, is_return_cheat)
         end
         return new_stacks[1] and new_stacks[1].name and true
     end
+    return false
 end
 
 --- Attempt to insert an arrary of items stacks into an entity
@@ -76,7 +77,7 @@ end
 --- Attempt to satisfy module requests from player inventory
 --- @param requests LuaEntity the item request proxy to get requests from
 --- @param entity LuaEntity the entity to satisfy requests for
---- @param player LuaEntity the entity to get modules from
+--- @param player LuaPlayer the player to get modules from
 local function satisfy_requests(requests, entity, player)
     local pinv = player.get_main_inventory()
     local new_requests = {}
@@ -96,13 +97,20 @@ end
 --- Create a projectile from source to target
 --- @param name string the name of the projecticle
 --- @param surface LuaSurface the surface to create the projectile on
---- @param force LuaForce the force this projectile belongs too
+--- @param force ForceIdentification the force this projectile belongs too
 --- @param source MapPosition|LuaEntity position table to start at
 --- @param target MapPosition|LuaEntity position table to end at
 local function create_projectile(name, surface, force, source, target, speed)
     speed = speed or 1
     force = force or 'player'
-    surface.create_entity { name = name, force = force, source = source, position = source, target = target, speed = speed }
+    surface.create_entity {
+        name = name,
+        force = force,
+        source = source,
+        position = source--[[@as MapPosition]],
+        target = target,
+        speed = speed
+    }
 end
 
 --- @param data Nanobots.action_data
@@ -111,7 +119,9 @@ function Actions.cliff_deconstruction(data)
     if not (player and player.valid) then return end
 
     local entity = data.entity
-    if not (entity and entity.valid and entity.to_be_deconstructed()) then return insert_or_spill_items(player, { data.item_stack }) end
+    if not (entity and entity.valid and entity.to_be_deconstructed()) then
+        return insert_or_spill_items(player --[[@as LuaEntity]], { data.item_stack })
+    end
 
     create_projectile('nano-projectile-deconstructors', entity.surface, entity.force, player.position, entity.position)
     local exp_name = data.item_stack.name == 'artillery-shell' and 'big-artillery-explosion' or 'big-explosion'
@@ -179,7 +189,7 @@ function Actions.build_entity_ghost(data)
     end
 
     create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
-    entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
+    entity.health = (entity.health > 0.0) and ((data.item_stack.health or 1.0) * entity.prototype.max_health)
     if insert_or_spill_items(player, insert_into_entity(entity, item_stacks)) then
         create_projectile('nano-projectile-return', surface, player.force, position, player.position)
     end
@@ -211,7 +221,9 @@ function Actions.build_tile_ghost(data)
     -- checking if the ghost was revived is likely unnecessary but felt safer.
     if tile_was_mined and not ghost_was_revived then
         create_projectile('nano-projectile-return', surface, force, position, player.position)
-        surface.set_tiles({ { name = tile_ptype.name, position = position } }, true, true, false, true)
+        surface.set_tiles({
+            { name = tile_ptype.name, position = position--[[@as TilePosition]] }
+        }, true, true, false, true)
     end
 
     surface.play_sound { path = 'nano-sound-build-tiles', position = position }
@@ -256,7 +268,7 @@ function Actions.upgrade_ghost(data)
 
     create_projectile('nano-projectile-constructors', entity.surface, entity.force, player.position, entity.position)
     surface.play_sound { path = 'utility/build_small', position = entity.position }
-    entity.health = (entity.health > 0) and ((data.item_stack.health or 1) * entity.prototype.max_health)
+    entity.health = (entity.health > 0.0) and ((data.item_stack.health or 1.0) * entity.prototype.max_health) --[[@as float]]
 end
 
 --- @param data Nanobots.action_data
@@ -276,7 +288,7 @@ function Actions.item_requests(data)
     if not (player and player.valid) then return end
 
     local proxy = data.entity
-    local target = proxy.valid and proxy.proxy_target ---@type LuaEntity
+    local target = proxy.valid and proxy.proxy_target
     if not (proxy.valid and target and target.valid) then return insert_or_spill_items(player, { data.item_stack }) end
 
     if not target.can_insert(data.item_stack) then return insert_or_spill_items(player, { data.item_stack }) end
