@@ -41,7 +41,7 @@ function queue:get_counters(start_tick, tick_spacing, actions_per_group)
     tick_spacing = tick_spacing or 1
     actions_per_group = actions_per_group or 1
 
-    local tick = ((start_tick >= game.tick and start_tick) or game.tick) + tick_spacing
+    local tick = ((start_tick >= game.tick and start_tick) or game.tick) + tick_spacing --[[@as uint]]
     local last_tick = tick
 
     local count = 0
@@ -94,6 +94,7 @@ end
 local function __len(self)
     return self.hash_count
 end
+
 local queue_mt = { __index = queue, __len = __len }
 
 do

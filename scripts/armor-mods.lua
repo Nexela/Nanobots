@@ -1,5 +1,5 @@
-local table = require('__stdlib__/stdlib/utils/table')
-local config = require('config')
+local table = require("__stdlib__/stdlib/utils/table")
+local config = require("config")
 local min, max, abs, ceil, floor = math.min, math.max, math.abs, math.ceil, math.floor
 
 -- TODO: Store this in global and update in on_con_changed
@@ -13,14 +13,15 @@ local healer_capsules = config.FOOD
 --- @return boolean
 local function is_personal_roboport_ready(character, ignore_radius)
     local cell = character.logistic_cell
-    return character.grid and cell and cell.mobile and (cell.construction_radius > 0 or ignore_radius)
+    local grid = character.grid
+    return grid and cell and cell.mobile and (cell.construction_radius > 0 or ignore_radius) or false
 end
 
 -- Loop through equipment grid and return a table of valid equipment tables indexed by equipment name.
 --- @param grid LuaEquipmentGrid
---- @return {[string]: LuaEquipment[]} #equipment with energy in buffer - name as key, array of named equipment as value
---- @return Nanobots.energy_shields
---- @return boolean #Has charged equipment
+--- @return {[string]: LuaEquipment[]}? #equipment with energy in buffer - name as key, array of named equipment as value
+--- @return Nanobots.energy_shields?
+--- @return boolean? #Has charged equipment
 local function get_valid_equipment(grid)
     if not (grid and grid.valid) then return end
 
@@ -35,7 +36,7 @@ local function get_valid_equipment(grid)
     }
 
     for _, equip in pairs(grid.equipment) do
-        if equip.type == 'energy-shield-equipment' and equip.shield < equip.max_shield * .75 then
+        if equip.type == "energy-shield-equipment" and equip.shield < equip.max_shield * .75 then
             energy_shields.shields[#energy_shields.shields + 1] = equip
         end
         if equip.energy > 0 then
@@ -87,11 +88,11 @@ end
 local function get_health_capsules(character)
     for name, health in pairs(healer_capsules) do
         local prototype = game.item_prototypes[name]
-        if prototype and character.remove_item({ name = name, count = 1 }) > 0 then
-            return max(health, 10), prototype.localised_name or { 'nanobots.free-food-unknown' }
+        if prototype and character.remove_item { name = name, count = 1 } > 0 then
+            return max(health, 10), prototype.localised_name or { "nanobots.free-food-unknown" }
         end
     end
-    return 10, { 'nanobots.free-food' }
+    return 10, { "nanobots.free-food" }
 end
 
 --- @param character LuaEntity
@@ -123,8 +124,14 @@ local function emergency_heal_shield(character, feeders, energy_shields)
                     local last_health = shield.shield
                     local heal_amount, locale = get_health_capsules(character)
                     shield.shield = shield.shield + (heal_amount * 1.5)
-                    local health_line = { 'nanobots.health_line', ceil(abs(shield.shield - last_health)), locale }
-                    player.create_local_flying_text { text = health_line, color = defines.color.green, position = pos() }
+                    local health_line = { "nanobots.health_line", ceil(abs(shield.shield - last_health)), locale }
+                    if player then
+                        player.create_local_flying_text {
+                            text = health_line,
+                            color = { r = 0.0, g = 1.0, b = 0.0, a = 1.0 },
+                            position = pos()
+                        }
+                    end
                     feeder.energy = feeder.energy - 120
                 else
                     break
@@ -149,11 +156,13 @@ local function emergency_heal_character(character, feeders)
         while feeder and feeder.energy >= 120 do
             if character.health < max_health then
                 local last_health = character.health
-                local heal, locale = get_health_capsules(player)
+                local heal, locale = get_health_capsules(character)
                 character.health = last_health + heal
-                local health_line = { 'nanobots.health_line', ceil(abs(character.health - last_health)), locale }
+                local health_line = { "nanobots.health_line", ceil(abs(character.health - last_health)), locale }
                 feeder.energy = feeder.energy - 120
-                player.create_local_flying_text { text = health_line, color = defines.color.green, position = pos() }
+                if player then
+                    player.create_local_flying_text { text = health_line, color = { r = 0.0, g = 1.0, b = 0.0, a = 1.0 }, position = pos() }
+                end
             else
                 return
             end
@@ -173,9 +182,9 @@ local function get_chip_radius(character, chip_name)
 end
 
 local chip_type = {
-    ['equipment-bot-chip-items'] = { type = 'item-entity', name = nil },
-    ['equipment-bot-chip-trees'] = { type = 'tree', name = nil },
-    ['equipment-bot-chip-rocks'] = { type = 'simple-entity', name = { 'rock-huge', 'rock-big', 'sand-rock-big' } }
+    ["equipment-bot-chip-items"] = { type = "item-entity", name = nil },
+    ["equipment-bot-chip-trees"] = { type = "tree", name = nil },
+    ["equipment-bot-chip-rocks"] = { type = "simple-entity", name = { "rock-huge", "rock-big", "sand-rock-big" } }
 }
 
 --- @param character LuaEntity
@@ -192,7 +201,7 @@ local function get_chip_results(character, equipment, limit)
         name = chip_type[eq_name].name,
         position = character.position,
         radius = get_chip_radius(character, eq_name),
-        limit = math.min(20 * #equipment, limit), -- 20 usages per equipment @50/1kj
+        limit = math.min(20 * #equipment, limit) --[[@as uint]] , -- 20 usages per equipment @50/1kj
         to_be_deconstructed = false
     }
     return character.surface.find_entities_filtered(params)
@@ -238,12 +247,12 @@ do -- The chips
     --- @param equipment {[string]: LuaEquipment[]}
     --- @param energy_shields Nanobots.energy_shields
     local function process_healing_chips(character, equipment, energy_shields)
-        if not equipment['equipment-bot-chip-feeder'] then return end
+        if not equipment["equipment-bot-chip-feeder"] then return end
 
         if #energy_shields.shields > 0 then
-            emergency_heal_shield(character, equipment['equipment-bot-chip-feeder'], energy_shields)
+            emergency_heal_shield(character, equipment["equipment-bot-chip-feeder"], energy_shields)
         elseif character.health < character.prototype.max_health * .75 then
-            emergency_heal_character(character, equipment['equipment-bot-chip-feeder'])
+            emergency_heal_character(character, equipment["equipment-bot-chip-feeder"])
         end
     end
 
@@ -251,9 +260,9 @@ do -- The chips
     --- @param character LuaEntity
     --- @param equipment {[string]: LuaEquipment[]}
     local function process_combat_chips(character, equipment)
-        if not equipment['equipment-bot-chip-launcher'] then return end
+        if not equipment["equipment-bot-chip-launcher"] then return end
 
-        local launchers = equipment['equipment-bot-chip-launcher']
+        local launchers = equipment["equipment-bot-chip-launcher"]
         local num_launchers = #launchers
         local capsule_data = get_best_follower_capsule(character)
         if capsule_data ~= nil then
@@ -264,7 +273,7 @@ do -- The chips
             while capsule and existing < (max_bots - capsule.qty) and capsule.count > 0 and num_launchers > 0 do
                 local launcher = launchers[num_launchers]
                 while capsule and existing < (max_bots - capsule.qty) and launcher and launcher.energy >= 500 do
-                    if character.remove_item({ name = capsule.capsule, count = 1 }) == 1 then
+                    if character.remove_item { name = capsule.capsule, count = 1 } == 1 then
                         character.surface.create_entity { name = capsule.unit, position = character.position, force = character.force, target = character }
                         launcher.energy = launcher.energy - 500
                         capsule.count = capsule.count - 1
@@ -285,8 +294,8 @@ do -- The chips
     --- @param force LuaForce
     --- @param equipment {[string]: LuaEquipment[]}
     local function process_peaceful_chips(character, force, equipment)
-        local item_eq = equipment['equipment-bot-chip-items']
-        local tree_eq = equipment['equipment-bot-chip-trees']
+        local item_eq = equipment["equipment-bot-chip-items"]
+        local tree_eq = equipment["equipment-bot-chip-trees"]
         if not (item_eq or tree_eq) then return end
 
         local bots_available = get_bot_counts(character)
@@ -306,10 +315,13 @@ do -- The chips
     --- @param player LuaPlayer
     local function prepare_chips(player)
         local character = player.character
+        if not character then return end
         if not is_personal_roboport_ready(character) then return end
 
         local equipment, energy_shields, has_charged_equipment = get_valid_equipment(character.grid)
         if not has_charged_equipment then return end
+        ---@cast equipment -nil
+        ---@cast energy_shields -nil
 
         process_healing_chips(character, equipment, energy_shields)
 
@@ -320,7 +332,7 @@ do -- The chips
         if enemy then
             process_combat_chips(character, equipment)
         else
-            process_peaceful_chips(character, force, equipment)
+            process_peaceful_chips(character, force--[[@as LuaForce]] , equipment)
         end
     end
 
