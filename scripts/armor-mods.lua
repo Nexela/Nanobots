@@ -2,8 +2,8 @@ local table = require("__stdlib__/stdlib/utils/table")
 local config = require("config")
 local min, max, abs, ceil, floor = math.min, math.max, math.abs, math.ceil, math.floor
 
--- TODO: Store this in global and update in on_con_changed
--- TODO: Remote call for inserting/removing into table
+---@todo Store this in global and update in on_con_changed
+---@todo Remote call for inserting/removing into table
 local combat_robots = config.COMBAT_ROBOTS
 local healer_capsules = config.FOOD
 
