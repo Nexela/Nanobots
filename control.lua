@@ -7,19 +7,19 @@ global = {}
 --- @field next_nano_tick uint
 --- @field ranges table
 
-require('__stdlib__/stdlib/config').skip_script_protections = true
+require("__stdlib__/stdlib/config").skip_script_protections = true
 
-local Config = require('config')
+local Config = require("config")
 
-local Player = require('__stdlib__/stdlib/event/player')
+local Player = require("__stdlib__/stdlib/event/player")
 Player.additional_data { ranges = {} }
-Player.additional_data(function() return {next_nano_tick = game.tick} end )
+Player.additional_data(function() return { next_nano_tick = game.tick } end)
 
-local Changes = require('__stdlib__/stdlib/event/changes')
-Changes.mod_versions['changes/versions'] = require('changes/versions')
+local Changes = require("__stdlib__/stdlib/event/changes")
+Changes.mod_versions["changes/versions"] = require("changes/versions")
 
-local Nanobots = require('scripts/nanobots')
-require('scripts/reprogram-gui')
+local Nanobots = require("scripts/nanobots")
+require("scripts/reprogram-gui")
 
 
 script.on_event(defines.events.on_tick, Nanobots.on_tick)
@@ -46,6 +46,6 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, Config.update_set
 Config.reset_nano_queue = script.generate_event_name()
 script.on_event(Config.reset_nano_queue, Nanobots.reset_nano_queue)
 
-remote.add_interface(script.mod_name, require('__stdlib__/stdlib/scripts/interface'))
+remote.add_interface(script.mod_name, require("__stdlib__/stdlib/scripts/interface"))
 
-commands.add_command(script.mod_name, 'Nanobot commands', require('commands'))
+commands.add_command(script.mod_name, "Nanobot commands", require("commands"))
