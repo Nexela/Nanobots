@@ -44,7 +44,7 @@ script.on_event({ defines.events.on_player_joined_game, defines.events.on_player
 script.on_event(defines.events.on_runtime_mod_setting_changed, Config.update_settings)
 
 Config.reset_nano_queue = script.generate_event_name()
-script.on_event(Config.reset_nano_queue, Nanobots.reset_nano_queue)
+script.on_event(Config.reset_nano_queue--[[@as defines.events]] , Nanobots.reset_nano_queue)
 
 remote.add_interface(script.mod_name, require("__stdlib__/stdlib/scripts/interface"))
 
