@@ -52,9 +52,10 @@ end
 local function is_equipment_powered(character, eq_name)
     local grid = character.grid
     if grid and grid.get_contents()[eq_name] then
+        ---@param v LuaEquipment
         return table_find(grid.equipment, function(v)
             return v.name == eq_name and v.energy > 0
-        end)
+        end) --[[@as boolean]]
     end
     return false
 end
