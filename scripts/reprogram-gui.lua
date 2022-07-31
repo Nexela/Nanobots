@@ -31,7 +31,7 @@ end
 
 if Pad then
     local function increase_decrease_reprogrammer(event)
-        local player = game.get_player(event.player_index)
+        local player = game.get_player(event.player_index) --[[@as LuaPlayer]]
         local pdata = global.players[event.player_index]
         local stack = player.cursor_stack
         local change = event.change or 0

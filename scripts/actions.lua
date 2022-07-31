@@ -79,7 +79,7 @@ end
 --- @param entity LuaEntity the entity to satisfy requests for
 --- @param player LuaPlayer the player to get modules from
 local function satisfy_requests(requests, entity, player)
-    local p_inv = player.get_main_inventory()
+    local p_inv = player.get_main_inventory() --[[@as LuaInventory]]
     local new_requests = {}
     for name, count in pairs(requests.item_requests) do
         if count > 0 and entity.can_insert(name) then

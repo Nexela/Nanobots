@@ -1,3 +1,4 @@
+---@type Prototype.Recipe
 local recipe_nano_gun = {
     type = "recipe",
     name = "gun-nano-emitter",
@@ -11,6 +12,7 @@ local recipe_nano_gun = {
     result = "gun-nano-emitter"
 }
 
+---@type Prototype.Gun
 local item_nano_gun = {
     type = "gun",
     name = "gun-nano-emitter",

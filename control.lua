@@ -16,11 +16,11 @@ Player.additional_data { ranges = {} }
 Player.additional_data(function() return { next_nano_tick = game.tick } end)
 
 local Changes = require("__stdlib__/stdlib/event/changes")
+---@diagnostic disable-next-line: undefined-field
 Changes.mod_versions["changes/versions"] = require("changes/versions")
 
 local Nanobots = require("scripts/nanobots")
 require("scripts/reprogram-gui")
-
 
 script.on_event(defines.events.on_tick, Nanobots.on_tick)
 script.on_nth_tick(15, Nanobots.on_nth_tick)
