@@ -142,7 +142,7 @@ local function get_items_from_inv(entity, item_stack, cheat, at_least_one)
                 if inventory and inventory.valid and inventory.get_item_count(item_stack.name) > 0 then
                     local stack = inventory.find_item_stack(item_stack.name)
                     while stack do
-                        local removed = math.min(stack.count, count)
+                        local removed = math.min(stack.count, count) --[[@as uint]]
                         new_item_stack.count = new_item_stack.count + removed
                         new_item_stack.health = new_item_stack.health * stack.health
                         stack.count = stack.count - removed
