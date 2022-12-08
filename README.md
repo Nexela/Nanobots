@@ -1,4 +1,4 @@
-# NANOBOTS 1.8.8
+# NANOBOTS 4.0.0
 
 ## Robot enhancements from the start of the game
 

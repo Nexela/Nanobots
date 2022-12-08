@@ -1,9 +1,8 @@
 ---------------------------------------------------------------------------------------------------
-Version: 3.2.20
+Version: 4.0.0
 Date: ????
   Changes:
     - Remove roboport interface to its own mod.
-    - Nanobots now queue multiple actions per cycle with a setting.
     - Major code cleanup.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.19

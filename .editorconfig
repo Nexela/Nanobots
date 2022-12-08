@@ -5,7 +5,7 @@
 # optional space/tab
 indent_style = space
 # if indent_style is space, this is valid
-indent_size = 4
+indent_size = 2
 # if indent_style is tab, this is valid
 tab_width = 2
 # none/single/double

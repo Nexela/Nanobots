@@ -1,3 +1,5 @@
+-- Unlock shortcuts for technologies that are researched.
+
 for _, force in pairs(game.forces) do
     for _, shortcut in pairs(game.shortcut_prototypes) do
         for _, player in pairs(force.players) do
