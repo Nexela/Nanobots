@@ -5,7 +5,6 @@ script.on_nth_tick(20, Nanobots.on_nth_tick)
 
 script.on_init(function()
   Player.on_init()
-  Nanobots.on_init()
 end)
 
 script.on_configuration_changed(Nanobots.on_configuration_changed)

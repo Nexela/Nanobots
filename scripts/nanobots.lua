@@ -1,9 +1,11 @@
 local Nanobots = {}
+
 local Player = require("scripts/player")
-local max, floor = math.max, math.floor
+
 local NANO_EMITTER = "gun-nano-emitter"
 local AMMO_CONSTRUCTORS = "ammo-nano-constructors"
 local AMMO_TERMITES = "ammo-nano-termites"
+local max, floor = math.max, math.floor
 
 --- Is the player ready?
 --- @param player LuaPlayer
@@ -12,23 +14,48 @@ local function is_ready(player)
   return player.afk_time <= (60 * 5)
 end
 
---- Get the ammo
+--- @param pdata Nanobots.pdata
 --- @param character LuaEntity
---- @return LuaItemStack?
---- @return string
-local function get_ammo(pdata, character)
-  local gun_inventory = pdata.gun_inventory --[[@as LuaInventory]]
-  if not gun_inventory then return nil, "none" end
-  local ammo_inventory = pdata.ammo_inventory --[[@as LuaInventory]]
+--- @return LuaItemStack?, uint?
+local function get_gun(pdata, character)
+  local gun_inventory = pdata.gun_inventory
+  if not (gun_inventory and gun_inventory.valid) then
+    gun_inventory = character.get_inventory(defines.inventory.character_guns)
+    pdata.gun_inventory = gun_inventory
+    if not gun_inventory then return end
+  end
+
   local index = character.selected_gun_index
   local gun = gun_inventory[index]
-  if gun.valid_for_read and gun.name == NANO_EMITTER then
-    local ammo = ammo_inventory[index]
-    if ammo.valid_for_read then
-      return ammo, ammo.name
-    end
+  if not (gun.valid_for_read and gun.name == NANO_EMITTER) then return end
+
+  if not pdata.gun_range then
+    pdata.gun_range = gun.prototype.attack_parameters.range
   end
-  return nil, "none"
+
+  return gun, index
+end
+
+--- Get the ammo
+--- Additionally stores the gun and ammo inventories to avoid creating objects.
+--- @param pdata Nanobots.pdata
+--- @param character LuaEntity
+--- @return LuaItemStack?, string
+local function get_ammo(pdata, character)
+  local gun, index = get_gun(pdata, character)
+  if not gun then return nil, "" end
+
+  local ammo_inventory = pdata.ammo_inventory
+  if not (ammo_inventory and ammo_inventory.valid) then
+    ammo_inventory = character.get_inventory(defines.inventory.character_ammo)
+    pdata.ammo_inventory = ammo_inventory
+    if not ammo_inventory then return nil, "none" end
+  end
+
+  local ammo = ammo_inventory[index]
+  if not ammo.valid_for_read then return nil, "" end
+
+  return ammo, ammo.name
 end
 
 --- Manually drain ammo, if it is the last bit of ammo in the stack pull in more ammo from inventory if available
@@ -44,11 +71,7 @@ local function drain_ammo(player, ammo, amount)
   ammo.drain_ammo(amount)
   if not ammo.valid_for_read then
     local new = player.get_main_inventory().find_item_stack(name)
-    if new then
-      ammo.set_stack(new) -- swap_stack?
-      new.clear()
-    end
-    return true
+    if new then return ammo.swap_stack(new) end
   end
   return false
 end
@@ -58,11 +81,11 @@ end
 --- @param player LuaPlayer
 --- @param pdata Nanobots.pdata
 --- @param character LuaEntity
-local function draw_range_overlay(player, pdata, character)
+local function draw_range_overlay(player, pdata, character, color)
   if not (pdata.range_indicator and rendering.is_valid(pdata.range_indicator)) then
     pdata.range_indicator = rendering.draw_circle {
-      color = { r = 0.0, g = 0.1, b = 0.0, a = 0.05 },
-      radius = global.gun_range,
+      color = color,
+      radius = pdata.gun_range,
       filled = true,
       target = character,
       surface = character.surface,
@@ -82,7 +105,7 @@ local function queue_ghosts_in_range(player, pdata, character, ammo, radius)
   local counter = 0
 
   for _, entity in ipairs(entities) do
-    if not ammo.valid_for_read then return end
+    if not (ammo and ammo.valid_for_read) then return end
     if counter > 9 then return end
 
 
@@ -123,19 +146,22 @@ end
 --- Nano Termites
 --- Kill the trees! Kill them dead
 --- @param player LuaPlayer
---- @param pos MapPosition
+--- @param pdata Nanobots.pdata
+--- @param character LuaEntity
 --- @param ammo LuaItemStack
-local function everyone_hates_trees(player, pos, ammo)
+local function everyone_hates_trees(player, pdata, character, ammo)
   local force = player.force --[[@as LuaForce]]
   local surface = player.surface
-  for _, stupid_tree in pairs(surface.find_entities_filtered { position = pos, radius = global.gun_range, type = "tree", limit = 200 }) do
-    if not ammo.valid_for_read then return end
-    if not stupid_tree.to_be_deconstructed then
+  local position = character.position
+  local trees = surface.find_entities_filtered { position = position, radius = pdata.gun_range, type = "tree", limit = 200 }
+  for _, stupid_tree in pairs(trees) do
+    if not (ammo and ammo.valid_for_read) then return end
+    if not stupid_tree.to_be_deconstructed() then
       if surface.count_entities_filtered { position = stupid_tree.position, radius = 0.5, name = "nano-cloud-small-termites" } == 0 then
         surface.create_entity {
           name = "nano-projectile-termites",
-          source = player --[[@as LuaEntity]] ,
-          position = pos,
+          source = character,
+          position = position,
           force = force,
           target = stupid_tree,
           speed = .5
@@ -147,52 +173,46 @@ local function everyone_hates_trees(player, pos, ammo)
 end
 
 function Nanobots.on_nth_tick(event)
-  local tick = event.tick
-  local connected_players = game.connected_players
-  local num_players = #connected_players
-  local last_player, player = next(connected_players, num_players > 1 and global.last_player or nil)
-  local pdata = global.players[player.index]
-  global.last_player = last_player
+  pcall(function()
+    local tick = event.tick
+    local connected_players = game.connected_players
+    local num_players = #connected_players
+    local last_player, player = next(connected_players, num_players > 1 and global.last_player or nil)
+    local pdata = global.players[player.index]
+    global.last_player = last_player
 
-  if not (player and is_ready(player)) then return end
+    if not (player and is_ready(player)) then return end
 
+    local character = player.character
+    if not character then return end
+
+    local ammo, ammo_name = get_ammo(pdata, character)
+    if not ammo then return rendering.destroy(pdata.range_indicator or 0) end
+
+    if ammo_name == AMMO_CONSTRUCTORS then
+      draw_range_overlay(player, pdata, character, { 0, 0, .1, .1 })
+      queue_ghosts_in_range(player, pdata, character)
+    elseif ammo_name == AMMO_TERMITES then
+      draw_range_overlay(player, pdata, character, { 0, .1, 0, .1 })
+      everyone_hates_trees(player, pdata, character, ammo)
+    end
+  end)
+end
+
+--- @param event EventData.on_player_gun_inventory_changed
+function Nanobots.on_player_gun_inventory_changed(event)
+  local player, pdata = Player.get(event.player_index)
   local character = player.character
   if not character then return end
 
-  local ammo, ammo_name, ammo_radius = get_ammo(pdata, character)
-  if not ammo then
-    rendering.destroy(pdata.range_indicator or 0)
-    return
-  end
-  draw_range_overlay(player, pdata, character)
-
-  if ammo_name == AMMO_CONSTRUCTORS then
-    queue_ghosts_in_range(player, pdata, character, ammo_radius)
-  elseif ammo_name == AMMO_TERMITES then
-    everyone_hates_trees(player, character.position, ammo)
-  end
-end
-
-function Nanobots.on_init()
-  global.gun_range = game.item_prototypes[NANO_EMITTER].attack_parameters.range
-end
-
-function Nanobots.on_configuration_changed()
-  global.gun_range = game.item_prototypes[NANO_EMITTER].attack_parameters.range
-end
-
-function Nanobots.on_player_gun_inventory_changed(event)
-  local player, pdata = Player.get(event.player_index)
-  if not ((pdata.ammo_inventory and pdata.ammo_inventory.valid) and (pdata.gun_inventory and pdata.gun_inventory.valid)) then
-    pdata.ammo_inventory = player.get_inventory(defines.inventory.character_ammo)
-    pdata.gun_inventory = player.get_inventory(defines.inventory.character_guns)
-  end
+  pdata.gun_range = nil
+  local gun = get_gun(pdata, character)
 end
 
 return Nanobots
 
 --- @class Nanobots.global
---- @field gun_range float
 
 --- @class Nanobots.pdata
---- @field range_indicator uint
+--- @field range_indicator uint64
+--- @field gun_range float
