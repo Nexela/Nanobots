@@ -45,4 +45,14 @@ function Player.on_player_removed(event)
   global.last_player = nil
 end
 
+--- @param event EventData.on_player_driving_changed_state
+function Player.on_player_driving_changed_state(event)
+  local player, pdata = Player.get(event.player_index)
+  local vehicle = event.entity
+  if vehicle then
+
+  end
+  global.last_player = nil
+end
+
 return Player

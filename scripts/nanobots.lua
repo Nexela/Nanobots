@@ -1,10 +1,17 @@
 local Nanobots = {}
 
 local Player = require("scripts/player")
+local Inventory = require("scripts/inventory")
+local Constants = require("scripts/constants")
+local Actions = require("scripts/actions")
 
-local NANO_EMITTER = "gun-nano-emitter"
-local AMMO_CONSTRUCTORS = "ammo-nano-constructors"
-local AMMO_TERMITES = "ammo-nano-termites"
+local MOVEABLE_TYPES = Constants.MOVEABLE_TYPES
+local BLOCKABLE_TYPES = Constants.BLOCKABLE_TYPES
+local EXPLOSIVES = Constants.EXPLOSIVES
+local NANO_EMITTER = Constants.NANO_EMITTER
+local AMMO_CONSTRUCTORS = Constants.AMMO_CONSTRUCTORS
+local AMMO_TERMITES = Constants.AMMO_TERMITES
+
 local max, floor = math.max, math.floor
 
 --- Is the player ready?
@@ -76,6 +83,17 @@ local function drain_ammo(player, ammo, amount)
   return false
 end
 
+--- Can nanobots repair this entity?
+--- @param entity LuaEntity
+--- @return boolean
+local function is_nanobot_repairable(entity)
+  if (entity.get_health_ratio() or 1) >= 1 then return false end
+  if entity.has_flag("not-repairable") or entity.type:find("robot") then return false end
+  if BLOCKABLE_TYPES[entity.type] and entity.minable == false then return false end
+  if MOVEABLE_TYPES[entity.type] and entity.speed > 0 then return false end
+  return table_size(entity.prototype.collision_mask) > 0
+end
+
 --- The range indicator, only shows in alt mode, when ammo is available.
 --- @todo Add a setting to disable this.
 --- @param player LuaPlayer
@@ -101,13 +119,13 @@ end
 local function queue_ghosts_in_range(player, pdata, character, ammo, radius)
   local player_force = player.force
   local surface = character.surface
-  local entities = surface.find_entities_filtered { radius = radius, position = character.position }
+  local entities = surface.find_entities_filtered { radius = radius, position = character.position, type = "resource", invert = true, limit = 1000 }
+  local cheat_mode = player.cheat_mode
   local counter = 0
 
   for _, entity in ipairs(entities) do
     if not (ammo and ammo.valid_for_read) then return end
-    if counter > 9 then return end
-
+    if counter > 100 then return end
 
     local entity_force = entity.force --[[@as LuaForce]]
     local friendly_force = entity_force.is_friend(player_force)
@@ -116,11 +134,42 @@ local function queue_ghosts_in_range(player, pdata, character, ammo, radius)
     local deconstruct = friendly_force and entity.to_be_deconstructed()
     local upgrade = friendly_force and entity.to_be_upgraded()
 
-    local data = {}
+    --- @class Nanobots.action_data
+    local function new_data(action, item_stack)
+      counter = counter + 1
+      return {
+        action = action, ---@type string
+        item_stack = item_stack, ---@type LuaItemStack
+        player_index = player.index, ---@type uint
+        player = player, ---@type LuaPlayer
+        ammo = ammo, ---@type LuaItemStack
+        entity = entity, ---@type LuaEntity
+        position = entity.position, ---@type MapPosition
+        surface = surface, ---@type LuaSurface
+        unit_number = entity.unit_number, ---@type uint
+        force = entity_force ---@type LuaForce
+      }
+    end
 
     if deconstruct then
       if entity.type == "cliff" then
+        if player_force.technologies["nanobots-cliff"].researched then
+          local item_stack = Inventory.find_item(player, EXPLOSIVES, cheat_mode)
+          if item_stack then
+            local explosive = Inventory.get_item_stack(player, item_stack, cheat_mode)
+            if explosive then
+              local data = new_data("cliff_deconstruction", explosive)
+              -- queue:insert(data, get_next_tick())
+              Actions[data.action](data)
+              drain_ammo(player, ammo, 1.0)
+            end
+          end
+        end
       elseif entity.minable then
+        local data = new_data("deconstruction")
+        -- queue:insert(data, get_next_tick())
+        Actions[data.action](data)
+        drain_ammo(player, ammo, 1.0)
       end
     elseif upgrade then
       local prototype = entity.get_upgrade_target()
@@ -128,16 +177,73 @@ local function queue_ghosts_in_range(player, pdata, character, ammo, radius)
         if prototype.name == entity.name then
           local dir = entity.get_upgrade_direction()
           if entity.direction ~= dir then
-            data.action = "upgrade_direction"
+            local data = new_data("upgrade_direction")
             data.direction = dir
+            -- queue:insert(data, get_next_tick())
+            Actions[data.action](data)
+            drain_ammo(player, ammo, 1.0)
           end
         else
+          local item_stack = Inventory.find_item(player, prototype.items_to_place_this, cheat_mode)
+          if item_stack then
+            local place_item = Inventory.get_item_stack(player, item_stack, cheat_mode)
+            if place_item then
+              local data = new_data("upgrade_ghost", place_item)
+              data.entity_name = prototype.name
+              -- queue:insert(data, get_next_tick())
+              Actions[data.action](data)
+              drain_ammo(player, ammo, 1.0)
+            end
+          end
         end
       end
     elseif entity.name == "entity-ghost" or entity.name == "tile-ghost" then
-    elseif entity.health > 0 and entity.health < entity.prototype.max_health then
+      local prototype = entity.ghost_prototype
+      local item_stack = Inventory.find_item(player, prototype.items_to_place_this, cheat_mode)
+      if item_stack then
+        if entity.name == "entity-ghost" then
+          local place_item = Inventory.get_item_stack(player, item_stack, cheat_mode)
+          if place_item then
+            local data = new_data("build_entity_ghost", place_item)
+            -- queue:insert(data, get_next_tick())
+            Actions[data.action](data)
+            drain_ammo(player, ammo, 1.0)
+          end
+        elseif entity.name == "tile-ghost" then
+          -- Don't queue tile ghosts if entity ghost is on top of it.
+          if surface.count_entities_filtered { name = "entity-ghost", area = entity.selection_box, limit = 1 } == 0 then
+            local tile = surface.get_tile(entity.position--[[@as TilePosition]] )
+            local place_item = Inventory.get_item_stack(player, item_stack, cheat_mode)
+            if place_item then
+              local data = new_data("build_tile_ghost, place_item")
+              data.tile = tile
+              -- queue:insert(data, get_next_tick())
+              Actions[data.action](data)
+              drain_ammo(player, ammo, 1.0)
+            end
+          end
+        end
+      end
+    elseif is_nanobot_repairable(entity) then
+      if surface.count_entities_filtered { name = "nano-cloud-small-repair", position = entity.position } == 0 then
+        local data = new_data("repair_entity")
+        -- queue:insert(data, get_next_tick())
+        Actions[data.action](data)
+        drain_ammo(player, ammo, 1.0)
+      end
     elseif entity.name == "item-request-proxy" then
       local items = {}
+      for item, count in pairs(entity.item_requests) do items[#items + 1] = { name = item, count = count } end
+      local item_stack = Inventory.find_item(player, items, cheat_mode, true)
+      if item_stack then
+        local place_item = Inventory.get_item_stack(player, item_stack, cheat_mode, true)
+        if place_item then
+          local data = new_data("item_requests", place_item)
+          -- queue:insert(data, get_next_tick())
+          Actions[data.action](data)
+          drain_ammo(player, ammo, 1.0)
+        end
+      end
     end
     ::next_ghost::
   end
@@ -156,6 +262,7 @@ local function everyone_hates_trees(player, pdata, character, ammo)
   local trees = surface.find_entities_filtered { position = position, radius = pdata.gun_range, type = "tree", limit = 200 }
   for _, stupid_tree in pairs(trees) do
     if not (ammo and ammo.valid_for_read) then return end
+
     if not stupid_tree.to_be_deconstructed() then
       if surface.count_entities_filtered { position = stupid_tree.position, radius = 0.5, name = "nano-cloud-small-termites" } == 0 then
         surface.create_entity {
@@ -191,7 +298,7 @@ function Nanobots.on_nth_tick(event)
 
     if ammo_name == AMMO_CONSTRUCTORS then
       draw_range_overlay(player, pdata, character, { 0, 0, .1, .1 })
-      queue_ghosts_in_range(player, pdata, character)
+      queue_ghosts_in_range(player, pdata, character, ammo, pdata.gun_range)
     elseif ammo_name == AMMO_TERMITES then
       draw_range_overlay(player, pdata, character, { 0, .1, 0, .1 })
       everyone_hates_trees(player, pdata, character, ammo)
