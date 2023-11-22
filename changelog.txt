@@ -1,7 +1,9 @@
 ---------------------------------------------------------------------------------------------------
-Version: 3.2.20
+Version: 3.3.0
 Date: ????
-  Changes:
+  Features:
+    - Added settings for Construction bot and Termite bot ammo size.
+    - Added settings for Construction bot and Termite bot ammo stack size.
 ---------------------------------------------------------------------------------------------------
 Version: 3.2.19
 Date: 2022-04-16
