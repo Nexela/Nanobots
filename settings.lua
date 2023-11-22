@@ -94,5 +94,41 @@ data:extend{
         maximum_value = 100,
         minimum_value = 1,
         order = "nanobots-fb[free-bots-per]"
-    }
+    },
+    {
+        type = "int-setting",
+        name = "nanobots-ammo-size-construction",
+        setting_type = "startup",
+        default_value = 10,
+        maximum_value = 1000,
+        minimum_value = 1,
+        order = "nanobots-as[construction]"
+    },
+    {
+        type = "int-setting",
+        name = "nanobots-ammo-size-termite",
+        setting_type = "startup",
+        default_value = 20,
+        maximum_value = 1000,
+        minimum_value = 1,
+        order = "nanobots-as[termite]"
+    },
+    {
+        type = "int-setting",
+        name = "nanobots-ammo-stack-size-construction",
+        setting_type = "startup",
+        default_value = 100,
+        maximum_value = 1000,
+        minimum_value = 1,
+        order = "nanobots-as[construction]"
+    },
+    {
+        type = "int-setting",
+        name = "nanobots-ammo-stack-size-termite",
+        setting_type = "startup",
+        default_value = 100,
+        maximum_value = 1000,
+        minimum_value = 1,
+        order = "nanobots-as[termite]"
+    },
 }
